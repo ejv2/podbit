@@ -3,13 +3,12 @@ package main
 import (
 	"fmt"
 	"os"
-	"os/signal"
 	"path/filepath"
-	"syscall"
+
+	"github.com/ethanv2/podbit/ui"
 
 	"github.com/juju/fslock"
 	"github.com/rthornton128/goncurses"
-	"golang.org/x/crypto/ssh/terminal"
 )
 
 const (
@@ -21,7 +20,7 @@ var (
 	homedir string
 	confdir string
 
-	w, h int
+	redraw chan int = make(chan int)
 )
 
 func banner() {
@@ -58,24 +57,6 @@ func alreadyRunning() (bool, *fslock.Lock) {
 	return false, lock
 }
 
-func UpdateDimensions(scr *goncurses.Window) {
-	var err error
-	w, h, err = terminal.GetSize(int(os.Stdin.Fd()))
-
-	if err != nil {
-		w, h = 72, 90
-	}
-
-	scr.Resize(h, w)
-}
-
-func watchResize(sig chan os.Signal, scr *goncurses.Window) {
-	for {
-		<-sig
-		UpdateDimensions(scr)
-	}
-}
-
 func initTTY() {
 	goncurses.Raw(true)
 	goncurses.Echo(false)
@@ -101,9 +82,25 @@ func main() {
 	initTTY()
 	defer goncurses.End()
 
-	resizeChan := make(chan os.Signal, 1)
-	signal.Notify(resizeChan, syscall.SIGWINCH)
+	ui.InitUI(scr, redraw)
+	go ui.RenderLoop()
 
-	UpdateDimensions(scr)
-	go watchResize(resizeChan, scr)
+	// Initial UI draw
+	redraw <- ui.RD_ALL
+
+	for {
+		var c rune
+		var buf [1]byte
+
+		os.Stdin.Read(buf[:])
+		c = rune(buf[0])
+
+		if c == 'q' {
+			return
+		} else if c == 'f' {
+			redraw <- 10
+		} else {
+			redraw <- ui.RD_ALL
+		}
+	}
 }

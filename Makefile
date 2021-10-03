@@ -5,11 +5,8 @@ INPUTSRC = input/input.go
 DATASRC  = data/queue.go
 SRC = main.go ver.go ${INPUTSRC} ${UISRC} ${DATASRC}
 
-export CGO_CFLAGS_ALLOW=".*"
-export CGO_LDFLAGS_ALLOW=".*"
-
 ${EXE}: ${SRC}
-	go build
+	CGO_LDFLAGS_ALLOW=".*" go build
 
 clean:
 	go clean

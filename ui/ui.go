@@ -1,7 +1,6 @@
 package ui
 
 import (
-	"fmt"
 	"os"
 	"os/signal"
 	"syscall"
@@ -12,8 +11,8 @@ import (
 
 // Represents a window in the current state
 type Menu interface {
-	Name()
-	Render()
+	Name() string
+	Render(x, y int)
 }
 
 // Redraw types
@@ -32,6 +31,11 @@ var (
 	redraw chan int
 )
 
+// Menu singletons
+var (
+	ListMenu List
+)
+
 // Watch the terminal for resizes and redraw when needed
 func watchResize(sig chan os.Signal, scr *goncurses.Window) {
 	for {
@@ -41,9 +45,10 @@ func watchResize(sig chan os.Signal, scr *goncurses.Window) {
 }
 
 // Initialise the UI subsystem
-func InitUI(scr *goncurses.Window, r chan int) {
+func InitUI(scr *goncurses.Window, initialMenu Menu, r chan int) {
 	redraw = r
 	root = scr
+	currentMenu = initialMenu
 
 	resizeChan := make(chan os.Signal, 1)
 	signal.Notify(resizeChan, syscall.SIGWINCH)
@@ -69,8 +74,16 @@ func UpdateDimensions(scr *goncurses.Window, shouldRedraw bool) {
 }
 
 func renderMenu() {
-	text := fmt.Sprintf("Dimensions: (%d, %d)", w, h)
-	root.MovePrint(h / 2, (w - len(text))/2, text)
+	if currentMenu == nil {
+		return
+	}
+
+	// Title Text
+	root.Printf("%s", currentMenu.Name())
+	root.HLine(1, 0, goncurses.ACS_HLINE, w)
+
+	// Actually render menu
+	currentMenu.Render(0, 3)
 }
 
 func renderTray() {

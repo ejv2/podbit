@@ -3,10 +3,13 @@ package main
 import (
 	"fmt"
 	"os"
+	"os/signal"
 	"path/filepath"
+	"syscall"
 
 	"github.com/juju/fslock"
 	"github.com/rthornton128/goncurses"
+	"golang.org/x/crypto/ssh/terminal"
 )
 
 const (
@@ -17,6 +20,8 @@ const (
 var (
 	homedir string
 	confdir string
+
+	w, h int
 )
 
 func banner() {
@@ -53,6 +58,24 @@ func alreadyRunning() (bool, *fslock.Lock) {
 	return false, lock
 }
 
+func UpdateDimensions(scr *goncurses.Window) {
+	var err error
+	w, h, err = terminal.GetSize(int(os.Stdin.Fd()))
+
+	if err != nil {
+		w, h = 72, 90
+	}
+
+	scr.Resize(h, w)
+}
+
+func watchResize(sig chan os.Signal, scr *goncurses.Window) {
+	for {
+		<-sig
+		UpdateDimensions(scr)
+	}
+}
+
 func main() {
 	banner()
 	initDirs()
@@ -64,10 +87,16 @@ func main() {
 	}
 	defer lock.Unlock()
 
-	_, err := goncurses.Init()
+	scr, err := goncurses.Init()
 	if err != nil {
 		fmt.Printf("Error: Failed to initialize UI: %s\n", err)
 		os.Exit(1)
 	}
 	defer goncurses.End()
+
+	resizeChan := make(chan os.Signal, 1)
+	signal.Notify(resizeChan, syscall.SIGWINCH)
+
+	UpdateDimensions(scr)
+	go watchResize(resizeChan, scr)
 }

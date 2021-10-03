@@ -5,8 +5,9 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/ethanv2/podbit/ui"
 	"github.com/ethanv2/podbit/input"
+	"github.com/ethanv2/podbit/ui"
+	"github.com/ethanv2/podbit/data"
 
 	"github.com/juju/fslock"
 	"github.com/rthornton128/goncurses"
@@ -22,6 +23,8 @@ var (
 	confdir string
 
 	redraw chan int = make(chan int)
+
+	queue data.Queue
 )
 
 func banner() {
@@ -40,6 +43,8 @@ func initDirs() {
 	confdir = filepath.Join(config, homebase)
 
 	err := os.MkdirAll(homedir, os.ModeDir|os.ModePerm)
+	err = os.MkdirAll(confdir, os.ModeDir|os.ModePerm)
+
 	if err != nil {
 		fmt.Println("Error: Failed to required directory(s)")
 		os.Exit(1)
@@ -74,6 +79,20 @@ func main() {
 		os.Exit(1)
 	}
 	defer lock.Unlock()
+
+	fmt.Println("Reading queue...")
+	err := queue.Open()
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	fmt.Println("Parsing queue...")
+	err = queue.Parse()
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
 
 	scr, err := goncurses.Init()
 	if err != nil {

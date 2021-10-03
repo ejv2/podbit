@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 
 	"github.com/ethanv2/podbit/ui"
+	"github.com/ethanv2/podbit/input"
 
 	"github.com/juju/fslock"
 	"github.com/rthornton128/goncurses"
@@ -89,5 +90,5 @@ func main() {
 	redraw <- ui.RD_ALL
 
 	// Initialisation is done; use this thread as the input loop
-	InputLoop(scr)
+	input.InputLoop()
 }

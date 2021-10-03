@@ -1,3 +1,4 @@
+// In charge of managing UI rendering and its associated thread(s)
 package ui
 
 import (
@@ -87,6 +88,13 @@ func renderMenu() {
 }
 
 func renderTray() {
+}
+
+// Signal to redraw a specific part of the UI
+// This call *WILL* block if a redraw is in progress
+// but will still signal a redraw once it is complete
+func Redraw(mode int) {
+	redraw <- mode
 }
 
 // Main render loop. Calls specific renderers when required

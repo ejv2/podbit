@@ -3,23 +3,28 @@ package input
 
 import (
 	"os"
+	"bufio"
 
 	"github.com/ethanv2/podbit/ui"
 )
 
+// Main input loop
+//
+// Recieves all key inputs serially, one character at a time
+// If there is no global keybinding for this key, we pass it
+// to the UI subsystem, which can deal with it from there.
+//
+// Any and all key inputs causes an immediate and full UI redraw
 func InputLoop() {
-	var buf [1]byte
-	var chr rune
-	for {
-		_, err := os.Stdin.Read(buf[:])
-		if err != nil {
-			return
-		}
+	f := os.Stdin
+	scanner := bufio.NewScanner(f)
+	scanner.Split(bufio.ScanRunes)
 
-		chr = rune(buf[0])
+	for scanner.Scan() {
+		c := scanner.Text()
 
-		switch chr {
-		case 'q':
+		switch c {
+		case "q":
 			return
 		}
 

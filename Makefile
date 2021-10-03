@@ -1,6 +1,6 @@
 EXE = podbit
 
-SRC = main.go ver.go ui/ui.go
+SRC = main.go input.go ver.go ui/ui.go
 
 export CGO_CFLAGS_ALLOW=".*"
 export CGO_LDFLAGS_ALLOW=".*"

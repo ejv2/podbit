@@ -88,19 +88,6 @@ func main() {
 	// Initial UI draw
 	redraw <- ui.RD_ALL
 
-	for {
-		var c rune
-		var buf [1]byte
-
-		os.Stdin.Read(buf[:])
-		c = rune(buf[0])
-
-		if c == 'q' {
-			return
-		} else if c == 'f' {
-			redraw <- 10
-		} else {
-			redraw <- ui.RD_ALL
-		}
-	}
+	// Initialisation is done; use this thread as the input loop
+	InputLoop(scr)
 }

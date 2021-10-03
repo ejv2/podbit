@@ -24,6 +24,15 @@ func InputLoop() {
 		c := scanner.Text()
 
 		switch c {
+		case "1":
+			if ui.MenuActive(ui.PlayerMenu) {
+				ui.ActivateMenu(ui.RawPlayerMenu)
+			} else {
+				ui.ActivateMenu(ui.PlayerMenu)
+			}
+		case "4":
+			ui.ActivateMenu(ui.ListMenu)
+
 		case "q":
 			return
 		}

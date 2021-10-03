@@ -34,7 +34,9 @@ var (
 
 // Menu singletons
 var (
-	ListMenu List
+	PlayerMenu    Player
+	RawPlayerMenu RawPlayer
+	ListMenu      List
 )
 
 // Watch the terminal for resizes and redraw when needed
@@ -95,6 +97,16 @@ func renderTray() {
 // but will still signal a redraw once it is complete
 func Redraw(mode int) {
 	redraw <- mode
+}
+
+func ActivateMenu(newMenu Menu) {
+	currentMenu = newMenu
+
+	Redraw(RD_MENU)
+}
+
+func MenuActive(compare Menu) bool {
+	return currentMenu.Name() == compare.Name()
 }
 
 // Main render loop. Calls specific renderers when required

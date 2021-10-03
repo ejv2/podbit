@@ -76,6 +76,12 @@ func watchResize(sig chan os.Signal, scr *goncurses.Window) {
 	}
 }
 
+func initTTY() {
+	goncurses.Raw(true)
+	goncurses.Echo(false)
+	goncurses.Cursor(0)
+}
+
 func main() {
 	banner()
 	initDirs()
@@ -92,6 +98,7 @@ func main() {
 		fmt.Printf("Error: Failed to initialize UI: %s\n", err)
 		os.Exit(1)
 	}
+	initTTY()
 	defer goncurses.End()
 
 	resizeChan := make(chan os.Signal, 1)

@@ -46,6 +46,30 @@ type Queue struct {
 	items []QueueItem
 }
 
+func (q *Queue) parseField(fields []string, num int) {
+	var item QueueItem
+
+	item.url = fields[0]
+	item.path = strings.ReplaceAll(fields[1], "\"", "")
+
+	if num == 2 {
+		item.state = STATE_PENDING
+	} else {
+		switch fields[2] {
+		case "downloaded":
+			item.state = STATE_READY
+		case "played":
+			item.state = STATE_PLAYED
+		case "finished":
+			item.state = STATE_FINISHED
+		default:
+			item.state = STATE_PENDING
+		}
+	}
+
+	q.items = append(q.items, item)
+}
+
 func (q *Queue) Open() error {
 	// First try the most likely places
 	var err error
@@ -88,8 +112,6 @@ func (q *Queue) Open() error {
 		}
 
 		elem := scanner.Text()
-
-		var item QueueItem
 		fields := strings.Split(elem, " ")
 		num := len(fields)
 
@@ -97,27 +119,50 @@ func (q *Queue) Open() error {
 			return fmt.Errorf(QueueSyntaxError, i)
 		}
 
-		item.url = fields[0]
-		item.path = strings.ReplaceAll(fields[1], "\"", "")
+		q.parseField(fields, num)
 
-		if num == 2 {
-			item.state = STATE_PENDING
-		} else {
-			switch fields[2] {
-			case "downloaded":
-				item.state = STATE_READY
-			case "played":
-				item.state = STATE_PLAYED
-			case "finished":
-				item.state = STATE_FINISHED
-			default:
-				item.state = STATE_PENDING
-			}
-		}
-
-		q.items = append(q.items, item)
 		i++
 	}
 
 	return nil
+}
+
+func (q *Queue) Reload() {
+	q.file.Close()
+
+	var err error
+	q.file, err = os.Open(q.path)
+	if err != nil {
+		fmt.Println("WARNING: Failed to open queue when reloading")
+		return
+	}
+
+	scanner := bufio.NewScanner(q.file)
+
+scanloop:
+	for scanner.Scan() {
+		if scanner.Err() != nil {
+			fmt.Println("WARNING: Failed to reload queue")
+			return
+		}
+
+		elem := scanner.Text()
+
+		fields := strings.Split(elem, " ")
+		num := len(fields)
+
+		if num < 2 {
+			fmt.Println("WARNING: Invalid queue found while reloading")
+			return
+		}
+
+		for _, elem := range q.items {
+			if elem.url == fields[0] {
+				continue scanloop
+			}
+		}
+
+		q.parseField(fields, num)
+
+	}
 }

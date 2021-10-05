@@ -84,6 +84,7 @@ func main() {
 		return
 	}
 	defer data.SaveData()
+	go data.ReloadLoop()
 
 	scr, err := goncurses.Init()
 	if err != nil {

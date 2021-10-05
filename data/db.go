@@ -34,7 +34,7 @@ type DB struct {
 
 func initDatabase(db *DB) error {
 	var err error
-	file, err := os.OpenFile(db.path, os.O_RDWR, os.ModePerm)
+	file, err := os.Open(db.path)
 	if err != nil {
 		file, err = os.Create(db.path)
 		if err != nil {
@@ -60,7 +60,7 @@ func initDatabase(db *DB) error {
 }
 
 func (db *DB) Open() error {
-	db.podcasts = make(map[string] Podcast)
+	db.podcasts = make(map[string]Podcast)
 
 	data := os.Getenv("XDG_DATA_HOME")
 	db.path = filepath.Join(data, DB_BASENAME, DB_FILENAME)

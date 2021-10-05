@@ -83,6 +83,7 @@ func main() {
 		fmt.Println(err)
 		return
 	}
+	defer data.SaveData()
 
 	scr, err := goncurses.Init()
 	if err != nil {

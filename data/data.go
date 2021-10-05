@@ -10,6 +10,7 @@ var (
 	database DB
 )
 
+// Set up all data sources
 func InitData() error {
 	defer fmt.Print("\n")
 
@@ -20,5 +21,18 @@ func InitData() error {
 	}
 	fmt.Println("done")
 
+	fmt.Print("Reading database...")
+	err = database.Open()
+	if err != nil {
+		return err
+	}
+	fmt.Println("done")
+
 	return nil
+}
+
+// Clean up and save data to disk
+// TODO: Reload on-disk data before saving to disk
+func SaveData() {
+	database.Save()
 }

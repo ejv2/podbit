@@ -23,8 +23,6 @@ var (
 	confdir string
 
 	redraw chan int = make(chan int)
-
-	queue data.Queue
 )
 
 func banner() {
@@ -80,15 +78,7 @@ func main() {
 	}
 	defer lock.Unlock()
 
-	fmt.Println("Reading queue...")
-	err := queue.Open()
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-
-	fmt.Println("Parsing queue...")
-	err = queue.Parse()
+	err := data.InitData()
 	if err != nil {
 		fmt.Println(err)
 		return

@@ -1,12 +1,12 @@
 package data
 
 import (
+	"bufio"
 	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
-	"bufio"
 )
 
 // Queue parsing/management errors
@@ -22,14 +22,21 @@ var QUEUE_DIRS = []string{
 	".newsboat",
 }
 
+// Name of the file for the queue
+const QUEUE_FILE = "queue"
+
+// Possible states of download queue
 const (
-	QUEUE_FILE = "queue"
+	STATE_PENDING  = iota // Pending download
+	STATE_READY           // Downloaded and ready to play
+	STATE_PLAYED          // Played at least once
+	STATE_FINISHED        // Finished to the end
 )
 
 type QueueItem struct {
 	url   string
 	path  string
-	state string
+	state int
 }
 
 type Queue struct {
@@ -42,6 +49,7 @@ type Queue struct {
 func (q *Queue) Open() error {
 	// First try the most likely places
 	var err error
+	var found bool = false
 	home, _ := os.UserHomeDir()
 	data := os.Getenv("XDG_DATA_HOME")
 
@@ -50,24 +58,24 @@ func (q *Queue) Open() error {
 		q.file, err = os.Open(q.path)
 
 		if err == nil {
-			return nil
+			found = true
+			break
 		}
 	}
 
 	// Next try XDG
-	q.path = filepath.Join(home, data, "newsboat", QUEUE_FILE)
-	q.file, err = os.Open(q.path)
+	if !found {
+		q.path = filepath.Join(home, data, "newsboat", QUEUE_FILE)
+		q.file, err = os.Open(q.path)
 
-	if err == nil {
-		return nil
+		if err == nil {
+			found = true
+		}
 	}
 
-	return QueueNotFound
-}
-
-func (q *Queue) Parse() error {
-	if q.file == nil {
-		return QueueNotOpen
+	// If we still haven't found it, we never will
+	if !found {
+		return QueueNotFound
 	}
 
 	scanner := bufio.NewScanner(q.file)
@@ -89,14 +97,22 @@ func (q *Queue) Parse() error {
 			return fmt.Errorf(QueueSyntaxError, i)
 		}
 
-
 		item.url = fields[0]
 		item.path = strings.ReplaceAll(fields[1], "\"", "")
 
 		if num == 2 {
-			item.state = "pending"
+			item.state = STATE_PENDING
 		} else {
-			item.state = fields[2]
+			switch fields[2] {
+			case "downloaded":
+				item.state = STATE_READY
+			case "played":
+				item.state = STATE_PLAYED
+			case "finished":
+				item.state = STATE_FINISHED
+			default:
+				item.state = STATE_PENDING
+			}
 		}
 
 		q.items = append(q.items, item)

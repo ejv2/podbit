@@ -88,7 +88,7 @@ func renderMenu() {
 	root.HLine(1, 0, goncurses.ACS_HLINE, w)
 
 	// Actually render menu
-	currentMenu.Render(0, 3)
+	currentMenu.Render(0, 2)
 }
 
 func renderTray() {

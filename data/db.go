@@ -1,38 +1,40 @@
 package data
 
 import (
-	"encoding/json"
+	"bufio"
 	"errors"
 	"fmt"
-	"io"
 	"os"
 	"path/filepath"
+	"strings"
+	"regexp"
 )
 
 const (
 	DB_BASENAME = "podbit"
-	DB_FILENAME = "db.json"
+	DB_FILENAME = "db"
 )
 
 // Error values
 var (
 	DatabaseIOFailed    error  = errors.New("Error: IO error while reading from queue file")
-	DatabaseSyntaxError string = "Error: Malformed database: %v"
+	DatabaseSyntaxError string = "Error: Malformed database: Syntax Error on Line %d"
 )
 
 // Human-provided podcast info
 type Podcast struct {
+	RegexPattern string
 	FriendlyName string
 }
 
-type DB struct {
+type Database struct {
 	path string
 	file *os.File
 
-	podcasts map[string]Podcast
+	podcasts []Podcast
 }
 
-func initDatabase(db *DB) error {
+func initDatabase(db *Database) error {
 	var err error
 	file, err := os.Open(db.path)
 	if err != nil {
@@ -41,27 +43,41 @@ func initDatabase(db *DB) error {
 			return err
 		}
 	} else {
+		scanner := bufio.NewScanner(file)
+		scanner.Split(bufio.ScanLines)
 
-		buf, err := io.ReadAll(file)
-		if err != nil {
-			return DatabaseIOFailed
-		}
+		i := 1
+		for scanner.Scan() {
+			var p Podcast
 
-		// Ignore null databases
-		if len(buf) > 0 {
-			err = json.Unmarshal(buf, &db.podcasts)
-			if err != nil {
-				return fmt.Errorf(DatabaseSyntaxError, err)
+			if scanner.Err() != nil {
+				return DatabaseIOFailed
 			}
+
+			elem := scanner.Text()
+			fields := strings.Split(elem, " ")
+			num := len(fields)
+
+			if num < 2 {
+				return fmt.Errorf(DatabaseSyntaxError, i)
+			}
+
+			p.RegexPattern = fields[0]
+
+			for i := 1; i < len(fields); i++ {
+				p.FriendlyName += fields[i] + " "
+			}
+
+			db.podcasts = append(db.podcasts, p)
+
+			i++
 		}
 	}
 
 	return nil
 }
 
-func (db *DB) Open() error {
-	db.podcasts = make(map[string]Podcast)
-
+func (db *Database) Open() error {
 	data := os.Getenv("XDG_DATA_HOME")
 	db.path = filepath.Join(data, DB_BASENAME, DB_FILENAME)
 
@@ -79,13 +95,21 @@ func (db *DB) Open() error {
 	return nil
 }
 
-func (db *DB) Save() {
-	data, err := json.Marshal(db.podcasts)
-	if err != nil {
-		fmt.Println("WARNING: Failed to encode data for saving. Bailing out...")
-		return
+func (db *Database) Save() {
+	for _, elem := range db.podcasts {
+		fmt.Fprintf(db.file, "%s %s\n", elem.RegexPattern, elem.FriendlyName)
 	}
 
-	db.file.Write(data)
 	db.file.Close()
+}
+
+func (db *Database) GetFriendlyName(url string) string {
+	for _, elem := range db.podcasts {
+		matched, _ := regexp.MatchString(elem.RegexPattern, url)
+		if matched {
+			return elem.FriendlyName
+		}
+	}
+
+	return url
 }

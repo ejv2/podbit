@@ -34,40 +34,40 @@ const (
 )
 
 type QueueItem struct {
-	url   string
-	path  string
-	state int
+	Url   string
+	Path  string
+	State int
 }
 
 type Queue struct {
 	path string
 	file *os.File
 
-	items []QueueItem
+	Items []QueueItem
 }
 
 func (q *Queue) parseField(fields []string, num int) {
 	var item QueueItem
 
-	item.url = fields[0]
-	item.path = strings.ReplaceAll(fields[1], "\"", "")
+	item.Url = fields[0]
+	item.Path = strings.ReplaceAll(fields[1], "\"", "")
 
 	if num == 2 {
-		item.state = STATE_PENDING
+		item.State = STATE_PENDING
 	} else {
 		switch fields[2] {
 		case "downloaded":
-			item.state = STATE_READY
+			item.State = STATE_READY
 		case "played":
-			item.state = STATE_PLAYED
+			item.State = STATE_PLAYED
 		case "finished":
-			item.state = STATE_FINISHED
+			item.State = STATE_FINISHED
 		default:
-			item.state = STATE_PENDING
+			item.State = STATE_PENDING
 		}
 	}
 
-	q.items = append(q.items, item)
+	q.Items = append(q.Items, item)
 }
 
 func (q *Queue) Open() error {
@@ -156,8 +156,8 @@ scanloop:
 			return
 		}
 
-		for _, elem := range q.items {
-			if elem.url == fields[0] {
+		for _, elem := range q.Items {
+			if elem.Url == fields[0] {
 				continue scanloop
 			}
 		}

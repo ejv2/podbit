@@ -11,8 +11,8 @@ const (
 
 // Dependent data structures
 var (
-	queue Queue
-	database DB
+	Q Queue
+	DB Database
 )
 
 // Set up all data sources
@@ -20,14 +20,14 @@ func InitData() error {
 	defer fmt.Print("\n")
 
 	fmt.Print("Reading queue...")
-	err := queue.Open()
+	err := Q.Open()
 	if err != nil {
 		return err
 	}
 	fmt.Println("done")
 
 	fmt.Print("Reading database...")
-	err = database.Open()
+	err = DB.Open()
 	if err != nil {
 		return err
 	}
@@ -41,12 +41,12 @@ func InitData() error {
 func SaveData() {
 	ReloadData()
 
-	database.Save()
+	DB.Save()
 }
 
 // Reload and merge data from disk into memory
 func ReloadData() {
-	queue.Reload()
+	Q.Reload()
 }
 
 // Infinite loop to continually reload the file on disk into memory

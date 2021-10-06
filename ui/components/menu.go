@@ -20,6 +20,13 @@ func (m Menu) Render() {
 			sel = ">>"
 		}
 
-		m.Win.MovePrintf(m.Y+i, m.X, "%s%*s", sel, elem, m.W)
+		var capped string
+		if len(elem) > m.W {
+			capped = elem[:m.W]
+		} else {
+			capped = elem
+		}
+
+		m.Win.MovePrintf(m.Y+i, m.X, "%s%s", sel, capped)
 	}
 }

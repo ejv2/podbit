@@ -7,24 +7,33 @@ import (
 )
 
 type List struct {
+	men components.Menu
 }
 
-func (l List) Name() string {
+func (l *List) Name() string {
 	return "Podcasts"
 }
 
-func (l List) Render(x, y int) {
-	var men components.Menu
-	men.X = x
-	men.Y = y
+func (l *List) Render(x, y int) {
+	l.men.X = x
+	l.men.Y = y
 
-	men.W, men.H = w, h
-	men.Win = *root
+	l.men.W, l.men.H = w, (h - 5)
+	l.men.Win = *root
 
-	men.Items = make([]string, len(data.Q.Items))
-	for i := range men.Items {
-		men.Items[i] = data.DB.GetFriendlyName(data.Q.Items[i].Url)
+	l.men.Items = make([]string, len(data.Q.Items))
+	for i := range l.men.Items {
+		l.men.Items[i] = data.DB.GetFriendlyName(data.Q.Items[i].Url)
 	}
 
-	men.Render()
+	l.men.Render()
+}
+
+func (l *List) Input(c rune) {
+	switch c {
+	case 'j':
+		l.men.MoveSelection(1)
+	case 'k':
+		l.men.MoveSelection(-1)
+	}
 }

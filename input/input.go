@@ -35,6 +35,11 @@ func InputLoop() {
 
 		case "q":
 			return
+		default:
+			runes := []rune(c)
+			for _, elem := range runes {
+				ui.PassKeystroke(elem)
+			}
 		}
 
 		ui.Redraw(ui.RD_ALL)

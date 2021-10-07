@@ -16,6 +16,7 @@ import (
 type Menu interface {
 	Name() string
 	Render(x, y int)
+	Input(c rune)
 }
 
 // Redraw types
@@ -36,9 +37,9 @@ var (
 
 // Menu singletons
 var (
-	PlayerMenu    Player
-	RawPlayerMenu RawPlayer
-	ListMenu      List
+	PlayerMenu    *Player    = new(Player)
+	RawPlayerMenu *RawPlayer = new(RawPlayer)
+	ListMenu      *List      = new(List)
 )
 
 // Watch the terminal for resizes and redraw when needed
@@ -110,6 +111,10 @@ func ActivateMenu(newMenu Menu) {
 
 func MenuActive(compare Menu) bool {
 	return currentMenu.Name() == compare.Name()
+}
+
+func PassKeystroke(c rune) {
+	currentMenu.Input(c)
 }
 
 // Main render loop. Calls specific renderers when required

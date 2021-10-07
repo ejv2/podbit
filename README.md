@@ -1,5 +1,7 @@
 # Podbit - **Podboat Improved**
 
+[![Makefile CI](https://github.com/ethanv2/podbit/actions/workflows/makefile.yml/badge.svg)](https://github.com/ethanv2/podbit/actions/workflows/makefile.yml)
+
 Podbit is a replacement for ``newsboat``'s standard podboat tool for listening to podcasts. It is minimal, performant and abides by the UNIX-philosophy, with an ncurses terminal user interface.
 
 Podbit runs on Linux and the BSDs.

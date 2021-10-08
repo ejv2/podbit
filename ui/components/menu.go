@@ -1,6 +1,8 @@
 package components
 
 import (
+	"fmt"
+
 	"github.com/rthornton128/goncurses"
 )
 
@@ -34,13 +36,12 @@ func (m *Menu) Render() {
 		}
 
 		var capped string
-		if len(elem) > m.W {
-			capped = elem[:m.W]
-		} else {
-			capped = elem
+		capped = fmt.Sprintf("%s%s", sel, elem)
+		if len(capped) > m.W {
+			capped = capped[:m.W]
 		}
 
-		m.Win.MovePrintf(m.Y+i, m.X, "%s%s", sel, capped)
+		m.Win.MovePrint(m.Y+i, m.X, capped)
 		c++
 	}
 }

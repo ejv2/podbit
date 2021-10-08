@@ -39,7 +39,7 @@ func (l *List) renderPodcasts(x, y int) {
 		}
 	}
 
-	l.men[0].Selected = (l.menSel == 0)
+	l.men[0].Selected = true
 
 	l.men[0].Render()
 }
@@ -62,6 +62,8 @@ func (l *List) renderEpisodes(x, y int) {
 			l.men[1].Items = append(l.men[1].Items, fmt.Sprintf("%s", elem.Url))
 		}
 	}
+
+	l.men[1].Selected = (l.menSel == 1)
 
 	l.men[1].Render()
 }

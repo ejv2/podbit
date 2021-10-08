@@ -13,12 +13,11 @@ const (
 var (
 	Q Queue
 	DB Database
+	Caching Cache
 )
 
 // Set up all data sources
 func InitData() error {
-	defer fmt.Print("\n")
-
 	fmt.Print("Reading queue...")
 	err := Q.Open()
 	if err != nil {
@@ -28,6 +27,13 @@ func InitData() error {
 
 	fmt.Print("Reading database...")
 	err = DB.Open()
+	if err != nil {
+		return err
+	}
+	fmt.Println("done")
+
+	fmt.Print("Initialising cache...")
+	err = Caching.Open()
 	if err != nil {
 		return err
 	}

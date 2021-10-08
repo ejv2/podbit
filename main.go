@@ -80,7 +80,7 @@ func main() {
 
 	err := data.InitData()
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println("\n" + err.Error())
 		return
 	}
 	defer data.SaveData()

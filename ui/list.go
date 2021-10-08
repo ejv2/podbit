@@ -74,15 +74,15 @@ func (l *List) Render(x, y int) {
 	l.renderEpisodes(w/2+1, y)
 }
 
-func (l *List) Input(c rune) {
+func (l *List) Input(c string) {
 	switch c {
-	case 'j':
+	case "j":
 		l.men[l.menSel].MoveSelection(1)
-	case 'k':
+	case "k":
 		l.men[l.menSel].MoveSelection(-1)
-	case 'h':
+	case "h":
 		l.MoveSelection(-1)
-	case 'l':
+	case "l":
 		l.MoveSelection(1)
 	}
 }

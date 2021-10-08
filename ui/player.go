@@ -13,6 +13,6 @@ func (l *Player) Render(x, y int) {
 	root.MovePrint(y, x, "The player will be here")
 }
 
-func (l *Player) Input(c rune) {
+func (l *Player) Input(c string) {
 
 }

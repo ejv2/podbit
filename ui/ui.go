@@ -14,7 +14,7 @@ import (
 type Menu interface {
 	Name() string
 	Render(x, y int)
-	Input(c rune)
+	Input(c string)
 }
 
 // Redraw types
@@ -111,7 +111,7 @@ func MenuActive(compare Menu) bool {
 	return currentMenu.Name() == compare.Name()
 }
 
-func PassKeystroke(c rune) {
+func PassKeystroke(c string) {
 	currentMenu.Input(c)
 }
 

@@ -13,6 +13,6 @@ func (p *RawPlayer) Render(x, y int) {
 	root.MovePrint(y, x, "The raw player will be here")
 }
 
-func (p *RawPlayer) Input(c rune) {
+func (p *RawPlayer) Input(c string) {
 
 }

@@ -33,6 +33,13 @@ const (
 	STATE_FINISHED        // Finished to the end
 )
 
+var STATE_STRINGS [4]string = [4]string{
+	"",
+	"downloaded",
+	"played",
+	"finished",
+}
+
 type QueueItem struct {
 	Url   string
 	Path  string
@@ -164,5 +171,16 @@ scanloop:
 
 		q.parseField(fields, num)
 
+	}
+}
+
+func (q *Queue) Save() {
+	file, err := os.OpenFile(q.path, os.O_TRUNC|os.O_WRONLY, os.ModePerm)
+	if err != nil {
+		fmt.Printf("WARNING: Failed to save queue file: %s\n", err.Error())
+	}
+
+	for _, elem := range q.Items {
+		fmt.Fprintf(file, "%s \"%s\" %s\n", elem.Url, elem.Path, STATE_STRINGS[elem.State])
 	}
 }

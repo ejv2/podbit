@@ -17,7 +17,7 @@ const (
 
 // Error values
 var (
-	DatabaseIOFailed    error  = errors.New("Error: IO error while reading from queue file")
+	DatabaseIOFailed    error  = errors.New("Error: IO error while reading from database file")
 	DatabaseSyntaxError string = "Error: Malformed database: Syntax Error on Line %d"
 )
 
@@ -29,8 +29,6 @@ type Podcast struct {
 
 type Database struct {
 	path string
-	file *os.File
-
 	podcasts []Podcast
 }
 
@@ -87,20 +85,20 @@ func (db *Database) Open() error {
 		return err
 	}
 
-	db.file, err = os.OpenFile(db.path, os.O_WRONLY|os.O_TRUNC, os.ModePerm)
-	if err != nil {
-		return DatabaseIOFailed
-	}
-
 	return nil
 }
 
 func (db *Database) Save() {
-	for _, elem := range db.podcasts {
-		fmt.Fprintf(db.file, "%s %s\n", elem.RegexPattern, elem.FriendlyName)
+	file, err := os.OpenFile(db.path, os.O_WRONLY|os.O_TRUNC, os.ModePerm)
+	if err != nil {
+		fmt.Printf("WARNING: failed to write database: %s\n", DatabaseIOFailed)
 	}
 
-	db.file.Close()
+	for _, elem := range db.podcasts {
+		fmt.Fprintf(file, "%s %s\n", elem.RegexPattern, elem.FriendlyName)
+	}
+
+	file.Close()
 }
 
 func (db *Database) GetFriendlyName(url string) string {

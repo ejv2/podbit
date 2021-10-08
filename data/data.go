@@ -41,6 +41,7 @@ func InitData() error {
 func SaveData() {
 	ReloadData()
 
+	Q.Save()
 	DB.Save()
 }
 

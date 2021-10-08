@@ -27,21 +27,15 @@ func (l *List) renderPodcasts(x, y int) {
 	l.men[0].W, l.men[0].H = (w/2)-1, (h - 5)
 	l.men[0].Win = *root
 
-	l.men[0].Items = make([]string, len(data.Q.Items))
+	l.men[0].Items = l.men[0].Items[:0]
 
 	seen := make(map[string]bool)
-	for i := range l.men[0].Items {
+	for i := range data.Q.Items {
 		name := data.DB.GetFriendlyName(data.Q.Items[i].Url)
 
 		if !seen[name] {
-			l.men[0].Items[i] = name
+			l.men[0].Items = append(l.men[0].Items, name)
 			seen[name] = true
-		}
-	}
-
-	for x, elem := range l.men[0].Items {
-		if elem == "" {
-			l.men[0].Items = append(l.men[0].Items[:x], l.men[0].Items[x+1:]...)
 		}
 	}
 
@@ -51,6 +45,10 @@ func (l *List) renderPodcasts(x, y int) {
 }
 
 func (l *List) renderEpisodes(x, y int) {
+	if len(l.men[0].Items) < 1 {
+		return
+	}
+
 	l.men[1].X = x
 	l.men[1].Y = y
 

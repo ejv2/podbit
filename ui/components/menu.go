@@ -46,6 +46,10 @@ func (m *Menu) Render() {
 }
 
 func (m *Menu) GetSelection() string {
+	if len(m.Items) < 1 {
+		return ""
+	}
+
 	return m.Items[m.sel]
 }
 

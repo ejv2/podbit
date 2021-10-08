@@ -3,7 +3,7 @@ package input
 
 import (
 	"os"
-	"bufio"
+	"unicode/utf8"
 
 	"github.com/ethanv2/podbit/ui"
 )
@@ -16,24 +16,25 @@ import (
 //
 // Any and all key inputs causes an immediate and full UI redraw
 func InputLoop() {
-	f := os.Stdin
-	scanner := bufio.NewScanner(f)
-	scanner.Split(bufio.ScanRunes)
+	var buf [4]byte
+	var err error
 
-	for scanner.Scan() {
-		c := scanner.Text()
+	for err == nil {
+		_, err = os.Stdin.Read(buf[:])
+		c, _ := utf8.DecodeRune(buf[:])
 
 		switch c {
-		case "1":
+		case '1':
 			if ui.MenuActive(ui.PlayerMenu) {
 				ui.ActivateMenu(ui.RawPlayerMenu)
 			} else {
 				ui.ActivateMenu(ui.PlayerMenu)
 			}
-		case "4":
+		case '4':
 			ui.ActivateMenu(ui.ListMenu)
-
-		case "q":
+		case 13: // Enter
+			return
+		case 'q':
 			return
 		default:
 			ui.PassKeystroke(c)

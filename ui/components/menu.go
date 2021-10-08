@@ -10,6 +10,8 @@ type Menu struct {
 	Items []string
 	Win   goncurses.Window
 
+	Selected bool
+
 	scroll int
 	sel    int
 
@@ -27,7 +29,7 @@ func (m *Menu) Render() {
 
 	for i, elem := range items {
 		var sel string
-		if c == m.sel {
+		if c == m.sel && m.Selected {
 			sel = ">>"
 		}
 

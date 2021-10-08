@@ -6,8 +6,6 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/ethanv2/podbit/ui/tray"
-
 	"github.com/rthornton128/goncurses"
 	"golang.org/x/crypto/ssh/terminal"
 )
@@ -93,7 +91,7 @@ func renderMenu() {
 }
 
 func renderTray() {
-	tray.RenderTray(root, w, h)
+	RenderTray(root, w, h)
 }
 
 // Signal to redraw a specific part of the UI

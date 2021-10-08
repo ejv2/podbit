@@ -1,4 +1,4 @@
-package tray
+package ui
 
 import (
 	"github.com/rthornton128/goncurses"

@@ -30,36 +30,36 @@ type Cache struct {
 }
 
 type Episode struct {
-	entry *QueueItem
+	Entry *QueueItem
 
-	title string
+	Title string
 }
 
 type Download struct {
-	episode Episode
-	file    *os.File
+	Episode Episode
+	File    *os.File
 
-	percentage float64
+	Percentage float64
 
-	size int64
-	done int64
+	Size int64
+	Done int64
 
-	started time.Time
+	Started time.Time
 
-	completed bool
-	success   bool
+	Completed bool
+	Success   bool
 }
 
 func (c *Cache) progressWatcher(watch *Download, stop chan int) {
 	for {
 		c.downloadsMutex.Lock()
 
-		fi, err := watch.file.Stat()
+		fi, err := watch.File.Stat()
 		if err != nil {
 			return
 		}
-		watch.done = fi.Size()
-		watch.percentage = float64(watch.done) / float64(watch.size)
+		watch.Done = fi.Size()
+		watch.Percentage = float64(watch.Done) / float64(watch.Size)
 
 		c.downloadsMutex.Unlock()
 
@@ -68,8 +68,6 @@ func (c *Cache) progressWatcher(watch *Download, stop chan int) {
 			return
 		default:
 			time.Sleep(1 * time.Second)
-
-			fmt.Printf("%f%% (%d/%d) - elapsed: %s\n", watch.percentage, watch.done, watch.size, time.Now().Sub(watch.started))
 		}
 	}
 }
@@ -140,17 +138,17 @@ func (c *Cache) Download(item *QueueItem) (id int, err error) {
 
 	size, _ := strconv.ParseInt(resp.Header.Get("Content-Length"), 10, 64)
 	newEp := Episode{
-		entry: item,
+		Entry: item,
 	}
 
 	stop := make(chan int)
 
 	c.downloadsMutex.Lock()
 	var dl Download = Download{
-		episode: newEp,
-		file:    f,
-		size:    size,
-		started: time.Now(),
+		Episode: newEp,
+		File:    f,
+		Size:    size,
+		Started: time.Now(),
 	}
 	c.Downloads = append(c.Downloads, dl)
 
@@ -166,11 +164,11 @@ func (c *Cache) Download(item *QueueItem) (id int, err error) {
 		io.Copy(f, resp.Body)
 
 		c.downloadsMutex.Lock()
-		c.Downloads[id].completed = true
+		c.Downloads[id].Completed = true
 		if err != nil {
-			c.Downloads[id].success = false
+			c.Downloads[id].Success = false
 		} else {
-			c.Downloads[id].success = true
+			c.Downloads[id].Success = true
 		}
 
 		c.episodes.Store(item.Path, newEp)

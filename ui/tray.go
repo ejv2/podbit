@@ -1,10 +1,18 @@
 package ui
 
 import (
+	"sync"
+	"time"
+
 	"github.com/rthornton128/goncurses"
 )
 
+const (
+	MSG_TIME time.Duration = 5 * time.Second
+)
+
 var (
+	msgMutex      sync.Mutex
 	statusMessage string
 )
 
@@ -15,5 +23,22 @@ var (
 func RenderTray(scr *goncurses.Window, w, h int) {
 	scr.HLine(h-2, 0, goncurses.ACS_HLINE, w)
 
-	scr.MovePrint(h-1, 0, "Status text: Status1234")
+	if statusMessage != "" {
+		scr.MovePrint(h-1, 0, statusMessage)
+	} else {
+		scr.MovePrint(h-1, 0, "Status text: Status1234")
+	}
+}
+
+// Send a status message
+// Blocks until the message has completed displaying
+// Will wait for the previous user to unlock the message bar first
+func StatusMessage(msg string) {
+	msgMutex.Lock()
+
+	statusMessage = msg
+	time.Sleep(MSG_TIME)
+	statusMessage = ""
+
+	msgMutex.Unlock()
 }

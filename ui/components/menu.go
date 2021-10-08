@@ -45,6 +45,10 @@ func (m *Menu) Render() {
 	}
 }
 
+func (m *Menu) GetSelection() string {
+	return m.Items[m.sel]
+}
+
 func (m *Menu) ChangeSelection(index int) {
 	if index >= len(m.Items) || index < 0 {
 		return

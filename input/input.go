@@ -32,8 +32,6 @@ func InputLoop() {
 			}
 		case '4':
 			ui.ActivateMenu(ui.ListMenu)
-		case 13: // Enter
-			return
 		case 'q':
 			return
 		default:

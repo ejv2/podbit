@@ -84,6 +84,8 @@ func (l *List) Input(c rune) {
 		l.MoveSelection(-1)
 	case 'l':
 		l.MoveSelection(1)
+	case 13: // Enter
+		l.StartDownload()
 	}
 }
 
@@ -102,4 +104,27 @@ func (l *List) MoveSelection(direction int) {
 
 	off := l.menSel + direction
 	l.ChangeSelection(off)
+}
+
+func (l *List) StartDownload() {
+	if len(l.men[0].Items) < 1 || len(l.men[1].Items) < 1 {
+		return
+	}
+
+	if l.menSel == 0 {
+		targets := l.men[1].Items
+		for _, entry := range targets {
+			for i, elem := range data.Q.Items {
+				if elem.Url == entry {
+					go data.Caching.Download(&data.Q.Items[i])
+				}
+			}
+		}
+	} else {
+		for i, elem := range data.Q.Items {
+			if elem.Url == l.men[l.menSel].GetSelection() {
+				go data.Caching.Download(&data.Q.Items[i])
+			}
+		}
+	}
 }

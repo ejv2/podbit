@@ -128,13 +128,11 @@ func (c *Cache) Download(item *QueueItem) (id int, err error) {
 	if err != nil {
 		return 0, CacheIOError
 	}
-	defer f.Close()
 
 	resp, err := http.Get(item.Url)
 	if err != nil || resp.StatusCode != http.StatusOK {
 		return 0, fmt.Errorf(CacheDownloadFailed, item.Url)
 	}
-	defer resp.Body.Close()
 
 	size, _ := strconv.ParseInt(resp.Header.Get("Content-Length"), 10, 64)
 	newEp := Episode{
@@ -156,12 +154,9 @@ func (c *Cache) Download(item *QueueItem) (id int, err error) {
 	go c.progressWatcher(&c.Downloads[id], stop)
 	c.downloadsMutex.Unlock()
 
-	defer func() {
-		stop <- 1
-	}()
-
 	go func() {
 		io.Copy(f, resp.Body)
+		stop <- 1
 
 		c.downloadsMutex.Lock()
 		c.Downloads[id].Completed = true
@@ -171,7 +166,14 @@ func (c *Cache) Download(item *QueueItem) (id int, err error) {
 			c.Downloads[id].Success = true
 		}
 
+		c.Downloads[id].Episode.Entry.State = STATE_READY
+
 		c.episodes.Store(item.Path, newEp)
+
+		c.downloadsMutex.Unlock()
+
+		resp.Body.Close()
+		f.Close()
 	}()
 
 	return

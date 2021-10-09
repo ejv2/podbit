@@ -32,7 +32,7 @@ func Exit() {
 
 // Main input loop
 //
-// Recieves all key inputs serially, one character at a time
+// Receives all key inputs serially, one character at a time
 // If there is no global keybinding for this key, we pass it
 // to the UI subsystem, which can deal with it from there.
 //

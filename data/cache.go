@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"runtime"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -155,7 +156,23 @@ func (c *Cache) Download(item *QueueItem) (id int, err error) {
 	c.downloadsMutex.Unlock()
 
 	go func() {
-		io.Copy(f, resp.Body)
+		var err error
+		var count int64
+		var read int
+		var buf []byte = make([]byte, 32 * 1024) // 32kb
+		for err == nil {
+			read, err = resp.Body.Read(buf)
+			f.WriteAt(buf, count)
+
+			count += int64(read)
+
+
+			runtime.Gosched() // Give the other threads a turn
+		}
+
+		if err != io.EOF {
+		}
+
 		stop <- 1
 
 		c.downloadsMutex.Lock()

@@ -8,7 +8,7 @@ import (
 )
 
 const (
-	MSG_TIME time.Duration = 5 * time.Second
+	MSG_TIME time.Duration = 2 * time.Second
 )
 
 var (

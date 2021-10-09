@@ -10,21 +10,21 @@ import (
 	"github.com/rthornton128/goncurses"
 )
 
-// List represents the list menu type and state
+// Library represents the list menu type and state
 //
-// List displays all detected and configured podcasts, along
+// Library displays all detected and configured podcasts, along
 // with associated episodes sorted into said podcasts
-type List struct {
+type Library struct {
 	men [2]components.Menu
 
 	menSel int
 }
 
-func (l *List) Name() string {
-	return "Podcasts"
+func (l *Library) Name() string {
+	return "Library"
 }
 
-func (l *List) renderPodcasts(x, y int) {
+func (l *Library) renderPodcasts(x, y int) {
 	l.men[0].X = x
 	l.men[0].Y = y
 
@@ -48,7 +48,7 @@ func (l *List) renderPodcasts(x, y int) {
 	l.men[0].Render()
 }
 
-func (l *List) renderEpisodes(x, y int) {
+func (l *Library) renderEpisodes(x, y int) {
 	if len(l.men[0].Items) < 1 {
 		return
 	}
@@ -81,13 +81,13 @@ func (l *List) renderEpisodes(x, y int) {
 	l.men[1].Render()
 }
 
-func (l *List) Render(x, y int) {
+func (l *Library) Render(x, y int) {
 	l.renderPodcasts(x, y)
 	root.VLine(y, w/2, goncurses.ACS_VLINE, h-2-y)
 	l.renderEpisodes(w/2+1, y)
 }
 
-func (l *List) Input(c rune) {
+func (l *Library) Input(c rune) {
 	switch c {
 	case 'j':
 		l.men[l.menSel].MoveSelection(1)
@@ -104,7 +104,7 @@ func (l *List) Input(c rune) {
 	}
 }
 
-func (l *List) ChangeSelection(index int) {
+func (l *Library) ChangeSelection(index int) {
 	if index >= len(l.men) || index < 0 {
 		return
 	}
@@ -112,7 +112,7 @@ func (l *List) ChangeSelection(index int) {
 	l.menSel = index
 }
 
-func (l *List) MoveSelection(direction int) {
+func (l *Library) MoveSelection(direction int) {
 	if direction == 0 {
 		return
 	}
@@ -122,7 +122,7 @@ func (l *List) MoveSelection(direction int) {
 }
 
 // StartDownload downloads the currently focused library entry
-func (l *List) StartDownload() {
+func (l *Library) StartDownload() {
 	if len(l.men[0].Items) < 1 || len(l.men[1].Items) < 1 {
 		return
 	}
@@ -157,7 +157,7 @@ func (l *List) StartDownload() {
 // StartPlaying begins playing the currently focused element
 // If the current focus requires downloading (and enough information
 // is known to oblige) it will first be downloaded
-func (l *List) StartPlaying() {
+func (l *Library) StartPlaying() {
 	if len(l.men[0].Items) < 1 || len(l.men[1].Items) < 1 {
 		return
 	}

@@ -94,7 +94,7 @@ func main() {
 	initTTY()
 	defer goncurses.End()
 
-	ui.InitUI(scr, ui.ListMenu, redraw)
+	ui.InitUI(scr, ui.LibraryMenu, redraw)
 	go ui.RenderLoop()
 
 	// Initial UI draw

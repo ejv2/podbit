@@ -1,6 +1,6 @@
 EXE = podbit
 
-UISRC    = ui/ui.go ui/input.go ui/list.go ui/player.go ui/rawplayer.go ui/tray.go
+UISRC    = ui/ui.go ui/input.go ui/library.go ui/player.go ui/rawplayer.go ui/tray.go
 UICOMPS  = ui/components/menu.go
 DATASRC  = data/data.go data/queue.go data/db.go data/cache.go
 SRC = main.go ver.go ${INPUTSRC} ${UISRC} ${DATASRC} ${UICOMPS}

@@ -60,7 +60,7 @@ var (
 	PlayerMenu    *Player    = new(Player)    // Full screen player
 	RawPlayerMenu *RawPlayer = new(RawPlayer) // Raw player output
 	QueueMenu     *Queue     = new(Queue)     // Player queue display
-	ListMenu      *List      = new(List)      // Library of podcasts and episodes
+	LibraryMenu   *Library   = new(Library)   // Library of podcasts and episodes
 )
 
 // Watch the terminal for resizes and redraw when needed

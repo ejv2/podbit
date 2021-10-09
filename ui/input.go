@@ -65,7 +65,7 @@ func InputLoop(exit chan int) {
 			case '2':
 				ActivateMenu(QueueMenu)
 			case '4':
-				ActivateMenu(ListMenu)
+				ActivateMenu(LibraryMenu)
 			case 'q':
 				return
 			default:

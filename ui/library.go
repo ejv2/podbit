@@ -165,7 +165,6 @@ func (l *Library) StartPlaying() {
 	if l.menSel == 1 {
 		entry := l.men[1].GetSelection()
 		if data.IsURL(entry) {
-			l.StartDownload() // Presence of a url implies no cached download
 			sound.EnqueueByURL(entry)
 		} else {
 			sound.EnqueueByTitle(entry)
@@ -175,7 +174,6 @@ func (l *Library) StartPlaying() {
 	} else {
 		entry := l.men[0].GetSelection()
 
-		l.StartDownload()
 		sound.EnqueueByPodcast(entry)
 
 		go StatusMessage("Multiple episodes enqueued...")

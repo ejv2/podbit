@@ -5,8 +5,9 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/ethanv2/podbit/ui"
 	"github.com/ethanv2/podbit/data"
+	"github.com/ethanv2/podbit/sound"
+	"github.com/ethanv2/podbit/ui"
 
 	"github.com/juju/fslock"
 	"github.com/rthornton128/goncurses"
@@ -85,6 +86,9 @@ func main() {
 	}
 	defer data.SaveData()
 	go data.ReloadLoop()
+
+	go sound.Mainloop()
+	defer sound.Plr.Stop()
 
 	scr, err := goncurses.Init()
 	if err != nil {

@@ -17,6 +17,9 @@ package sound
 import (
 	"errors"
 	"os/exec"
+	"time"
+
+	"github.com/ethanv2/podbit/data"
 )
 
 // Player errors
@@ -24,15 +27,55 @@ var (
 	ErrorSpawnFailed = errors.New("Error: Failed to create player process")
 )
 
-const (
+// Useful player vars
+var (
 	// PlayerName is the name of the player program to spawn
 	PlayerName = "mpv"
 	// PlayerArgs are the standard arguments to use for the player
-	// "%s" will be replaced with the media file to play
-	PlayerArgs = "--no-video %s"
+	// The media file to play will be appended to this on each play
+	PlayerArgs = []string{"--no-video"}
+	// UpdateTime is the time between queue checks and supervision updates
+	UpdateTime = time.Second
 )
 
-// Plr represents the current player instance
-var Plr struct {
-	proc exec.Cmd
+// Player represents the current player instance
+type Player struct {
+	proc *exec.Cmd
+
+	Playing  bool
+	Finished bool
+}
+
+var Plr Player
+
+func (p *Player) Play(q *data.QueueItem) {
+	args := append(PlayerArgs, q.Path)
+	p.proc = exec.Command(PlayerName, args...)
+	p.Playing = true
+
+	p.proc.Start()
+}
+
+func (p *Player) Stop() {
+	p.proc.Process.Kill()
+	p.Playing = false
+}
+
+func Mainloop() {
+	for {
+		if !Plr.Playing {
+
+			for _, elem := range queue {
+				if elem.State != data.StatePending {
+					Plr.Play(queue[0])
+				} else {
+					data.Caching.Download(elem)
+					break
+				}
+			}
+		} else {
+		}
+
+		time.Sleep(UpdateTime)
+	}
 }

@@ -244,6 +244,7 @@ func (c *Cache) Download(item *QueueItem) (id int, err error) {
 
 		c.downloadsMutex.Lock()
 		c.Downloads[id].Completed = true
+		item.State = StateReady
 		if err != nil {
 			c.Downloads[id].Success = false
 		} else {

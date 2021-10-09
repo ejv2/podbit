@@ -23,6 +23,7 @@ var (
 	confdir string
 
 	redraw chan int = make(chan int)
+	exit   chan int = make(chan int)
 )
 
 func banner() {
@@ -101,5 +102,5 @@ func main() {
 	redraw <- ui.RD_ALL
 
 	// Initialisation is done; use this thread as the input loop
-	input.InputLoop()
+	input.InputLoop(exit)
 }

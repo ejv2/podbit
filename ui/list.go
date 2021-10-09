@@ -84,8 +84,10 @@ func (l *List) Input(c rune) {
 		l.MoveSelection(-1)
 	case 'l':
 		l.MoveSelection(1)
-	case 13: // Enter
+	case ' ':
 		l.StartDownload()
+	case 13: // Enter
+		//l.StartDownload()
 	}
 }
 

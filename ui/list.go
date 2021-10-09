@@ -2,8 +2,6 @@
 package ui
 
 import (
-	"fmt"
-
 	"github.com/ethanv2/podbit/data"
 	"github.com/ethanv2/podbit/ui/components"
 
@@ -59,7 +57,16 @@ func (l *List) renderEpisodes(x, y int) {
 
 	for _, elem := range data.Q.Items {
 		if data.DB.GetFriendlyName(elem.Url) == l.men[0].GetSelection() {
-			l.men[1].Items = append(l.men[1].Items, fmt.Sprintf("%s", elem.Url))
+			var text string
+			entry, ok := data.Caching.Query(elem.Path)
+			title := entry.Title
+			if !ok || title == "" {
+				text = elem.Url
+			} else {
+				text = title
+			}
+
+			l.men[1].Items = append(l.men[1].Items, text)
 		}
 	}
 

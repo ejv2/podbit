@@ -123,8 +123,6 @@ func (c *Cache) Open() error {
 	for _, elem := range files {
 		path := filepath.Join(c.dir, elem.Name())
 		c.loadFile(path, true)
-
-		fmt.Println(path)
 	}
 
 	return nil
@@ -233,10 +231,13 @@ func (c *Cache) Download(item *QueueItem) (id int, err error) {
 	return
 }
 
-func (c *Cache) Query(path string) (Episode, bool) {
+func (c *Cache) Query(path string) (ep Episode, ok bool) {
 	e, ok := c.episodes.Load(path)
+	if e != nil {
+		ep = e.(Episode)
+	}
 
-	return e.(Episode), ok
+	return
 }
 
 func (c *Cache) QueryAll(allowQueued bool) (e []Episode) {

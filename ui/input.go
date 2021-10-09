@@ -61,6 +61,8 @@ func InputLoop(exit chan int) {
 				} else {
 					ActivateMenu(PlayerMenu)
 				}
+			case '2':
+				ActivateMenu(QueueMenu)
 			case '4':
 				ActivateMenu(ListMenu)
 			case 'q':

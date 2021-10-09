@@ -157,24 +157,20 @@ func (l *List) StartPlaying() {
 
 	if l.menSel == 1 {
 		entry := l.men[1].GetSelection()
-		for _, elem := range data.Q.Items {
-			if data.IsUrl(entry) {
-				if entry == elem.Url {
-					l.StartDownload()
-					sound.Enqueue(elem)
-					break
-				}
-			} else {
-				title, ok := data.Caching.Query(elem.Path)
-				if ok && title.Title == entry {
-					sound.Enqueue(elem)
-					break
-				}
-			}
+		if data.IsUrl(entry) {
+			l.StartDownload() // Presence of a url implies no cached download
+			sound.EnqueueByUrl(entry)
+		} else {
+			sound.EnqueueByTitle(entry)
 		}
 
-		go StatusMessage("Enqueued episode to play")
+		go StatusMessage(fmt.Sprintf("Enqueued episode %q to play", entry))
 	} else {
+		entry := l.men[0].GetSelection()
+
 		l.StartDownload()
+		sound.EnqueueByPodcast(entry)
+
+		go StatusMessage("Multiple episodes enqueued...")
 	}
 }

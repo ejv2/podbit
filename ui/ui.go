@@ -37,6 +37,7 @@ var (
 var (
 	PlayerMenu    *Player    = new(Player)
 	RawPlayerMenu *RawPlayer = new(RawPlayer)
+	QueueMenu     *Queue     = new(Queue)
 	ListMenu      *List      = new(List)
 )
 

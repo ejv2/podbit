@@ -6,6 +6,10 @@ import (
 	"unicode/utf8"
 )
 
+var (
+	exitChan chan int
+)
+
 func getInput(out chan rune, errc chan error) {
 	var buf [4]byte
 	var err error
@@ -22,6 +26,10 @@ func getInput(out chan rune, errc chan error) {
 	out <- c
 }
 
+func Exit() {
+	exitChan <- 1
+}
+
 // Main input loop
 //
 // Recieves all key inputs serially, one character at a time
@@ -30,6 +38,8 @@ func getInput(out chan rune, errc chan error) {
 //
 // Any and all key inputs causes an immediate and full UI redraw
 func InputLoop(exit chan int) {
+	exitChan = exit
+
 	var c rune
 	var char chan rune = make(chan rune)
 	var err chan error = make(chan error, 1)

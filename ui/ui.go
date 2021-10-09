@@ -70,6 +70,10 @@ func UpdateDimensions(scr *goncurses.Window, shouldRedraw bool) {
 		w, h = 72, 90
 	}
 
+	if w < 10 || h < 5 {
+		Exit()
+	}
+
 	goncurses.ResizeTerm(h, w)
 
 	if shouldRedraw {

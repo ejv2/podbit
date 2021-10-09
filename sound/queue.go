@@ -5,11 +5,11 @@ import (
 )
 
 // Singleton state
-var queue []data.QueueItem
+var queue []*data.QueueItem
 
 // Enqueue is the low-level enqueue routine
 // Enqueues a raw QueueItem for playback
-func Enqueue(item data.QueueItem) {
+func Enqueue(item *data.QueueItem) {
 	queue = append(queue, item)
 }
 
@@ -17,9 +17,9 @@ func Enqueue(item data.QueueItem) {
 // Remember to download before playing!
 // If you know episode is downloaded, use EnqueueByTitle - it's faster
 func EnqueueByURL(url string) {
-	for _, elem := range data.Q.Items {
+	for i, elem := range data.Q.Items {
 		if url == elem.URL {
-			Enqueue(elem)
+			Enqueue(&data.Q.Items[i])
 			return
 		}
 	}
@@ -30,10 +30,10 @@ func EnqueueByURL(url string) {
 //
 // The availability of a title implies presence in cache, so don't bother to download the episode
 func EnqueueByTitle(title string) {
-	for _, elem := range data.Q.Items {
+	for i, elem := range data.Q.Items {
 		ent, ok := data.Caching.Query(elem.Path)
 		if ok && ent.Title == title {
-			Enqueue(elem)
+			Enqueue(&data.Q.Items[i])
 			return
 		}
 	}
@@ -50,10 +50,10 @@ func EnqueueByTitle(title string) {
 func EnqueueByPodcast(ident string) {
 	comp := data.DB.GetFriendlyName(ident)
 
-	for _, elem := range data.Q.Items {
+	for i, elem := range data.Q.Items {
 		name := data.DB.GetFriendlyName(elem.URL)
 		if name == comp {
-			Enqueue(elem) // Do not return: we are queueing in bulk
+			Enqueue(&data.Q.Items[i]) // Do not return: we are queueing in bulk
 		}
 	}
 }
@@ -66,6 +66,6 @@ func ClearQueue() {
 // GetQueue returns the raw queue in QueueItem slice form
 // You should not edit the returned values, as this looses
 // all thread protection
-func GetQueue() []data.QueueItem {
+func GetQueue() []*data.QueueItem {
 	return queue
 }

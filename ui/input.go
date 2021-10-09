@@ -1,11 +1,9 @@
 // In charge of managing input and its associated thread
-package input
+package ui
 
 import (
 	"os"
 	"unicode/utf8"
-
-	"github.com/ethanv2/podbit/ui"
 )
 
 func getInput(out chan rune, errc chan error) {
@@ -48,20 +46,20 @@ func InputLoop(exit chan int) {
 			switch c {
 
 			case '1':
-				if ui.MenuActive(ui.PlayerMenu) {
-					ui.ActivateMenu(ui.RawPlayerMenu)
+				if MenuActive(PlayerMenu) {
+					ActivateMenu(RawPlayerMenu)
 				} else {
-					ui.ActivateMenu(ui.PlayerMenu)
+					ActivateMenu(PlayerMenu)
 				}
 			case '4':
-				ui.ActivateMenu(ui.ListMenu)
+				ActivateMenu(ListMenu)
 			case 'q':
 				return
 			default:
-				ui.PassKeystroke(c)
+				PassKeystroke(c)
 			}
 
-			ui.Redraw(ui.RD_ALL)
+			Redraw(RD_ALL)
 		case <-exit:
 			return
 		}

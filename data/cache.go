@@ -26,8 +26,9 @@ type Cache struct {
 
 	episodes sync.Map
 
-	downloadsMutex sync.RWMutex
+	downloadsMutex sync.Mutex // Protects the below two variables
 	Downloads      []Download
+	ongoing        int
 }
 
 type Episode struct {
@@ -149,6 +150,7 @@ func (c *Cache) Download(item *QueueItem) (id int, err error) {
 		Size:    size,
 		Started: time.Now(),
 	}
+	c.ongoing++
 	c.Downloads = append(c.Downloads, dl)
 
 	id = len(c.Downloads) - 1
@@ -163,14 +165,15 @@ func (c *Cache) Download(item *QueueItem) (id int, err error) {
 		for err == nil {
 			read, err = resp.Body.Read(buf)
 			f.WriteAt(buf, count)
-
 			count += int64(read)
 
-
-			runtime.Gosched() // Give the other threads a turn
+			if c.ongoing > 1 {
+				runtime.Gosched() // Give the other threads a turn
+			}
 		}
 
 		if err != io.EOF {
+			return
 		}
 
 		stop <- 1
@@ -184,8 +187,8 @@ func (c *Cache) Download(item *QueueItem) (id int, err error) {
 		}
 
 		c.Downloads[id].Episode.Entry.State = STATE_READY
-
 		c.episodes.Store(item.Path, newEp)
+		c.ongoing--
 
 		c.downloadsMutex.Unlock()
 

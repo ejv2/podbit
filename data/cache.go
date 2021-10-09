@@ -122,7 +122,9 @@ func (c *Cache) Open() error {
 
 	for _, elem := range files {
 		path := filepath.Join(c.dir, elem.Name())
-		c.loadFile(path, true)
+		if elem.Size() > 0 {
+			c.loadFile(path, true)
+		}
 	}
 
 	return nil

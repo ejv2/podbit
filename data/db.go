@@ -111,3 +111,13 @@ func (db *Database) GetFriendlyName(url string) string {
 
 	return url
 }
+
+func (db *Database) GetRegex(friendly string) string {
+	for _, elem := range db.podcasts {
+		if elem.FriendlyName == friendly {
+			return elem.RegexPattern
+		}
+	}
+
+	return ""
+}

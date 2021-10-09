@@ -2,7 +2,10 @@
 package ui
 
 import (
+	"fmt"
+
 	"github.com/ethanv2/podbit/data"
+	"github.com/ethanv2/podbit/sound"
 	"github.com/ethanv2/podbit/ui/components"
 
 	"github.com/rthornton128/goncurses"
@@ -93,8 +96,8 @@ func (l *List) Input(c rune) {
 		l.MoveSelection(1)
 	case ' ':
 		l.StartDownload()
-	case 13: // Enter
-		//l.StartDownload()
+	case 13:
+		l.StartPlaying() // Enter key
 	}
 }
 
@@ -120,20 +123,58 @@ func (l *List) StartDownload() {
 		return
 	}
 
-	if l.menSel == 0 {
-		targets := l.men[1].Items
-		for _, entry := range targets {
-			for i, elem := range data.Q.Items {
-				if elem.Url == entry {
-					go data.Caching.Download(&data.Q.Items[i])
-				}
+	targets := l.men[1].Items
+	if l.menSel == 1 {
+		for i, elem := range data.Q.Items {
+			if elem.Url == l.men[1].GetSelection() {
+				go data.Caching.Download(&data.Q.Items[i])
+				go StatusMessage(fmt.Sprintf("Download of %s started...", elem.Url))
+
+				return
 			}
 		}
 	} else {
-		for i, elem := range data.Q.Items {
-			if elem.Url == l.men[l.menSel].GetSelection() {
-				go data.Caching.Download(&data.Q.Items[i])
+		for _, elem := range targets {
+			if data.IsUrl(elem) {
+				for i, q := range data.Q.Items {
+					if q.Url == elem {
+						go data.Caching.Download(&data.Q.Items[i])
+					}
+				}
 			}
 		}
+
+		go StatusMessage("Download of multiple episodes started...")
+
+	}
+
+}
+
+func (l *List) StartPlaying() {
+	if len(l.men[0].Items) < 1 || len(l.men[1].Items) < 1 {
+		return
+	}
+
+	if l.menSel == 1 {
+		entry := l.men[1].GetSelection()
+		for _, elem := range data.Q.Items {
+			if data.IsUrl(entry) {
+				if entry == elem.Url {
+					l.StartDownload()
+					sound.Enqueue(elem)
+					break
+				}
+			} else {
+				title, ok := data.Caching.Query(elem.Path)
+				if ok && title.Title == entry {
+					sound.Enqueue(elem)
+					break
+				}
+			}
+		}
+
+		go StatusMessage("Enqueued episode to play")
+	} else {
+		l.StartDownload()
 	}
 }

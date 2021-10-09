@@ -2,6 +2,7 @@ package data
 
 import (
 	"fmt"
+	"net/url"
 	"time"
 )
 
@@ -11,8 +12,8 @@ const (
 
 // Dependent data structures
 var (
-	Q Queue
-	DB Database
+	Q       Queue
+	DB      Database
 	Caching Cache
 )
 
@@ -63,4 +64,10 @@ func ReloadLoop() {
 		ReloadData()
 		time.Sleep(RELOAD_INTERVAL)
 	}
+}
+
+// Returns true is a string is a valid HTTP(s) URL
+func IsUrl(check string) bool {
+	u, err := url.Parse(check)
+	return err == nil && u.Scheme != "" && u.Host != ""
 }

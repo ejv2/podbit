@@ -6,29 +6,33 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
 	"regexp"
+	"strings"
 )
 
 const (
-	DB_BASENAME = "podbit"
-	DB_FILENAME = "db"
+	// DatabaseDirname is the directory name in which the database will be stored
+	DatabaseDirname = "podbit"
+
+	// DatabaseFilename is the file name of the database on disk
+	DatabaseFilename = "db"
 )
 
 // Error values
 var (
-	DatabaseIOFailed    error  = errors.New("Error: IO error while reading from database file")
-	DatabaseSyntaxError string = "Error: Malformed database: Syntax Error on Line %d"
+	ErrorDatabaseIOFailed error  = errors.New("Error: IO error while reading from database file")
+	ErrorDatabaseSyntax   string = "Error: Malformed database: Syntax Error on Line %d"
 )
 
-// Human-provided podcast info
+// Podcast is the human-provided podcast info
 type Podcast struct {
 	RegexPattern string
 	FriendlyName string
 }
 
+// Database aggregates all podcast data from the database
 type Database struct {
-	path string
+	path     string
 	podcasts []Podcast
 }
 
@@ -49,7 +53,7 @@ func initDatabase(db *Database) error {
 			var p Podcast
 
 			if scanner.Err() != nil {
-				return DatabaseIOFailed
+				return ErrorDatabaseIOFailed
 			}
 
 			elem := scanner.Text()
@@ -57,7 +61,7 @@ func initDatabase(db *Database) error {
 			num := len(fields)
 
 			if num < 2 {
-				return fmt.Errorf(DatabaseSyntaxError, i)
+				return fmt.Errorf(ErrorDatabaseSyntax, i)
 			}
 
 			p.RegexPattern = fields[0]
@@ -75,9 +79,11 @@ func initDatabase(db *Database) error {
 	return nil
 }
 
+// Open opens and parses the database
+// Returned errors are usually fatal to the application
 func (db *Database) Open() error {
 	data := os.Getenv("XDG_DATA_HOME")
-	db.path = filepath.Join(data, DB_BASENAME, DB_FILENAME)
+	db.path = filepath.Join(data, DatabaseDirname, DatabaseFilename)
 
 	// Ensure the database exists and is initialised
 	err := initDatabase(db)
@@ -88,10 +94,13 @@ func (db *Database) Open() error {
 	return nil
 }
 
+// Save saves the database to disk
+// Errors are ignored, as save operations are usually done during application
+// use and are temporary (or nothing can be done)
 func (db *Database) Save() {
 	file, err := os.OpenFile(db.path, os.O_WRONLY|os.O_TRUNC, os.ModePerm)
 	if err != nil {
-		fmt.Printf("WARNING: failed to write database: %s\n", DatabaseIOFailed)
+		fmt.Printf("WARNING: failed to write database: %s\n", ErrorDatabaseIOFailed)
 	}
 
 	for _, elem := range db.podcasts {
@@ -101,6 +110,8 @@ func (db *Database) Save() {
 	file.Close()
 }
 
+// GetFriendlyName returns the user-configured friendly name for a
+// specified URL. If one cannot be found, the url is returned.
 func (db *Database) GetFriendlyName(url string) string {
 	for _, elem := range db.podcasts {
 		matched, _ := regexp.MatchString(elem.RegexPattern, url)
@@ -112,6 +123,8 @@ func (db *Database) GetFriendlyName(url string) string {
 	return url
 }
 
+// GetRegex returns the registered regex for a specified friendly name - as
+// returned by GetFriendlyName.
 func (db *Database) GetRegex(friendly string) string {
 	for _, elem := range db.podcasts {
 		if elem.FriendlyName == friendly {

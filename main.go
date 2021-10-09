@@ -98,7 +98,7 @@ func main() {
 	go ui.RenderLoop()
 
 	// Initial UI draw
-	redraw <- ui.RD_ALL
+	redraw <- ui.RedrawAll
 
 	// Initialisation is done; use this thread as the input loop
 	ui.InputLoop(exit)

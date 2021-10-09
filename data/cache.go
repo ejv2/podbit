@@ -20,10 +20,15 @@ import (
 
 // Possible cache errors
 var (
-	CacheIOError        error  = errors.New("Error: Failed to create cache entry")
-	CacheDownloadFailed string = "Error: Failed to download from url %s"
+	ErrorIO             error  = errors.New("Error: Failed to create cache entry")
+	ErrorDownloadFailed string = "Error: Failed to download from url %s"
 )
 
+// Cache is the current state of the on-disk cache and associated
+// operations.
+//
+// This structure *is* thread safe, but ONLY is used with the
+// correct methods. Use with care!
 type Cache struct {
 	dir string
 
@@ -34,6 +39,8 @@ type Cache struct {
 	ongoing        int
 }
 
+// Episode represents the data extracted from a single cached episode
+// media entry.
 type Episode struct {
 	Queued bool
 
@@ -42,6 +49,23 @@ type Episode struct {
 	Host  string
 }
 
+// Download represents the statistics of a specific ongoing download.
+// Once the associated download is complete, the watcher goroutine
+// terminates.
+//
+// You should treat this struct as read only - including the contained
+// file handle, despite write permissions being granted.
+//
+// Contained fields have no guarantees of thread safety: this struct is
+// merely an approximation and a convenience.
+//
+// Path is the absolute path of the destination
+// File is the current live handle of the download file. DO NOT TOUCH!
+// Size is the size of the download to be completed
+// Done is the size of the download which *has* completed
+// Started is the timestamp of the download start
+// Completed will be true when the nanny goroutine terminates
+// Success will be true if the download completed with no errors
 type Download struct {
 	Path string
 	File *os.File
@@ -114,7 +138,9 @@ func (c *Cache) guessDir() string {
 	return ret
 }
 
-// Open and initialise the cache
+// Open opens and initialises the cache
+// Should be called once and once only - further modifications
+// and cache mutations happen exclusively through other methods
 func (c *Cache) Open() error {
 	home, _ := os.UserHomeDir()
 	c.dir = strings.ReplaceAll(c.guessDir(), "~", home)
@@ -155,24 +181,27 @@ func (c *Cache) loadFile(path string, startup bool) {
 	c.episodes.Store(path, ep)
 }
 
-// Start a download and return its ID in the downloads table
+// Download Starts a download and return its ID in the downloads table
 // This can be used to retrieve information about said download
 //
-// WARNING: DO NOT modify this table without taking out the mutex
-// This code is NOT THREAD SAFE witout this mutex being used
+// WARNING: DO NOT modify this table without taking out the mutex!
+// This code is NOT THREAD SAFE witout this mutex being used. In most
+// situations, use the entry as a read-only reference *only*.
 //
-// Returns as soon as the download has been initialised
-// Does not block until completion
+// Returns as soon as the download has been initialised - which could be
+// significant. We recommend calling this function in a goroutine.
+// Does not block until completion, but spawns two goroutines to
+// complete the work as efficiently as possible.
 func (c *Cache) Download(item *QueueItem) (id int, err error) {
 
 	f, err := os.Create(item.Path)
 	if err != nil {
-		return 0, CacheIOError
+		return 0, ErrorIO
 	}
 
-	resp, err := http.Get(item.Url)
+	resp, err := http.Get(item.URL)
 	if err != nil || resp.StatusCode != http.StatusOK {
-		return 0, fmt.Errorf(CacheDownloadFailed, item.Url)
+		return 0, fmt.Errorf(ErrorDownloadFailed, item.URL)
 	}
 
 	size, _ := strconv.ParseInt(resp.Header.Get("Content-Length"), 10, 64)
@@ -233,6 +262,7 @@ func (c *Cache) Download(item *QueueItem) (id int, err error) {
 	return
 }
 
+// Query returns cached data about an episode on disk
 func (c *Cache) Query(path string) (ep Episode, ok bool) {
 	e, ok := c.episodes.Load(path)
 	if e != nil {
@@ -242,6 +272,7 @@ func (c *Cache) Query(path string) (ep Episode, ok bool) {
 	return
 }
 
+// QueryAll returns all known data about the on-disk cache
 func (c *Cache) QueryAll(allowQueued bool) (e []Episode) {
 	c.episodes.Range(func(key interface{}, value interface{}) bool {
 		ep := value.(Episode)

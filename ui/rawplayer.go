@@ -1,6 +1,9 @@
-// Shows the raw output from the spawned player and allows raw inputs to it
 package ui
 
+// RawPlayer represents a RawPlayer menu component
+//
+// The RawPlayer allows the user to see the raw output of the
+// active player and send raw keystrokes to it
 type RawPlayer struct {
 	test string
 }

@@ -8,7 +8,8 @@ import (
 )
 
 const (
-	MSG_TIME time.Duration = 2 * time.Second
+	// MessageTime is the time a message will show for
+	MessageTime time.Duration = 2 * time.Second
 )
 
 var (
@@ -16,7 +17,7 @@ var (
 	statusMessage string
 )
 
-// Renders the statusbar tray at the bottom of the screen
+// RenderTray renders the statusbar tray at the bottom of the screen
 // Tray takes up two vertical cells and the entirety of the width
 // The top cell is a horizontal line denoting a player status bar
 // The bottom cell is the status text
@@ -30,14 +31,16 @@ func RenderTray(scr *goncurses.Window, w, h int) {
 	}
 }
 
-// Send a status message
+// StatusMessage sends a status message
+//
 // Blocks until the message has completed displaying
 // Will wait for the previous user to unlock the message bar first
+// Every message can be guaranteed MSG_TIME display time
 func StatusMessage(msg string) {
 	msgMutex.Lock()
 
 	statusMessage = msg
-	time.Sleep(MSG_TIME)
+	time.Sleep(MessageTime)
 	statusMessage = ""
 
 	msgMutex.Unlock()

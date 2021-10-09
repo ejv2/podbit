@@ -1,4 +1,3 @@
-// Lists your configured/detected podcasts and available episodes
 package ui
 
 import (
@@ -11,6 +10,10 @@ import (
 	"github.com/rthornton128/goncurses"
 )
 
+// List represents the list menu type and state
+//
+// List displays all detected and configured podcasts, along
+// with associated episodes sorted into said podcasts
 type List struct {
 	men [2]components.Menu
 
@@ -32,7 +35,7 @@ func (l *List) renderPodcasts(x, y int) {
 
 	seen := make(map[string]bool)
 	for i := range data.Q.Items {
-		name := data.DB.GetFriendlyName(data.Q.Items[i].Url)
+		name := data.DB.GetFriendlyName(data.Q.Items[i].URL)
 
 		if !seen[name] {
 			l.men[0].Items = append(l.men[0].Items, name)
@@ -59,12 +62,12 @@ func (l *List) renderEpisodes(x, y int) {
 	l.men[1].Items = l.men[1].Items[:0]
 
 	for _, elem := range data.Q.Items {
-		if data.DB.GetFriendlyName(elem.Url) == l.men[0].GetSelection() {
+		if data.DB.GetFriendlyName(elem.URL) == l.men[0].GetSelection() {
 			var text string
 			entry, ok := data.Caching.Query(elem.Path)
 			title := entry.Title
 			if !ok || title == "" {
-				text = elem.Url
+				text = elem.URL
 			} else {
 				text = title
 			}
@@ -118,6 +121,7 @@ func (l *List) MoveSelection(direction int) {
 	l.ChangeSelection(off)
 }
 
+// StartDownload downloads the currently focused library entry
 func (l *List) StartDownload() {
 	if len(l.men[0].Items) < 1 || len(l.men[1].Items) < 1 {
 		return
@@ -126,18 +130,18 @@ func (l *List) StartDownload() {
 	targets := l.men[1].Items
 	if l.menSel == 1 {
 		for i, elem := range data.Q.Items {
-			if elem.Url == l.men[1].GetSelection() {
+			if elem.URL == l.men[1].GetSelection() {
 				go data.Caching.Download(&data.Q.Items[i])
-				go StatusMessage(fmt.Sprintf("Download of %s started...", elem.Url))
+				go StatusMessage(fmt.Sprintf("Download of %s started...", elem.URL))
 
 				return
 			}
 		}
 	} else {
 		for _, elem := range targets {
-			if data.IsUrl(elem) {
+			if data.IsURL(elem) {
 				for i, q := range data.Q.Items {
-					if q.Url == elem {
+					if q.URL == elem {
 						go data.Caching.Download(&data.Q.Items[i])
 					}
 				}
@@ -150,6 +154,9 @@ func (l *List) StartDownload() {
 
 }
 
+// StartPlaying begins playing the currently focused element
+// If the current focus requires downloading (and enough information
+// is known to oblige) it will first be downloaded
 func (l *List) StartPlaying() {
 	if len(l.men[0].Items) < 1 || len(l.men[1].Items) < 1 {
 		return
@@ -157,9 +164,9 @@ func (l *List) StartPlaying() {
 
 	if l.menSel == 1 {
 		entry := l.men[1].GetSelection()
-		if data.IsUrl(entry) {
+		if data.IsURL(entry) {
 			l.StartDownload() // Presence of a url implies no cached download
-			sound.EnqueueByUrl(entry)
+			sound.EnqueueByURL(entry)
 		} else {
 			sound.EnqueueByTitle(entry)
 		}

@@ -1,6 +1,11 @@
-// Full screen player UI
 package ui
 
+// Player is the full screen player component
+//
+// Player displays the currently playing episode, the next up
+// episode, progress through the episode etc.
+//
+// This is mostly for user convenience and visual appeal
 type Player struct {
 	test string
 }

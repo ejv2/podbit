@@ -1,4 +1,3 @@
-// In charge of managing input and its associated thread
 package ui
 
 import (
@@ -26,11 +25,13 @@ func getInput(out chan rune, errc chan error) {
 	out <- c
 }
 
+// Exit requests that the input handler shuts down and gracefully
+// exits the program via a return to the main function.
 func Exit() {
 	exitChan <- 1
 }
 
-// Main input loop
+// InputLoop - main UI input handler
 //
 // Receives all key inputs serially, one character at a time
 // If there is no global keybinding for this key, we pass it
@@ -71,7 +72,7 @@ func InputLoop(exit chan int) {
 				PassKeystroke(c)
 			}
 
-			Redraw(RD_ALL)
+			Redraw(RedrawAll)
 		case <-exit:
 			return
 		}

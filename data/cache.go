@@ -5,14 +5,17 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"runtime"
+	"io/ioutil"
 	"net/http"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strconv"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/dhowden/tag"
 )
 
 // Possible cache errors
@@ -32,14 +35,16 @@ type Cache struct {
 }
 
 type Episode struct {
-	Entry *QueueItem
+	Queued bool
 
 	Title string
+	Date  int
+	Host  string
 }
 
 type Download struct {
-	Episode Episode
-	File    *os.File
+	Path string
+	File *os.File
 
 	Percentage float64
 
@@ -111,9 +116,43 @@ func (c *Cache) guessDir() string {
 
 // Open and initialise the cache
 func (c *Cache) Open() error {
-	c.dir = c.guessDir()
+	home, _ := os.UserHomeDir()
+	c.dir = strings.ReplaceAll(c.guessDir(), "~", home)
+	files, _ := ioutil.ReadDir(c.dir)
+
+	for _, elem := range files {
+		path := filepath.Join(c.dir, elem.Name())
+		c.loadFile(path, true)
+
+		fmt.Println(path)
+	}
 
 	return nil
+}
+
+func (c *Cache) loadFile(path string, startup bool) {
+	file, err := os.Open(path)
+	if err != nil {
+		return
+	}
+	data, err := tag.ReadFrom(file)
+
+	artist, albumArtist := data.Artist(), data.AlbumArtist()
+	var host string
+	if artist == "" {
+		host = albumArtist
+	} else {
+		host = artist
+	}
+
+	var ep Episode = Episode{
+		Queued: !startup,
+		Title:  data.Title(),
+		Date:   data.Year(),
+		Host:   host,
+	}
+
+	c.episodes.Store(path, ep)
 }
 
 // Start a download and return its ID in the downloads table
@@ -137,15 +176,11 @@ func (c *Cache) Download(item *QueueItem) (id int, err error) {
 	}
 
 	size, _ := strconv.ParseInt(resp.Header.Get("Content-Length"), 10, 64)
-	newEp := Episode{
-		Entry: item,
-	}
-
 	stop := make(chan int)
 
 	c.downloadsMutex.Lock()
 	var dl Download = Download{
-		Episode: newEp,
+		Path:    item.Path,
 		File:    f,
 		Size:    size,
 		Started: time.Now(),
@@ -161,7 +196,7 @@ func (c *Cache) Download(item *QueueItem) (id int, err error) {
 		var err error
 		var count int64
 		var read int
-		var buf []byte = make([]byte, 32 * 1024) // 32kb
+		var buf []byte = make([]byte, 32*1024) // 32kb
 		for err == nil {
 			read, err = resp.Body.Read(buf)
 			f.WriteAt(buf, count)
@@ -186,8 +221,7 @@ func (c *Cache) Download(item *QueueItem) (id int, err error) {
 			c.Downloads[id].Success = true
 		}
 
-		c.Downloads[id].Episode.Entry.State = STATE_READY
-		c.episodes.Store(item.Path, newEp)
+		c.loadFile(c.Downloads[id].Path, false)
 		c.ongoing--
 
 		c.downloadsMutex.Unlock()
@@ -195,6 +229,25 @@ func (c *Cache) Download(item *QueueItem) (id int, err error) {
 		resp.Body.Close()
 		f.Close()
 	}()
+
+	return
+}
+
+func (c *Cache) Query(path string) (Episode, bool) {
+	e, ok := c.episodes.Load(path)
+
+	return e.(Episode), ok
+}
+
+func (c *Cache) QueryAll(allowQueued bool) (e []Episode) {
+	c.episodes.Range(func(key interface{}, value interface{}) bool {
+		ep := value.(Episode)
+		if (!allowQueued && !ep.Queued) || allowQueued {
+			e = append(e, ep)
+		}
+
+		return true
+	})
 
 	return
 }

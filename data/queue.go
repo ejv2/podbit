@@ -66,7 +66,8 @@ func (q *Queue) parseField(fields []string, num int) {
 	item.URL = fields[0]
 	item.Path = strings.ReplaceAll(fields[1], "\"", "")
 
-	if num == 2 {
+	f, err := os.Open(item.Path)
+	if num == 2 || (err != nil && os.IsNotExist(err)) {
 		item.State = StatePending
 	} else {
 		switch fields[2] {
@@ -77,10 +78,11 @@ func (q *Queue) parseField(fields []string, num int) {
 		case "finished":
 			item.State = StateFinished
 		default:
-			item.State = StatePending
+			item.State = StateReady
 		}
 	}
 
+	f.Close()
 	q.Items = append(q.Items, item)
 }
 

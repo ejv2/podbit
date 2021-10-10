@@ -286,3 +286,16 @@ func (c *Cache) QueryAll(allowQueued bool) (e []Episode) {
 
 	return
 }
+
+// EntryExists searches the cache to determine if the entry exists
+// Path should be an absolute path
+// If path lies outside the cache dir, false is returned
+func (c *Cache) EntryExists(path string) bool {
+	f, err := os.Open(path)
+	if err != nil && os.IsNotExist(err) {
+		return false
+	}
+
+	f.Close()
+	return true
+}

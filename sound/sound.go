@@ -50,7 +50,7 @@ type Player struct {
 	times  io.ReadCloser
 
 	Waiting  bool
-	download data.Download
+	download *data.Download
 
 	Playing  bool
 	Finished bool
@@ -130,13 +130,13 @@ func Mainloop() {
 		if !Plr.Playing && !Plr.Waiting {
 
 			for _, elem := range queue {
-				if elem.State != data.StatePending {
+				if elem.State != data.StatePending && data.Caching.EntryExists(elem.Path) {
 					Plr.Play(PopQueue())
 				} else {
 					Plr.Waiting = true
 
 					id, _ := data.Caching.Download(elem)
-					Plr.download = data.Caching.Downloads[id]
+					Plr.download = &data.Caching.Downloads[id]
 					for !Plr.download.Completed {}
 
 					Plr.Waiting = false

@@ -3,6 +3,8 @@ package ui
 import (
 	"os"
 	"unicode/utf8"
+
+	"github.com/ethanv2/podbit/sound"
 )
 
 var (
@@ -66,6 +68,8 @@ func InputLoop(exit chan int) {
 				ActivateMenu(QueueMenu)
 			case '4':
 				ActivateMenu(LibraryMenu)
+			case 'p':
+				sound.Plr.Toggle()
 			case 'q':
 				return
 			default:

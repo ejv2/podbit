@@ -87,8 +87,21 @@ func main() {
 	defer data.SaveData()
 	go data.ReloadLoop()
 
+	fmt.Print("Initialising sound system...")
+	sound.Plr, err = sound.NewPlayer()
+	if err != nil {
+		fmt.Printf("\nError: Failed to initialise sound system: %s\n", err.Error())
+		os.Exit(1)
+	}
+
+	var cerr error = sound.ConnectPlayer(&sound.Plr)
+	for cerr != nil {
+		cerr = sound.ConnectPlayer(&sound.Plr)
+	}
+	fmt.Println("done")
+
 	go sound.Mainloop()
-	defer sound.Plr.Stop()
+	defer sound.Plr.Destroy()
 
 	scr, err := goncurses.Init()
 	if err != nil {

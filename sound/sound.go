@@ -15,25 +15,26 @@
 package sound
 
 import (
-	"errors"
+	"fmt"
+	"io"
 	"os/exec"
 	"time"
 
 	"github.com/ethanv2/podbit/data"
-)
 
-// Player errors
-var (
-	ErrorSpawnFailed = errors.New("Error: Failed to create player process")
+	"github.com/blang/mpv"
 )
 
 // Useful player vars
 var (
 	// PlayerName is the name of the player program to spawn
 	PlayerName = "mpv"
+	// The path to the RPC endpoint
+	PlayerRPC = "/tmp/podbit-mpv"
 	// PlayerArgs are the standard arguments to use for the player
-	// The media file to play will be appended to this on each play
-	PlayerArgs = []string{"--no-video"}
+	// These are not the final configs of the player, but just used
+	// to idle mpv ready to recieve instructions
+	PlayerArgs = []string{"--no-video", "--no-config", "--idle", "--input-ipc-server=" + PlayerRPC}
 	// UpdateTime is the time between queue checks and supervision updates
 	UpdateTime = time.Second
 )
@@ -42,23 +43,69 @@ var (
 type Player struct {
 	proc *exec.Cmd
 
+	ipcc *mpv.IPCClient
+	ctrl *mpv.Client
+
+	output io.ReadCloser
+	times  io.ReadCloser
+
 	Playing  bool
 	Finished bool
 }
 
 var Plr Player
 
-func (p *Player) Play(q *data.QueueItem) {
-	args := append(PlayerArgs, q.Path)
-	p.proc = exec.Command(PlayerName, args...)
-	p.Playing = true
-
+func NewPlayer() (p Player, err error) {
+	p.proc = exec.Command(PlayerName, PlayerArgs...)
+	p.output, err = p.proc.StdoutPipe()
+	p.times, err = p.proc.StderrPipe()
 	p.proc.Start()
+
+	return
+}
+
+// ConnectPlayer attempts to connect to the RPC endpoint
+// Sadly, this is needed because of an exceptionally bad
+// design choice in the mpv library forcing me to create
+// this bad workaround. :(
+func ConnectPlayer(p *Player) (err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			err = fmt.Errorf("Error: Player connection")
+		}
+	}()
+
+	p.ipcc = mpv.NewIPCClient(PlayerRPC)
+	p.ctrl = mpv.NewClient(p.ipcc)
+
+	return
+}
+
+func (p *Player) Play(q *data.QueueItem) {
+	if q.State != data.StatePending {
+		p.ctrl.Loadfile(q.Path, mpv.LoadFileModeReplace)
+		p.Playing = true
+	}
 }
 
 func (p *Player) Stop() {
+	p.ctrl.SetPause(true)
+	p.Playing = false
+}
+
+func (p *Player) Destroy() {
 	p.proc.Process.Kill()
 	p.Playing = false
+}
+
+func (p *Player) Pause() {
+	// Leave playing set to true so we know not to play another episode
+	p.ctrl.SetPause(true)
+}
+
+func (p *Player) Toggle() {
+	paused, _ := p.ctrl.Pause()
+	p.ctrl.SetPause(!paused)
 }
 
 func Mainloop() {
@@ -67,7 +114,7 @@ func Mainloop() {
 
 			for _, elem := range queue {
 				if elem.State != data.StatePending {
-					Plr.Play(queue[0])
+					Plr.Play(elem)
 				} else {
 					data.Caching.Download(elem)
 					break

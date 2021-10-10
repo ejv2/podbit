@@ -203,7 +203,8 @@ func Mainloop() {
 				}
 
 				Plr.Waiting = false
-				break
+				head--
+				continue
 			}
 		}
 

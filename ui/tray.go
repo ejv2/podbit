@@ -49,7 +49,14 @@ func RenderTray(scr *goncurses.Window, w, h int) {
 
 		if sound.Plr.Playing {
 			// TODO: Show now playing name here
-			scr.MovePrintf(h-1, 0, "Playing: %s")
+			var status string
+			if sound.Plr.Paused {
+				status = "Paused"
+			} else {
+				status = "Playing"
+			}
+
+			scr.MovePrintf(h-1, 0, "%s: %s - %s", status, sound.Plr.NowPlaying, sound.Plr.NowPodcast)
 			scr.MovePrintf(h-1, w-len(code), "%s", code)
 		} else {
 			scr.MovePrint(h-1, 0, "Not playing")

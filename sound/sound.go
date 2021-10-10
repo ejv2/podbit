@@ -54,6 +54,9 @@ type Player struct {
 
 	Playing  bool
 	Paused bool
+
+	NowPlaying string
+	NowPodcast string
 }
 
 var Plr Player
@@ -86,6 +89,14 @@ func ConnectPlayer(p *Player) (err error) {
 
 func (p *Player) Play(q *data.QueueItem) {
 	if q.State != data.StatePending {
+		now, ok := data.Caching.Query(q.Path)
+		if !ok {
+			p.NowPlaying = ""
+			p.NowPodcast = ""
+		}
+		p.NowPlaying = now.Title
+		p.NowPodcast = data.DB.GetFriendlyName(q.URL)
+
 		p.ctrl.Loadfile(q.Path, mpv.LoadFileModeReplace)
 		p.Playing = true
 	}

@@ -34,7 +34,7 @@ var (
 	// PlayerArgs are the standard arguments to use for the player
 	// These are not the final configs of the player, but just used
 	// to idle mpv ready to recieve instructions
-	PlayerArgs = []string{"--no-video", "--no-config", "--idle", "--input-ipc-server=" + PlayerRPC}
+	PlayerArgs = []string{"--no-video", "--idle", "--input-ipc-server=" + PlayerRPC}
 	// UpdateTime is the time between queue checks and supervision updates
 	UpdateTime = time.Second
 )

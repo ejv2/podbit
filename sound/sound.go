@@ -103,7 +103,7 @@ func (p *Player) Play(q *data.QueueItem) {
 }
 
 func (p *Player) Stop() {
-	p.Pause()
+	p.ctrl.SetPause(true)
 	p.ctrl.Seek(0, mpv.SeekModeAbsolute)
 	p.Playing = false
 }
@@ -114,12 +114,20 @@ func (p *Player) Destroy() {
 }
 
 func (p *Player) Pause() {
+	if !p.Playing {
+		return
+	}
+
 	// Leave playing set to true so we know not to play another episode
 	p.Paused = true
 	p.ctrl.SetPause(true)
 }
 
 func (p *Player) Unpause() {
+	if !p.Playing {
+		return
+	}
+
 	// Leave playing set to true so we know not to play another episode
 	p.Paused = false
 	p.ctrl.SetPause(false)
@@ -150,7 +158,7 @@ func Mainloop() {
 
 			for _, elem := range queue {
 				if elem.State != data.StatePending && data.Caching.EntryExists(elem.Path) {
-					Plr.Play(PopQueue())
+					Plr.Play(GetQueueHead())
 				} else {
 					Plr.Waiting = true
 

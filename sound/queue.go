@@ -5,6 +5,7 @@ import (
 )
 
 // Singleton state
+var head int
 var queue []*data.QueueItem
 
 // Enqueue is the low-level enqueue routine
@@ -70,15 +71,15 @@ func GetQueue() []*data.QueueItem {
 	return queue
 }
 
-// PopQueue returns the head of the queue, popping it off the
-// top of the data
-func PopQueue() *data.QueueItem {
+// GetQueueHead returns the head of the queue, increasing
+// the head beyond the end (if present)
+func GetQueueHead() *data.QueueItem {
 	if len(queue) > 0 {
+		if head+1 < len(queue)-1 {
+			head++
+		}
 
-		ent := queue[0]
-		queue = queue[1:]
-
-		return ent
+		return queue[head]
 	}
 
 	return nil

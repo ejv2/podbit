@@ -80,3 +80,15 @@ func IsURL(check string) bool {
 	u, err := url.Parse(check)
 	return err == nil && u.Scheme != "" && u.Host != ""
 }
+
+// FormatTime formats a time measured in seconds
+func FormatTime(seconds float64) string {
+	round := int(seconds)
+
+	s := round%60
+	m := round/60
+	h := m / 60
+	m = m%60
+
+	return fmt.Sprintf("%.2d:%.2d:%.2d", h, m, s)
+}

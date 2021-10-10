@@ -108,13 +108,27 @@ func (p *Player) Toggle() {
 	p.ctrl.SetPause(!paused)
 }
 
+// GetTimings returns the current time and duration
+// of the ongoing player. Returns zero if we are
+// not playing currently
+func (p *Player) GetTimings() (float64, float64) {
+	if !p.Playing {
+		return 0, 0
+	}
+
+	pos, _ := p.ctrl.Position()
+	dur, _ := p.ctrl.Duration()
+
+	return pos, dur
+}
+
 func Mainloop() {
 	for {
 		if !Plr.Playing {
 
 			for _, elem := range queue {
 				if elem.State != data.StatePending {
-					Plr.Play(elem)
+					Plr.Play(PopQueue())
 				} else {
 					data.Caching.Download(elem)
 					break

@@ -69,3 +69,17 @@ func ClearQueue() {
 func GetQueue() []*data.QueueItem {
 	return queue
 }
+
+// PopQueue returns the head of the queue, popping it off the
+// top of the data
+func PopQueue() *data.QueueItem {
+	if len(queue) > 0 {
+
+		ent := queue[0]
+		queue = queue[1:]
+
+		return ent
+	}
+
+	return nil
+}

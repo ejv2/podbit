@@ -148,9 +148,7 @@ func (c *Cache) Open() error {
 
 	for _, elem := range files {
 		path := filepath.Join(c.dir, elem.Name())
-		if elem.Size() > 0 {
-			c.loadFile(path, true)
-		}
+		c.loadFile(path, true)
 	}
 
 	return nil
@@ -161,6 +159,16 @@ func (c *Cache) loadFile(path string, startup bool) {
 	if err != nil {
 		return
 	}
+	defer file.Close()
+	defer func() {
+		// Prevent invalid media files from causing a panic
+		if p := recover(); p != nil {
+			fmt.Printf("\nInvalid media file %q in cache! Ignoring...\n", path)
+			return
+		}
+	}()
+
+
 	data, err := tag.ReadFrom(file)
 
 	artist, albumArtist := data.Artist(), data.AlbumArtist()

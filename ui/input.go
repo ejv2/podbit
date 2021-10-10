@@ -70,6 +70,8 @@ func InputLoop(exit chan int) {
 				ActivateMenu(LibraryMenu)
 			case 'p':
 				sound.Plr.Toggle()
+			case 's':
+				sound.Plr.Stop()
 			case 'q':
 				return
 			default:

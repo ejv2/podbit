@@ -114,7 +114,7 @@ func renderMenu() {
 	}
 
 	// Clear region
-	for i := 2; i < h - 2; i++ {
+	for i := 0; i < h - 2; i++ {
 		root.Move(i, 0)
 		root.ClearToEOL()
 	}

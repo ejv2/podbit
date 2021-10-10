@@ -72,15 +72,21 @@ func GetQueue() []*data.QueueItem {
 }
 
 // GetQueueHead returns the head of the queue, increasing
-// the head beyond the end (if present)
-func GetQueueHead() *data.QueueItem {
+// the head beyond the end (if present). The boolean returned
+// indicates if the player should stop - which occurs in the
+// case of the end of the queue or an empty queue
+func GetQueueHead() (*data.QueueItem, bool) {
 	if len(queue) > 0 {
-		if head+1 < len(queue)-1 {
-			head++
+		if head >= len(queue) {
+			head = 0
+			return nil, true
 		}
 
-		return queue[head]
+		i := queue[head]
+		head++
+
+		return i, false
 	}
 
-	return nil
+	return nil, true
 }

@@ -52,8 +52,8 @@ type Player struct {
 	Waiting  bool
 	download *data.Download
 
-	Playing  bool
-	Paused bool
+	Playing bool
+	Paused  bool
 
 	NowPlaying string
 	NowPodcast string
@@ -152,25 +152,46 @@ func (p *Player) GetTimings() (float64, float64) {
 	return pos, dur
 }
 
+// Wait for the current episode to complete
+func (p *Player) Wait() {
+	if !p.Playing {
+		return
+	}
+
+	// Wait for media to load?
+	var dur float64
+	for dur == 0 {
+		_, dur = p.GetTimings()
+	}
+
+	time.Sleep(time.Duration(dur+1) * time.Second)
+}
+
 func Mainloop() {
 	for {
-		if !Plr.Playing && !Plr.Waiting {
-
-			for _, elem := range queue {
-				if elem.State != data.StatePending && data.Caching.EntryExists(elem.Path) {
-					Plr.Play(GetQueueHead())
-				} else {
-					Plr.Waiting = true
-
-					id, _ := data.Caching.Download(elem)
-					Plr.download = &data.Caching.Downloads[id]
-					for !Plr.download.Completed {}
-
-					Plr.Waiting = false
-					break
-				}
+		if !Plr.Playing && !Plr.Waiting && len(queue) > 0 {
+			elem, stop := GetQueueHead()
+			if stop {
+				Plr.Stop()
+				continue
 			}
-		} else {
+
+			if elem.State != data.StatePending && data.Caching.EntryExists(elem.Path) {
+				Plr.Play(elem)
+				Plr.Wait()
+
+				Plr.Playing = false
+			} else {
+				Plr.Waiting = true
+
+				id, _ := data.Caching.Download(elem)
+				Plr.download = &data.Caching.Downloads[id]
+				for !Plr.download.Completed {
+				}
+
+				Plr.Waiting = false
+				break
+			}
 		}
 
 		time.Sleep(UpdateTime)

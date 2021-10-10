@@ -49,6 +49,9 @@ type Player struct {
 	output io.ReadCloser
 	times  io.ReadCloser
 
+	Waiting  bool
+	download data.Download
+
 	Playing  bool
 	Finished bool
 }
@@ -124,13 +127,19 @@ func (p *Player) GetTimings() (float64, float64) {
 
 func Mainloop() {
 	for {
-		if !Plr.Playing {
+		if !Plr.Playing && !Plr.Waiting {
 
 			for _, elem := range queue {
 				if elem.State != data.StatePending {
 					Plr.Play(PopQueue())
 				} else {
-					data.Caching.Download(elem)
+					Plr.Waiting = true
+
+					id, _ := data.Caching.Download(elem)
+					Plr.download = data.Caching.Downloads[id]
+					for !Plr.download.Completed {}
+
+					Plr.Waiting = false
 					break
 				}
 			}

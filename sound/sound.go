@@ -53,7 +53,7 @@ type Player struct {
 	download *data.Download
 
 	Playing  bool
-	Finished bool
+	Paused bool
 }
 
 var Plr Player
@@ -92,7 +92,8 @@ func (p *Player) Play(q *data.QueueItem) {
 }
 
 func (p *Player) Stop() {
-	p.ctrl.SetPause(true)
+	p.Pause()
+	p.ctrl.Seek(0, mpv.SeekModeAbsolute)
 	p.Playing = false
 }
 
@@ -103,7 +104,14 @@ func (p *Player) Destroy() {
 
 func (p *Player) Pause() {
 	// Leave playing set to true so we know not to play another episode
+	p.Paused = true
 	p.ctrl.SetPause(true)
+}
+
+func (p *Player) Unpause() {
+	// Leave playing set to true so we know not to play another episode
+	p.Paused = false
+	p.ctrl.SetPause(false)
 }
 
 func (p *Player) Toggle() {

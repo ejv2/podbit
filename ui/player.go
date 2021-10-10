@@ -1,5 +1,10 @@
 package ui
 
+import (
+	"github.com/ethanv2/podbit/sound"
+	"github.com/ethanv2/podbit/data"
+)
+
 // Player is the full screen player component
 //
 // Player displays the currently playing episode, the next up
@@ -15,7 +20,11 @@ func (l *Player) Name() string {
 }
 
 func (l *Player) Render(x, y int) {
-	root.MovePrint(y, x, "The player will be here")
+	pos, dur := sound.Plr.GetTimings()
+	p, d := data.FormatTime(pos), data.FormatTime(dur)
+
+	root.MovePrint(h-(h/3), 0, p)
+	root.MovePrint(h-(h/3), w-len(d), d)
 }
 
 func (l *Player) Input(c rune) {

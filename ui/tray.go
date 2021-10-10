@@ -1,8 +1,12 @@
 package ui
 
 import (
+	"fmt"
 	"sync"
 	"time"
+
+	"github.com/ethanv2/podbit/data"
+	"github.com/ethanv2/podbit/sound"
 
 	"github.com/rthornton128/goncurses"
 )
@@ -17,6 +21,18 @@ var (
 	statusMessage string
 )
 
+func trayWatcher() {
+	for {
+		time.Sleep(500 * time.Millisecond)
+
+		if MenuActive(PlayerMenu) {
+			Redraw(RedrawAll)
+		} else {
+			Redraw(RedrawTray)
+		}
+	}
+}
+
 // RenderTray renders the statusbar tray at the bottom of the screen
 // Tray takes up two vertical cells and the entirety of the width
 // The top cell is a horizontal line denoting a player status bar
@@ -27,7 +43,17 @@ func RenderTray(scr *goncurses.Window, w, h int) {
 	if statusMessage != "" {
 		scr.MovePrint(h-1, 0, statusMessage)
 	} else {
-		scr.MovePrint(h-1, 0, "Status text: Status1234")
+		pos, dur := sound.Plr.GetTimings()
+		p, d := data.FormatTime(pos), data.FormatTime(dur)
+		code := fmt.Sprintf("[%s/%s]", p, d)
+
+		if sound.Plr.Playing {
+			// TODO: Show now playing name here
+			scr.MovePrintf(h-1, 0, "Playing: %s")
+			scr.MovePrintf(h-1, w-len(code), "%s", code)
+		} else {
+			scr.MovePrint(h-1, 0, "Not playing")
+		}
 	}
 }
 

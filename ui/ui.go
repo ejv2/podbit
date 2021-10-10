@@ -80,6 +80,7 @@ func InitUI(scr *goncurses.Window, initialMenu Menu, r chan int) {
 	resizeChan := make(chan os.Signal, 1)
 	signal.Notify(resizeChan, syscall.SIGWINCH)
 	go watchResize(resizeChan, scr)
+	go trayWatcher()
 
 	UpdateDimensions(scr, false)
 }
@@ -112,6 +113,13 @@ func renderMenu() {
 		return
 	}
 
+	// Clear region
+	for i := 2; i < h - 2; i++ {
+		root.Move(i, 0)
+		root.ClearToEOL()
+	}
+	root.Move(0, 0)
+
 	// Title Text
 	root.Printf("%s", currentMenu.Name())
 	root.HLine(1, 0, goncurses.ACS_HLINE, w)
@@ -121,6 +129,11 @@ func renderMenu() {
 }
 
 func renderTray() {
+	for i := h - 2; i <= h; i++ {
+		root.Move(i, 0)
+		root.ClearToEOL()
+	}
+
 	RenderTray(root, w, h)
 }
 
@@ -160,7 +173,6 @@ func RenderLoop() {
 	for {
 		toRedraw := <-redraw
 
-		root.Clear()
 		switch toRedraw {
 		case RedrawAll:
 			renderMenu()

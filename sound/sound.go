@@ -84,7 +84,20 @@ func ConnectPlayer(p *Player) (err error) {
 	p.ipcc = mpv.NewIPCClient(PlayerRPC)
 	p.ctrl = mpv.NewClient(p.ipcc)
 
+
+	go nanny(p, p.ctrl)
+
 	return
+}
+
+// Look after our little baby mpv process to make sure
+// we have the right details
+func nanny(dat *Player, c *mpv.Client) {
+	for {
+		dat.Paused, _ = c.Pause()
+
+		time.Sleep(UpdateTime)
+	}
 }
 
 func (p *Player) Play(q *data.QueueItem) {

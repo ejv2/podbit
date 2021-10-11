@@ -9,6 +9,9 @@ SRC = main.go ver.go ${INPUTSRC} ${UISRC} ${DATASRC} ${UICOMPS} ${SOUNDSRC}
 ${EXE}: ${SRC}
 	CGO_LDFLAGS_ALLOW=".*" go build
 
+check: ${EXE}
+	CGO_LDFLAGS_ALLOW=".*" go run -race .
+
 clean:
 	go clean
 

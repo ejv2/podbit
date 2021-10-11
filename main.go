@@ -23,8 +23,9 @@ var (
 	homedir string
 	confdir string
 
-	redraw chan int = make(chan int)
-	exit   chan int = make(chan int)
+	redraw    chan int  = make(chan int)
+	keystroke chan rune = make(chan rune)
+	exit      chan int  = make(chan int)
 )
 
 func banner() {
@@ -116,7 +117,7 @@ func main() {
 	initColors()
 	defer goncurses.End()
 
-	ui.InitUI(scr, ui.LibraryMenu, redraw)
+	ui.InitUI(scr, ui.LibraryMenu, redraw, keystroke)
 	go ui.RenderLoop()
 
 	// Initial UI draw

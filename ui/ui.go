@@ -52,7 +52,8 @@ var (
 
 	currentMenu Menu
 
-	redraw chan int
+	redraw    chan int
+	keystroke chan rune
 )
 
 // Menu singletons
@@ -72,8 +73,9 @@ func watchResize(sig chan os.Signal, scr *goncurses.Window) {
 }
 
 // InitUI initialises the UI subsystem
-func InitUI(scr *goncurses.Window, initialMenu Menu, r chan int) {
+func InitUI(scr *goncurses.Window, initialMenu Menu, r chan int, k chan rune) {
 	redraw = r
+	keystroke = k
 	root = scr
 	currentMenu = initialMenu
 
@@ -114,7 +116,7 @@ func renderMenu() {
 	}
 
 	// Clear region
-	for i := 0; i < h - 2; i++ {
+	for i := 0; i < h-2; i++ {
 		root.Move(i, 0)
 		root.ClearToEOL()
 	}
@@ -166,27 +168,31 @@ func MenuActive(compare Menu) bool {
 
 // PassKeystroke performs a keystroke passthrough for the active menu
 func PassKeystroke(c rune) {
-	currentMenu.Input(c)
+	keystroke <- c
 }
 
 // RenderLoop is the main render callback for the program
 // This is intended to run in its own thread
 func RenderLoop() {
 	for {
-		toRedraw := <-redraw
+		select {
+		case toRedraw := <-redraw:
 
-		switch toRedraw {
-		case RedrawAll:
-			renderMenu()
-			renderTray()
-		case RedrawMenu:
-			renderMenu()
-		case RedrawTray:
-			renderTray()
-		default:
-			goncurses.Flash()
+			switch toRedraw {
+			case RedrawAll:
+				renderMenu()
+				renderTray()
+			case RedrawMenu:
+				renderMenu()
+			case RedrawTray:
+				renderTray()
+			default:
+				goncurses.Flash()
+			}
+
+			root.Refresh()
+		case c := <-keystroke:
+			currentMenu.Input(c)
 		}
-
-		root.Refresh()
 	}
 }

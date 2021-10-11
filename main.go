@@ -62,6 +62,14 @@ func alreadyRunning() (bool, *fslock.Lock) {
 	return false, lock
 }
 
+func initColors() {
+	if goncurses.HasColors() {
+		goncurses.StartColor()
+	}
+
+	ui.CreateColors()
+}
+
 func initTTY() {
 	goncurses.Raw(true)
 	goncurses.Echo(false)
@@ -104,6 +112,7 @@ func main() {
 		os.Exit(1)
 	}
 	initTTY()
+	initColors()
 	defer goncurses.End()
 
 	ui.InitUI(scr, ui.LibraryMenu, redraw)

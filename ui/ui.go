@@ -121,8 +121,10 @@ func renderMenu() {
 	root.Move(0, 0)
 
 	// Title Text
+	root.AttrOn(goncurses.A_BOLD)
 	root.Printf("%s", currentMenu.Name())
 	root.HLine(1, 0, goncurses.ACS_HLINE, w)
+	root.AttrOff(goncurses.A_BOLD)
 
 	// Actually render menu
 	currentMenu.Render(0, 2)

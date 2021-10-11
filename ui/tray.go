@@ -2,9 +2,9 @@ package ui
 
 import (
 	"fmt"
+	"math"
 	"sync"
 	"time"
-	"math"
 
 	"github.com/ethanv2/podbit/data"
 	"github.com/ethanv2/podbit/sound"
@@ -43,13 +43,15 @@ func RenderTray(scr *goncurses.Window, w, h int) {
 
 	pos, dur := sound.Plr.GetTimings()
 	percent := pos / dur
-	scr.HLine(h-2, 0, '=', int(percent * float64(w)))
+	scr.HLine(h-2, 0, '=', int(percent*float64(w)))
 
-	head := int(math.Max((percent * float64(w)) - 1, 0))
+	head := int(math.Max((percent*float64(w))-1, 0))
 	scr.MovePrint(h-2, head, ">")
 
 	if statusMessage != "" {
+		root.ColorOn(ColorRed)
 		scr.MovePrint(h-1, 0, statusMessage)
+		root.ColorOff(ColorRed)
 	} else {
 		pos, dur := sound.Plr.GetTimings()
 		p, d := data.FormatTime(pos), data.FormatTime(dur)
@@ -64,10 +66,21 @@ func RenderTray(scr *goncurses.Window, w, h int) {
 				status = "Playing"
 			}
 
-			scr.MovePrintf(h-1, 0, "%s: %s - %s", status, sound.Plr.NowPlaying, sound.Plr.NowPodcast)
+			root.ColorOn(ColorRed)
+			scr.MovePrintf(h-1, 0, "%s: ", status)
+			root.ColorOff(ColorRed)
+
+			root.ColorOn(ColorGreen)
+			scr.MovePrintf(h-1, len(status)+2, "%s - %s", sound.Plr.NowPlaying, sound.Plr.NowPodcast)
+			root.ColorOff(ColorGreen)
+
+			root.ColorOn(ColorRed)
 			scr.MovePrintf(h-1, w-len(code), "%s", code)
+			root.ColorOff(ColorRed)
 		} else {
+			root.ColorOn(ColorRed)
 			scr.MovePrint(h-1, 0, "Not playing")
+			root.ColorOff(ColorRed)
 		}
 	}
 }

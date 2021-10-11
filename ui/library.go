@@ -85,7 +85,11 @@ func (l *Library) renderEpisodes(x, y int) {
 
 func (l *Library) Render(x, y int) {
 	l.renderPodcasts(x, y)
+
+	root.AttrOn(goncurses.A_BOLD)
 	root.VLine(y, w/2, goncurses.ACS_VLINE, h-2-y)
+	root.AttrOff(goncurses.A_BOLD)
+
 	l.renderEpisodes(w/2+1, y)
 }
 

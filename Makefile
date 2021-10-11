@@ -1,6 +1,6 @@
 EXE = podbit
 
-UISRC    = ui/ui.go ui/input.go ui/colors.go ui/library.go ui/player.go ui/rawplayer.go ui/queue.go ui/tray.go
+UISRC    = ui/ui.go ui/input.go colors/colors.go ui/library.go ui/player.go ui/rawplayer.go ui/queue.go ui/tray.go
 UICOMPS  = ui/components/menu.go
 SOUNDSRC = sound/sound.go sound/queue.go
 DATASRC  = data/data.go data/queue.go data/db.go data/cache.go

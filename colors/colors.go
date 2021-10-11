@@ -1,4 +1,4 @@
-package ui
+package colors
 
 import (
 	"github.com/rthornton128/goncurses"

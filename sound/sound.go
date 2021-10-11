@@ -9,9 +9,8 @@
 // Entries that require downloading are handled gracefully and with as little
 // user impact as possible. Usually, the user won't even notice anything happened.
 //
-// Sound is played through mpv instances which are supervised by a nanny goroutine
-// spawned upon playing each queue entry. This player is destroyed upon the next
-// piece of media being requested.
+// Sound is played through an idle MPV instance which sits in the background and
+// recieves media to play when appropriate
 package sound
 
 import (
@@ -36,12 +35,13 @@ var (
 	// to idle mpv ready to recieve instructions
 	PlayerArgs = []string{"--no-video", "--idle", "--input-ipc-server=" + PlayerRPC}
 	// UpdateTime is the time between queue checks and supervision updates
-	UpdateTime = time.Second
+	UpdateTime = 200 * time.Millisecond
 )
 
 // Player represents the current player instance
 type Player struct {
 	proc *exec.Cmd
+	exit chan int
 
 	ipcc *mpv.IPCClient
 	ctrl *mpv.Client
@@ -53,19 +53,36 @@ type Player struct {
 	download *data.Download
 
 	Playing bool
-	Paused  bool
 
 	NowPlaying string
 	NowPodcast string
 }
 
-var Plr Player
+var (
+	Plr    Player
+)
 
-func NewPlayer() (p Player, err error) {
+// Detect end of process and exit if it does
+func pin(p *Player) {
+	p.proc.Wait()
+
+	// Uh oh! We exitted mpv - now we need to exit quickly too
+	p.exit <- 1
+}
+
+func NewPlayer(exit chan int) (p Player, err error) {
+	p.exit = exit
+
 	p.proc = exec.Command(PlayerName, PlayerArgs...)
 	p.output, err = p.proc.StdoutPipe()
 	p.times, err = p.proc.StderrPipe()
 	p.proc.Start()
+
+	for err = ConnectPlayer(&p); err != nil; {
+		err = ConnectPlayer(&p)
+	}
+
+	go pin(&p)
 
 	return
 }
@@ -84,20 +101,7 @@ func ConnectPlayer(p *Player) (err error) {
 	p.ipcc = mpv.NewIPCClient(PlayerRPC)
 	p.ctrl = mpv.NewClient(p.ipcc)
 
-
-	go nanny(p, p.ctrl)
-
 	return
-}
-
-// Look after our little baby mpv process to make sure
-// we have the right details
-func nanny(dat *Player, c *mpv.Client) {
-	for {
-		dat.Paused, _ = c.Pause()
-
-		time.Sleep(UpdateTime)
-	}
 }
 
 func (p *Player) Play(q *data.QueueItem) {
@@ -126,13 +130,17 @@ func (p *Player) Destroy() {
 	p.Playing = false
 }
 
+func (p *Player) IsPaused() bool {
+	paused, _ := p.ctrl.Pause()
+	return paused
+}
+
 func (p *Player) Pause() {
 	if !p.Playing {
 		return
 	}
 
 	// Leave playing set to true so we know not to play another episode
-	p.Paused = true
 	p.ctrl.SetPause(true)
 }
 
@@ -142,7 +150,6 @@ func (p *Player) Unpause() {
 	}
 
 	// Leave playing set to true so we know not to play another episode
-	p.Paused = false
 	p.ctrl.SetPause(false)
 }
 

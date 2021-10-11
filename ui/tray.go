@@ -24,7 +24,7 @@ var (
 
 func trayWatcher() {
 	for {
-		time.Sleep(500 * time.Millisecond)
+		time.Sleep(100 * time.Millisecond)
 
 		if MenuActive(PlayerMenu) {
 			Redraw(RedrawAll)

@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/ethanv2/podbit/colors"
 	"github.com/ethanv2/podbit/data"
 	"github.com/ethanv2/podbit/sound"
 	"github.com/ethanv2/podbit/ui"
@@ -67,7 +68,7 @@ func initColors() {
 		goncurses.StartColor()
 	}
 
-	ui.CreateColors()
+	colors.CreateColors()
 }
 
 func initTTY() {

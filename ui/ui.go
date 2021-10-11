@@ -46,6 +46,11 @@ const (
 	RedrawTray        // Redraw just the tray
 )
 
+// Info request types
+const (
+	InfoName = iota // Requesting the menu's name
+)
+
 var (
 	root *goncurses.Window
 	w, h int
@@ -53,7 +58,11 @@ var (
 	currentMenu Menu
 
 	redraw    chan int
+	menuChan  chan Menu
 	keystroke chan rune
+
+	infoRequest chan int
+	infoResponse chan interface{}
 )
 
 // Menu singletons
@@ -73,11 +82,15 @@ func watchResize(sig chan os.Signal, scr *goncurses.Window) {
 }
 
 // InitUI initialises the UI subsystem
-func InitUI(scr *goncurses.Window, initialMenu Menu, r chan int, k chan rune) {
+func InitUI(scr *goncurses.Window, initialMenu Menu, r chan int, k chan rune, m chan Menu) {
 	redraw = r
 	keystroke = k
+	menuChan = m
 	root = scr
 	currentMenu = initialMenu
+
+	infoRequest = make(chan int)
+	infoResponse = make(chan interface{})
 
 	resizeChan := make(chan os.Signal, 1)
 	signal.Notify(resizeChan, syscall.SIGWINCH)
@@ -151,8 +164,9 @@ func Redraw(mode int) {
 
 // ActivateMenu sets the current menu to the requested value
 // and orders a redraw of the menu area
+// This function will block until the new menu is being drawn
 func ActivateMenu(newMenu Menu) {
-	currentMenu = newMenu
+	menuChan <- newMenu
 
 	Redraw(RedrawMenu)
 }
@@ -163,7 +177,10 @@ func ActivateMenu(newMenu Menu) {
 // "compare" does not necessarily have to be exactly the same type as
 // the current menu
 func MenuActive(compare Menu) bool {
-	return currentMenu.Name() == compare.Name()
+	infoRequest <- InfoName
+	resp := <-infoResponse
+
+	return resp.(string) == compare.Name()
 }
 
 // PassKeystroke performs a keystroke passthrough for the active menu
@@ -176,8 +193,14 @@ func PassKeystroke(c rune) {
 func RenderLoop() {
 	for {
 		select {
+		case newMenu := <-menuChan:
+			currentMenu = newMenu
+		case req := <-infoRequest:
+			switch req {
+			case InfoName:
+				infoResponse <- currentMenu.Name()
+			}
 		case toRedraw := <-redraw:
-
 			switch toRedraw {
 			case RedrawAll:
 				renderMenu()

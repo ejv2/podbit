@@ -61,7 +61,7 @@ func (l *Library) renderEpisodes(x, y int) {
 
 	l.men[1].Items = l.men[1].Items[:0]
 
-	for i := len(data.Q.Items)-1; i >= 0; i-- {
+	for i := len(data.Q.Items) - 1; i >= 0; i-- {
 		elem := data.Q.Items[i]
 
 		if data.DB.GetFriendlyName(elem.URL) == l.men[0].GetSelection() {

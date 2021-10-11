@@ -3,6 +3,8 @@ package components
 import (
 	"fmt"
 
+	"github.com/ethanv2/podbit/colors"
+
 	"github.com/rthornton128/goncurses"
 )
 
@@ -32,7 +34,7 @@ func (m *Menu) Render() {
 	for i, elem := range items {
 		var sel string
 		if c == m.sel && m.Selected {
-			sel = ">>"
+			m.Win.ColorOn(colors.BackgroundBlue)
 		}
 
 		var capped string
@@ -43,6 +45,8 @@ func (m *Menu) Render() {
 
 		m.Win.MovePrint(m.Y+i, m.X, capped)
 		c++
+
+		m.Win.ColorOff(colors.BackgroundBlue)
 	}
 }
 

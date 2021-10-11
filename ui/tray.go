@@ -61,7 +61,7 @@ func RenderTray(scr *goncurses.Window, w, h int) {
 		p, d := data.FormatTime(pos), data.FormatTime(dur)
 		code := fmt.Sprintf("[%s/%s]", p, d)
 
-		if sound.Plr.Playing {
+		if sound.Plr.IsPlaying() {
 			var status string
 			if sound.Plr.IsPaused() {
 				status = "Paused"

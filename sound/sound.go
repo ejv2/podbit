@@ -38,12 +38,30 @@ var (
 	UpdateTime = 200 * time.Millisecond
 )
 
+// Internal: Types of actions
+const (
+	actPause = iota
+	actUnpause
+	actToggle
+	actStop
+
+	reqPaused
+	reqPlaying
+	reqTimings
+)
+
+// WaitFunc is the function to call waiting between each update
+type WaitFunc func(u chan int)
+
 // Player represents the current player instance
 type Player struct {
 	proc *exec.Cmd
 
+	act chan int
+	dat chan interface{}
+
 	exit      chan int
-	stop      chan int
+	end       chan int
 	watchStop chan int
 
 	ipcc *mpv.IPCClient
@@ -52,10 +70,10 @@ type Player struct {
 	output io.ReadCloser
 	times  io.ReadCloser
 
-	Waiting  bool
+	waiting  bool
 	download *data.Download
 
-	Playing bool
+	playing bool
 
 	NowPlaying string
 	NowPodcast string
@@ -70,6 +88,11 @@ func updateWait(u chan int) {
 	u <- 1
 }
 
+func endWait(u chan int) {
+	Plr.Wait()
+	u <- 1
+}
+
 // Detect end of process and exit if it does
 func pin(p *Player, giveUp chan int) {
 	p.proc.Wait()
@@ -81,6 +104,9 @@ func pin(p *Player, giveUp chan int) {
 func NewPlayer(exit chan int) (p Player, err error) {
 	p.exit = exit
 
+	p.act = make(chan int)
+	p.dat = make(chan interface{})
+
 	p.proc = exec.Command(PlayerName, PlayerArgs...)
 	p.output, err = p.proc.StdoutPipe()
 	p.times, err = p.proc.StderrPipe()
@@ -91,7 +117,7 @@ func NewPlayer(exit chan int) (p Player, err error) {
 	}
 
 	p.watchStop = make(chan int)
-	p.stop = make(chan int)
+	p.end = make(chan int)
 	go pin(&p, p.watchStop)
 
 	return
@@ -114,7 +140,7 @@ func ConnectPlayer(p *Player) (err error) {
 	return
 }
 
-func (p *Player) Play(q *data.QueueItem) {
+func (p *Player) play(q *data.QueueItem) {
 	if q.State != data.StatePending {
 		now, ok := data.Caching.Query(q.Path)
 		if !ok {
@@ -125,28 +151,53 @@ func (p *Player) Play(q *data.QueueItem) {
 		p.NowPodcast = data.DB.GetFriendlyName(q.URL)
 
 		p.ctrl.Loadfile(q.Path, mpv.LoadFileModeReplace)
-		p.Playing = true
+		p.playing = true
 	}
 }
 
 func (p *Player) Stop() {
+	p.act <- actStop
+}
+
+func (p *Player) stop() {
 	p.ctrl.SetPause(true)
 	p.ctrl.Seek(0, mpv.SeekModeAbsolute)
-	p.Playing = false
+	p.playing = false
 }
 
 func (p *Player) Destroy() {
-	p.proc.Process.Kill()
-	p.Playing = false
+	p.end <- 1
 }
 
 func (p *Player) IsPaused() bool {
+	p.act <- reqPaused
+
+	r := <-p.dat
+	return r.(bool)
+}
+
+func (p *Player) isPaused() bool {
 	paused, _ := p.ctrl.Pause()
 	return paused
 }
 
+func (p *Player) IsPlaying() bool {
+	p.act <- reqPlaying
+
+	r := <-p.dat
+	return r.(bool)
+}
+
+func (p *Player) isPlaying() bool {
+	return p.playing
+}
+
 func (p *Player) Pause() {
-	if !p.Playing {
+	p.act <- actPause
+}
+
+func (p *Player) pause() {
+	if !p.playing {
 		return
 	}
 
@@ -155,7 +206,11 @@ func (p *Player) Pause() {
 }
 
 func (p *Player) Unpause() {
-	if !p.Playing {
+	p.act <- actUnpause
+}
+
+func (p *Player) unpause() {
+	if !p.playing {
 		return
 	}
 
@@ -164,15 +219,29 @@ func (p *Player) Unpause() {
 }
 
 func (p *Player) Toggle() {
+	p.act <- actToggle
+}
+
+func (p *Player) toggle() {
 	paused, _ := p.ctrl.Pause()
 	p.ctrl.SetPause(!paused)
 }
 
 // GetTimings returns the current time and duration
 // of the ongoing player. Returns zero if we are
-// not playing currently
+// not playing currently.
+//
+// This function is thread safe but may block until
+// data is available
 func (p *Player) GetTimings() (float64, float64) {
-	if !p.Playing {
+	p.act <- reqTimings
+
+	var dat [2]float64 = (<-p.dat).([2]float64)
+	return dat[0], dat[1]
+}
+
+func (p *Player) getTimings() (float64, float64) {
+	if !p.playing {
 		return 0, 0
 	}
 
@@ -183,8 +252,9 @@ func (p *Player) GetTimings() (float64, float64) {
 }
 
 // Wait for the current episode to complete
+// TODO: This is hopelessly broken: rewrite this!
 func (p *Player) Wait() {
-	if !p.Playing {
+	if !p.playing {
 		return
 	}
 
@@ -195,11 +265,14 @@ func (p *Player) Wait() {
 	}
 
 	time.Sleep(time.Duration(dur+1) * time.Second)
+	p.playing = false
 }
 
 func Mainloop() {
 	for {
-		if !Plr.Playing && !Plr.Waiting && len(queue) > 0 {
+		var wait WaitFunc = updateWait
+
+		if !Plr.playing && !Plr.waiting && len(queue) > 0 {
 			elem, stop := GetQueueHead()
 			if stop {
 				Plr.Stop()
@@ -207,30 +280,56 @@ func Mainloop() {
 			}
 
 			if elem.State != data.StatePending && data.Caching.EntryExists(elem.Path) {
-				Plr.Play(elem)
-				Plr.Wait()
-
-				Plr.Playing = false
+				Plr.play(elem)
+				wait = endWait
 			} else {
-				Plr.Waiting = true
+				Plr.waiting = true
 
 				id, _ := data.Caching.Download(elem)
 				Plr.download = &data.Caching.Downloads[id]
 				for !Plr.download.Completed {
 				}
 
-				Plr.Waiting = false
+				Plr.waiting = false
 				head--
 				continue
 			}
 		}
 
 		u := make(chan int)
-		go updateWait(u)
-		select {
-		case <-u:
-		case <-Plr.stop:
-			return
+		go wait(u)
+		keepWaiting := true
+		for keepWaiting {
+			select {
+			case <-Plr.end:
+				Plr.proc.Process.Kill()
+				Plr.playing = false
+				return
+			case <-u:
+				keepWaiting = false
+
+			case action := <-Plr.act:
+				switch action {
+				case actStop:
+					Plr.stop()
+				case actPause:
+					Plr.pause()
+				case actUnpause:
+					Plr.unpause()
+				case actToggle:
+					Plr.toggle()
+
+				case reqPaused:
+					Plr.dat <- Plr.isPaused()
+				case reqPlaying:
+					Plr.dat <- Plr.isPlaying()
+				case reqTimings:
+					d, p := Plr.getTimings()
+					arr := [2]float64{d, p}
+
+					Plr.dat <- arr
+				}
+			}
 		}
 	}
 }

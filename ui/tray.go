@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"sync"
 	"time"
+	"math"
 
 	"github.com/ethanv2/podbit/data"
 	"github.com/ethanv2/podbit/sound"
@@ -39,6 +40,13 @@ func trayWatcher() {
 // The bottom cell is the status text
 func RenderTray(scr *goncurses.Window, w, h int) {
 	scr.HLine(h-2, 0, goncurses.ACS_HLINE, w)
+
+	pos, dur := sound.Plr.GetTimings()
+	percent := pos / dur
+	scr.HLine(h-2, 0, '=', int(percent * float64(w)))
+
+	head := int(math.Max((percent * float64(w)) - 1, 0))
+	scr.MovePrint(h-2, head, ">")
 
 	if statusMessage != "" {
 		scr.MovePrint(h-1, 0, statusMessage)

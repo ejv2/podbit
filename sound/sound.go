@@ -16,6 +16,7 @@ package sound
 import (
 	"fmt"
 	"io"
+	"os"
 	"os/exec"
 	"time"
 
@@ -41,7 +42,10 @@ var (
 // Player represents the current player instance
 type Player struct {
 	proc *exec.Cmd
+
 	exit chan int
+	stop chan int
+	watchStop chan int
 
 	ipcc *mpv.IPCClient
 	ctrl *mpv.Client
@@ -59,15 +63,31 @@ type Player struct {
 }
 
 var (
-	Plr    Player
+	Plr Player
 )
 
-// Detect end of process and exit if it does
-func pin(p *Player) {
-	p.proc.Wait()
+func procWait(proc *os.Process, done chan int) {
+	proc.Wait()
+	done <- 1
+}
 
-	// Uh oh! We exitted mpv - now we need to exit quickly too
-	p.exit <- 1
+func updateWait(u chan int) {
+	time.Sleep(UpdateTime)
+	u <- 1
+}
+
+// Detect end of process and exit if it does
+func pin(p *Player, giveUp chan int) {
+	c := make(chan int)
+	go procWait(p.proc.Process, c)
+
+	select {
+	case <-c:
+		// Uh oh! We exitted mpv - now we need to exit quickly too
+		p.exit <- 1
+	case <-giveUp:
+		return
+	}
 }
 
 func NewPlayer(exit chan int) (p Player, err error) {
@@ -82,7 +102,9 @@ func NewPlayer(exit chan int) (p Player, err error) {
 		err = ConnectPlayer(&p)
 	}
 
-	go pin(&p)
+	p.watchStop = make(chan int)
+	p.stop = make(chan int)
+	go pin(&p, p.watchStop)
 
 	return
 }
@@ -126,8 +148,11 @@ func (p *Player) Stop() {
 }
 
 func (p *Player) Destroy() {
-	p.proc.Process.Kill()
+	p.watchStop <- 1
+	p.stop <- 1
 	p.Playing = false
+
+	p.proc.Process.Kill()
 }
 
 func (p *Player) IsPaused() bool {
@@ -215,6 +240,12 @@ func Mainloop() {
 			}
 		}
 
-		time.Sleep(UpdateTime)
+		u := make(chan int)
+		go updateWait(u)
+		select {
+		case <-u:
+		case <-Plr.stop:
+			return
+		}
 	}
 }

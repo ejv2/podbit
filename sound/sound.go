@@ -285,7 +285,11 @@ func Mainloop() {
 			} else {
 				Plr.waiting = true
 
-				id, _ := data.Caching.Download(elem)
+				id, err := data.Caching.Download(elem)
+				if err != nil {
+					continue
+				}
+
 				Plr.download = &data.Caching.Downloads[id]
 				for !Plr.download.Completed {
 				}

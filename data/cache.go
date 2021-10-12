@@ -209,6 +209,7 @@ func (c *Cache) Download(item *QueueItem) (id int, err error) {
 
 	resp, err := http.Get(item.URL)
 	if err != nil || resp.StatusCode != http.StatusOK {
+		os.Remove(item.Path)
 		return 0, fmt.Errorf(ErrorDownloadFailed, item.URL)
 	}
 

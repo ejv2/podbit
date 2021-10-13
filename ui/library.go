@@ -47,7 +47,7 @@ func (l *Library) renderEpisodes(x, y int) {
 	l.men[1].X = x
 	l.men[1].Y = y
 
-	l.men[1].W, l.men[1].H = (w/2)-1, (h - 5)
+	l.men[1].W, l.men[1].H = (w/2)-2, (h - 5)
 	l.men[1].Win = *root
 
 	l.men[1].Items = l.men[1].Items[:0]
@@ -107,6 +107,10 @@ func (l *Library) ChangeSelection(index int) {
 	}
 
 	l.menSel = index
+
+	if l.menSel == 0 {
+		l.men[1].ChangeSelection(0)
+	}
 }
 
 func (l *Library) MoveSelection(direction int) {

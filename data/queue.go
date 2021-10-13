@@ -61,7 +61,7 @@ type Queue struct {
 	path string
 	file *os.File
 
-	mutex   sync.RWMutex
+	mutex sync.RWMutex
 	Items []QueueItem
 }
 
@@ -232,4 +232,75 @@ func (q *Queue) Range(callback RangeFunc) {
 			return
 		}
 	}
+}
+
+// Range loops through the queue array in reverse order in a
+// thread safe fashion using a callback which recieves each
+// item in the queue in the same format as a range loop.
+//
+// It *IS* safe to modify the queue in this callback
+func (q *Queue) RevRange(callback RangeFunc) {
+	q.mutex.Lock()
+	defer q.mutex.Unlock()
+
+	for i := len(q.Items) - 1; i >= 0; i-- {
+		item := q.Items[i]
+
+		if !callback(i, &item) {
+			return
+		}
+	}
+}
+
+// GetPodcasts returns each individual podcast detected
+// through the queue file and database.
+// The value returned may be out of date by the time of
+// returning. It is best to use Range if you rely on
+// the results.
+func (q *Queue) GetPodcasts() (podcasts []string) {
+	q.mutex.RLock()
+	defer q.mutex.RUnlock()
+
+	seen := make(map[string]bool)
+	for i := range q.Items {
+		name := DB.GetFriendlyName(q.Items[i].URL)
+
+		if !seen[name] {
+			podcasts = append(podcasts, name)
+			seen[name] = true
+		}
+	}
+
+	return
+}
+
+// GetEpisodeByURL searches the queue file for an entry
+// with the requested URL
+func (q *Queue) GetEpisodeByURL(url string) (found *QueueItem) {
+	q.Range(func(i int, elem *QueueItem) bool {
+		if elem.URL == url {
+			found = elem
+			return false
+		}
+
+		return true
+	})
+
+	return
+}
+
+// GetEpisodeByTitle searches the queue file for an entry
+// with the requested title from cache
+func (q *Queue) GetEpisodeByTitle(title string) (found *QueueItem) {
+	q.Range(func(i int, elem *QueueItem) bool {
+		find, ok := Caching.Query(elem.Path)
+		if ok && find.Title == title {
+			found = elem
+			return false
+		}
+
+		return true
+	})
+
+	return
 }

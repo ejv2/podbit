@@ -93,6 +93,16 @@ func endWait(u chan int) {
 	u <- 1
 }
 
+func downloadWait(u chan int) {
+	for !Plr.download.Completed {
+	}
+
+	Plr.waiting = false
+	head--
+
+	u <- 1
+}
+
 // Detect end of process and exit if it does
 func pin(p *Player, giveUp chan int) {
 	p.proc.Wait()
@@ -291,12 +301,7 @@ func Mainloop() {
 				}
 
 				Plr.download = &data.Caching.Downloads[id]
-				for !Plr.download.Completed {
-				}
-
-				Plr.waiting = false
-				head--
-				continue
+				wait = downloadWait
 			}
 		}
 

@@ -32,16 +32,7 @@ func (l *Library) renderPodcasts(x, y int) {
 	l.men[0].Win = *root
 
 	l.men[0].Items = l.men[0].Items[:0]
-
-	seen := make(map[string]bool)
-	for i := range data.Q.Items {
-		name := data.DB.GetFriendlyName(data.Q.Items[i].URL)
-
-		if !seen[name] {
-			l.men[0].Items = append(l.men[0].Items, name)
-			seen[name] = true
-		}
-	}
+	l.men[0].Items = data.Q.GetPodcasts()
 
 	l.men[0].Selected = true
 
@@ -61,9 +52,7 @@ func (l *Library) renderEpisodes(x, y int) {
 
 	l.men[1].Items = l.men[1].Items[:0]
 
-	for i := len(data.Q.Items) - 1; i >= 0; i-- {
-		elem := data.Q.Items[i]
-
+	data.Q.RevRange(func(i int, elem *data.QueueItem) bool {
 		if data.DB.GetFriendlyName(elem.URL) == l.men[0].GetSelection() {
 			var text string
 			entry, ok := data.Caching.Query(elem.Path)
@@ -76,7 +65,9 @@ func (l *Library) renderEpisodes(x, y int) {
 
 			l.men[1].Items = append(l.men[1].Items, text)
 		}
-	}
+
+		return true
+	})
 
 	l.men[1].Selected = (l.menSel == 1)
 
@@ -135,29 +126,25 @@ func (l *Library) StartDownload() {
 
 	targets := l.men[1].Items
 	if l.menSel == 1 {
-		for i, elem := range data.Q.Items {
-			if elem.URL == l.men[1].GetSelection() {
-				go data.Caching.Download(&data.Q.Items[i])
-				go StatusMessage(fmt.Sprintf("Download of %s started...", elem.URL))
-
-				return
-			}
+		item := data.Q.GetEpisodeByURL(l.men[1].GetSelection())
+		if item == nil {
+			return
 		}
+
+		go data.Caching.Download(item)
+		go StatusMessage(fmt.Sprintf("Download of %s started...", item.URL))
+
+		return
 	} else {
 		for _, elem := range targets {
 			if data.IsURL(elem) {
-				for i, q := range data.Q.Items {
-					if q.URL == elem {
-						go data.Caching.Download(&data.Q.Items[i])
-					}
-				}
+				item := data.Q.GetEpisodeByURL(elem)
+				go data.Caching.Download(item)
 			}
 		}
-
-		go StatusMessage("Download of multiple episodes started...")
-
 	}
 
+	go StatusMessage("Download of multiple episodes started...")
 }
 
 // StartPlaying begins playing the currently focused element

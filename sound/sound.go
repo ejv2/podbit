@@ -285,7 +285,7 @@ func Mainloop() {
 		if !Plr.playing && !Plr.waiting && len(queue) > 0 {
 			elem, stop := PopHead()
 			if stop {
-				Plr.Stop()
+				Plr.stop()
 				continue
 			}
 

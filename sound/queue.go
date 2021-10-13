@@ -68,11 +68,11 @@ func GetQueue() []*data.QueueItem {
 	return queue
 }
 
-// GetQueueHead returns the head of the queue, increasing
+// PopHead returns the head of the queue, increasing
 // the head beyond the end (if present). The boolean returned
 // indicates if the player should stop - which occurs in the
 // case of the end of the queue or an empty queue
-func GetQueueHead() (*data.QueueItem, bool) {
+func PopHead() (*data.QueueItem, bool) {
 	if len(queue) > 0 {
 		if head >= len(queue) {
 			head = 0
@@ -86,4 +86,16 @@ func GetQueueHead() (*data.QueueItem, bool) {
 	}
 
 	return nil, true
+}
+
+// GetHead returns the current queue item at the head of the
+// queue (playing) and the index into the queue. This function
+// does not pop any items (the head remains unchanged).
+func GetHead() (h *data.QueueItem, pos int) {
+	if len(queue) > 0 && len(queue)-1 > pos {
+		pos = head
+		h = queue[pos]
+	}
+
+	return
 }

@@ -283,7 +283,7 @@ func Mainloop() {
 		var wait WaitFunc = updateWait
 
 		if !Plr.playing && !Plr.waiting && len(queue) > 0 {
-			elem, stop := GetQueueHead()
+			elem, stop := PopHead()
 			if stop {
 				Plr.Stop()
 				continue

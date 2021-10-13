@@ -40,7 +40,12 @@ func (m *Menu) Render() {
 		var capped string
 		capped = fmt.Sprintf("%s%s", sel, elem)
 		if len(capped) > m.W {
-			capped = capped[:m.W]
+			capped = capped[:m.W+1]
+		} else {
+			// Pad out to fill row
+			for i := len(capped); i <= m.W; i++ {
+				capped += " "
+			}
 		}
 
 		m.Win.MovePrint(m.Y+i, m.X, capped)

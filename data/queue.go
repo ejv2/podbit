@@ -7,7 +7,11 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 )
+
+// Range function typedefs
+type RangeFunc func(i int, item *QueueItem) bool
 
 // Queue parsing/management errors
 var (
@@ -57,6 +61,7 @@ type Queue struct {
 	path string
 	file *os.File
 
+	mutex   sync.RWMutex
 	Items []QueueItem
 }
 
@@ -120,6 +125,9 @@ func (q *Queue) Open() error {
 		return ErrorNotFound
 	}
 
+	q.mutex.Lock()
+	defer q.mutex.Unlock()
+
 	scanner := bufio.NewScanner(q.file)
 	scanner.Split(bufio.ScanLines)
 
@@ -150,6 +158,9 @@ func (q *Queue) Open() error {
 // Merges are performed on the simple basis that new lines are the
 // data we want. All other changes are wiped and completely ignored.
 func (q *Queue) Reload() {
+	q.mutex.Lock()
+	defer q.mutex.Unlock()
+
 	q.file.Close()
 
 	var err error
@@ -194,6 +205,9 @@ scanloop:
 //
 // The file is first truncated and blanked.
 func (q *Queue) Save() {
+	q.mutex.RLock()
+	defer q.mutex.RUnlock()
+
 	file, err := os.OpenFile(q.path, os.O_TRUNC|os.O_WRONLY, os.ModePerm)
 	if err != nil {
 		fmt.Printf("WARNING: Failed to save queue file: %s\n", err.Error())
@@ -201,5 +215,21 @@ func (q *Queue) Save() {
 
 	for _, elem := range q.Items {
 		fmt.Fprintf(file, "%s \"%s\" %s\n", elem.URL, elem.Path, StateStrings[elem.State])
+	}
+}
+
+// Range loops through the queue array in a thread-safe fashion
+// using a callback which recieves each item in the queue in the
+// same format as a for range loop.
+//
+// It *IS* save to modify the queue in the callback
+func (q *Queue) Range(callback RangeFunc) {
+	q.mutex.Lock()
+	defer q.mutex.Unlock()
+
+	for i, item := range q.Items {
+		if !callback(i, &item) {
+			return
+		}
 	}
 }

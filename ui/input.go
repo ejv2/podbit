@@ -72,6 +72,8 @@ func InputLoop(exit chan int) {
 				sound.Plr.Toggle()
 			case 's':
 				sound.Plr.Stop()
+			case '\f': // Control-L
+				UpdateDimensions(root, true)
 			case 'q':
 				return
 			default:

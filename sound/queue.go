@@ -18,11 +18,9 @@ func Enqueue(item *data.QueueItem) {
 // Remember to download before playing!
 // If you know episode is downloaded, use EnqueueByTitle - it's faster
 func EnqueueByURL(url string) {
-	for i, elem := range data.Q.Items {
-		if url == elem.URL {
-			Enqueue(&data.Q.Items[i])
-			return
-		}
+	item := data.Q.GetEpisodeByURL(url)
+	if item != nil {
+		Enqueue(item)
 	}
 }
 
@@ -31,12 +29,9 @@ func EnqueueByURL(url string) {
 //
 // The availability of a title implies presence in cache, so don't bother to download the episode
 func EnqueueByTitle(title string) {
-	for i, elem := range data.Q.Items {
-		ent, ok := data.Caching.Query(elem.Path)
-		if ok && ent.Title == title {
-			Enqueue(&data.Q.Items[i])
-			return
-		}
+	item := data.Q.GetEpisodeByTitle(title)
+	if item != nil {
+		Enqueue(item)
 	}
 }
 
@@ -51,12 +46,14 @@ func EnqueueByTitle(title string) {
 func EnqueueByPodcast(ident string) {
 	comp := data.DB.GetFriendlyName(ident)
 
-	for i, elem := range data.Q.Items {
+	data.Q.Range(func (i int, elem *data.QueueItem) bool {
 		name := data.DB.GetFriendlyName(elem.URL)
 		if name == comp {
 			Enqueue(&data.Q.Items[i]) // Do not return: we are queueing in bulk
 		}
-	}
+
+		return true
+	})
 }
 
 // ClearQueue truncates the queue to zero items

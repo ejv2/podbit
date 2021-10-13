@@ -90,6 +90,10 @@ func updateWait(u chan int) {
 
 func endWait(u chan int) {
 	Plr.Wait()
+	time.Sleep(time.Second)
+
+	Plr.playing = false
+
 	u <- 1
 }
 
@@ -262,20 +266,20 @@ func (p *Player) getTimings() (float64, float64) {
 }
 
 // Wait for the current episode to complete
-// TODO: This is hopelessly broken: rewrite this!
 func (p *Player) Wait() {
 	if !p.playing {
 		return
 	}
 
 	// Wait for media to load?
-	var dur float64
-	for dur == 0 {
-		_, dur = p.GetTimings()
+	var pos, dur float64
+	for dur == 0 && pos == 0 {
+		pos, dur = p.getTimings()
 	}
 
-	time.Sleep(time.Duration(dur+1) * time.Second)
-	p.playing = false
+	var percent float64
+	for percent = 0; percent < 99; percent, _ = p.ctrl.PercentPosition() {
+	}
 }
 
 func Mainloop() {

@@ -38,6 +38,7 @@ func (l *Player) Render(x, y int) {
 
 	root.ColorOn(colors.ColorBlue)
 	root.HLine(h-(h/3), len(p)+1, goncurses.ACS_HLINE, wid)
+	root.ColorOff(colors.ColorBlue)
 }
 
 func (l *Player) Input(c rune) {

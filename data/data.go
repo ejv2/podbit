@@ -8,7 +8,7 @@ import (
 
 const (
 	// QueueReloadInterval is how often the queue will be reloaded
-	QueueReloadInterval = time.Duration(30) * time.Second
+	QueueReloadInterval = time.Duration(15) * time.Second
 )
 
 // Dependent data structures

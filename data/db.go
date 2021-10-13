@@ -65,10 +65,7 @@ func initDatabase(db *Database) error {
 			}
 
 			p.RegexPattern = fields[0]
-
-			for i := 1; i < len(fields); i++ {
-				p.FriendlyName += fields[i] + " "
-			}
+			p.FriendlyName = strings.Join(fields[1:], " ")
 
 			db.podcasts = append(db.podcasts, p)
 

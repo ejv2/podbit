@@ -43,7 +43,7 @@ func (m *Menu) Render() {
 			capped = capped[:m.W+1]
 		} else {
 			// Pad out to fill row
-			for i := len(capped); i <= m.W-1; i++ {
+			for i := len(capped); i <= m.W; i++ {
 				capped += " "
 			}
 		}

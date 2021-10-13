@@ -9,7 +9,7 @@ type RawPlayer struct {
 }
 
 func (p *RawPlayer) Name() string {
-	return "Player - Raw View"
+	return "Player output"
 }
 
 func (p *RawPlayer) Render(x, y int) {

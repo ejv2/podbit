@@ -33,7 +33,7 @@ var (
 	// PlayerArgs are the standard arguments to use for the player
 	// These are not the final configs of the player, but just used
 	// to idle mpv ready to recieve instructions
-	PlayerArgs = []string{"--no-video", "--idle", "--input-ipc-server=" + PlayerRPC}
+	PlayerArgs = []string{"--no-video", "--input-ipc-server=" + PlayerRPC}
 	// UpdateTime is the time between queue checks and supervision updates
 	UpdateTime = 200 * time.Millisecond
 )
@@ -108,31 +108,14 @@ func downloadWait(u chan int) {
 }
 
 // Detect end of process and exit if it does
-func pin(p *Player, giveUp chan int) {
-	p.proc.Wait()
-
-	// Uh oh! We exitted mpv - now we need to exit quickly too
-	p.exit <- 1
-}
-
 func NewPlayer(exit chan int) (p Player, err error) {
 	p.exit = exit
 
 	p.act = make(chan int)
 	p.dat = make(chan interface{})
 
-	p.proc = exec.Command(PlayerName, PlayerArgs...)
-	p.output, err = p.proc.StdoutPipe()
-	p.times, err = p.proc.StderrPipe()
-	p.proc.Start()
-
-	for err = ConnectPlayer(&p); err != nil; {
-		err = ConnectPlayer(&p)
-	}
-
 	p.watchStop = make(chan int)
 	p.end = make(chan int)
-	go pin(&p, p.watchStop)
 
 	return
 }
@@ -141,7 +124,7 @@ func NewPlayer(exit chan int) (p Player, err error) {
 // Sadly, this is needed because of an exceptionally bad
 // design choice in the mpv library forcing me to create
 // this bad workaround. :(
-func ConnectPlayer(p *Player) (err error) {
+func (p *Player) connect() (err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			err = fmt.Errorf("Error: Player connection")
@@ -154,7 +137,22 @@ func ConnectPlayer(p *Player) (err error) {
 	return
 }
 
+func (p *Player) start(filename string) (err error) {
+	p.proc = exec.Command(PlayerName, append(PlayerArgs, filename)...)
+	p.output, err = p.proc.StdoutPipe()
+	p.times, err = p.proc.StderrPipe()
+	p.proc.Start()
+
+	for err = p.connect(); err != nil; {
+		err = p.connect()
+	}
+
+	return
+}
+
 func (p *Player) play(q *data.QueueItem) {
+	p.start(q.Path)
+
 	if q.State != data.StatePending {
 		now, ok := data.Caching.Query(q.Path)
 		if !ok {
@@ -164,7 +162,6 @@ func (p *Player) play(q *data.QueueItem) {
 		p.NowPlaying = now.Title
 		p.NowPodcast = data.DB.GetFriendlyName(q.URL)
 
-		p.ctrl.Loadfile(q.Path, mpv.LoadFileModeReplace)
 		p.playing = true
 	}
 }
@@ -174,8 +171,7 @@ func (p *Player) Stop() {
 }
 
 func (p *Player) stop() {
-	p.ctrl.SetPause(true)
-	p.ctrl.Seek(0, mpv.SeekModeAbsolute)
+	p.proc.Process.Kill()
 	p.playing = false
 }
 
@@ -271,15 +267,7 @@ func (p *Player) Wait() {
 		return
 	}
 
-	// Wait for media to load?
-	var pos, dur float64
-	for dur == 0 && pos == 0 {
-		pos, dur = p.getTimings()
-	}
-
-	var percent float64
-	for percent = 0; percent < 99; percent, _ = p.ctrl.PercentPosition() {
-	}
+	p.proc.Wait()
 }
 
 func Mainloop() {

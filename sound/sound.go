@@ -299,12 +299,18 @@ func Mainloop() {
 			} else {
 				Plr.waiting = true
 
-				id, err := data.Caching.Download(elem)
-				if err != nil {
-					continue
+				if y, dow := data.Caching.IsDownloading(elem.Path); y {
+					Plr.download = &data.Caching.Downloads[dow]
+				} else {
+
+					id, err := data.Caching.Download(elem)
+					if err != nil {
+						continue
+					}
+
+					Plr.download = &data.Caching.Downloads[id]
 				}
 
-				Plr.download = &data.Caching.Downloads[id]
 				wait = downloadWait
 			}
 		}

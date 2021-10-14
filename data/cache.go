@@ -274,17 +274,17 @@ func (c *Cache) Download(item *QueueItem) (id int, err error) {
 
 // IsDownloading queries the download cache to check
 // if a podcast is currently downloading
-func (c *Cache) IsDownloading(path string) (bool, Download) {
+func (c *Cache) IsDownloading(path string) (bool, int) {
 	c.downloadsMutex.Lock()
 	defer c.downloadsMutex.Unlock()
 
-	for _, elem := range c.Downloads {
+	for i, elem := range c.Downloads {
 		if elem.Path == path && !elem.Completed {
-			return true, elem
+			return true, i
 		}
 	}
 
-	return false, Download{}
+	return false, 0
 }
 
 // Query returns cached data about an episode on disk

@@ -130,10 +130,18 @@ func (l *Library) StartDownload() {
 
 	targets := l.men[1].Items
 	if l.menSel == 1 {
-		item := data.Q.GetEpisodeByURL(l.men[1].GetSelection())
+		target := l.men[1].GetSelection()
+		item := data.Q.GetEpisodeByURL(target)
+
 		if item == nil {
 			return
 		}
+
+		if y, _ := data.Caching.IsDownloading(item.Path); y {
+			go StatusMessage(fmt.Sprintf("Episode already downloading"))
+			return
+		}
+
 
 		go data.Caching.Download(item)
 		go StatusMessage(fmt.Sprintf("Download of %s started...", item.URL))
@@ -143,6 +151,15 @@ func (l *Library) StartDownload() {
 		for _, elem := range targets {
 			if data.IsURL(elem) {
 				item := data.Q.GetEpisodeByURL(elem)
+				if item == nil {
+					continue
+				}
+
+				if y, _ := data.Caching.IsDownloading(item.Path); y {
+					go StatusMessage(fmt.Sprintf("Episode already downloading"))
+					return
+				}
+
 				go data.Caching.Download(item)
 			}
 		}

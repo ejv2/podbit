@@ -97,7 +97,9 @@ func (l *Library) Input(c rune) {
 	case ' ':
 		l.StartDownload()
 	case 13:
-		l.StartPlaying() // Enter key
+		l.StartPlaying(false) // Enter key - enqueue
+	case '\t':
+		l.StartPlaying(true) // Tab key - play NOW!
 	}
 }
 
@@ -142,7 +144,6 @@ func (l *Library) StartDownload() {
 			return
 		}
 
-
 		go data.Caching.Download(item)
 		go StatusMessage(fmt.Sprintf("Download of %s started...", item.URL))
 
@@ -171,9 +172,13 @@ func (l *Library) StartDownload() {
 // StartPlaying begins playing the currently focused element
 // If the current focus requires downloading (and enough information
 // is known to oblige) it will first be downloaded
-func (l *Library) StartPlaying() {
+func (l *Library) StartPlaying(immediate bool) {
 	if len(l.men[0].Items) < 1 || len(l.men[1].Items) < 1 {
 		return
+	}
+
+	if immediate {
+		sound.Plr.Stop()
 	}
 
 	if l.menSel == 1 {

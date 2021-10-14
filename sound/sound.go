@@ -319,7 +319,10 @@ func Mainloop() {
 		for keepWaiting {
 			select {
 			case <-Plr.end:
-				Plr.proc.Process.Kill()
+				if Plr.playing {
+					Plr.proc.Process.Kill()
+				}
+
 				Plr.playing = false
 				return
 			case <-u:

@@ -75,7 +75,6 @@ func GetQueue() []*data.QueueItem {
 func PopHead() (*data.QueueItem, bool) {
 	if len(queue) > 0 {
 		if head >= len(queue) {
-			head = 0
 			return nil, true
 		}
 

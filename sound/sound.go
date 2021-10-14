@@ -107,7 +107,16 @@ func downloadWait(u chan int) {
 	u <- 1
 }
 
-// Detect end of process and exit if it does
+func waitNew(u chan int) {
+	for head >= len(queue) {
+	}
+
+	Plr.waiting = false
+	u <- 1
+}
+
+// NewPlayer constructs a new player. This does not yet
+// launch any processes or play any media
 func NewPlayer(exit chan int) (p Player, err error) {
 	p.exit = exit
 
@@ -171,6 +180,10 @@ func (p *Player) Stop() {
 }
 
 func (p *Player) stop() {
+	if !p.playing {
+		return
+	}
+
 	p.proc.Process.Kill()
 	p.playing = false
 }
@@ -271,16 +284,13 @@ func (p *Player) Wait() {
 }
 
 func Mainloop() {
+	var wait WaitFunc = updateWait
+	var elem *data.QueueItem
+
 	for {
-		var wait WaitFunc = updateWait
+		elem, Plr.waiting = PopHead()
 
 		if !Plr.playing && !Plr.waiting && len(queue) > 0 {
-			elem, stop := PopHead()
-			if stop {
-				Plr.stop()
-				continue
-			}
-
 			if elem.State != data.StatePending && data.Caching.EntryExists(elem.Path) {
 				Plr.play(elem)
 				wait = endWait

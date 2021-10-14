@@ -61,7 +61,7 @@ type Player struct {
 	dat chan interface{}
 
 	exit      chan int
-	end       chan int
+	end       chan chan int
 	watchStop chan int
 
 	ipcc *mpv.IPCClient
@@ -124,7 +124,7 @@ func NewPlayer(exit chan int) (p Player, err error) {
 	p.dat = make(chan interface{})
 
 	p.watchStop = make(chan int)
-	p.end = make(chan int)
+	p.end = make(chan chan int)
 
 	return
 }
@@ -189,7 +189,10 @@ func (p *Player) stop() {
 }
 
 func (p *Player) Destroy() {
-	p.end <- 1
+	done := make(chan int)
+
+	p.end <- done
+	<-done
 }
 
 func (p *Player) IsPaused() bool {
@@ -318,12 +321,14 @@ func Mainloop() {
 		keepWaiting := true
 		for keepWaiting {
 			select {
-			case <-Plr.end:
+			case resp := <-Plr.end:
 				if Plr.playing {
 					Plr.proc.Process.Kill()
 				}
 
 				Plr.playing = false
+
+				resp <- 1
 				return
 			case <-u:
 				keepWaiting = false

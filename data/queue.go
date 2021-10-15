@@ -212,10 +212,12 @@ func (q *Queue) Save() {
 	if err != nil {
 		fmt.Printf("WARNING: Failed to save queue file: %s\n", err.Error())
 	}
+	defer file.Close()
 
 	for _, elem := range q.Items {
 		fmt.Fprintf(file, "%s \"%s\" %s\n", elem.URL, elem.Path, StateStrings[elem.State])
 	}
+
 }
 
 // Range loops through the queue array in a thread-safe fashion

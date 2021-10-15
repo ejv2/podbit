@@ -203,6 +203,10 @@ func (p *Player) IsPaused() bool {
 }
 
 func (p *Player) isPaused() bool {
+	if !p.playing {
+		return false
+	}
+
 	paused, _ := p.ctrl.Pause()
 	return paused
 }
@@ -249,6 +253,10 @@ func (p *Player) Toggle() {
 }
 
 func (p *Player) toggle() {
+	if !p.playing {
+		return
+	}
+
 	paused, _ := p.ctrl.Pause()
 	p.ctrl.SetPause(!paused)
 }

@@ -44,6 +44,7 @@ const (
 	actUnpause
 	actToggle
 	actStop
+	actSeek
 
 	reqPaused
 	reqPlaying
@@ -285,6 +286,15 @@ func (p *Player) getTimings() (float64, float64) {
 	return pos, dur
 }
 
+func (p *Player) Seek(off int) {
+	p.act <- actSeek
+	p.dat <- off
+}
+
+func (p *Player) seek(off int) {
+	p.ctrl.Seek(off, mpv.SeekModeRelative)
+}
+
 // Wait for the current episode to complete
 func (p *Player) Wait() {
 	if !p.playing {
@@ -351,6 +361,9 @@ func Mainloop() {
 					Plr.unpause()
 				case actToggle:
 					Plr.toggle()
+				case actSeek:
+					dat := <-Plr.dat
+					Plr.seek(dat.(int))
 
 				case reqPaused:
 					Plr.dat <- Plr.isPaused()

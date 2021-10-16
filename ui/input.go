@@ -5,6 +5,7 @@ import (
 	"unicode/utf8"
 
 	"github.com/ethanv2/podbit/sound"
+	"github.com/ethanv2/podbit/data"
 )
 
 var (
@@ -75,7 +76,11 @@ func InputLoop(exit chan int) {
 			case '\f': // Control-L
 				UpdateDimensions(root, true)
 			case 'q':
-				return
+				if data.Caching.Ongoing() == 0 {
+					return
+				} else {
+					StatusMessage("Error: Cannot quit with ongoing downloads")
+				}
 			default:
 				PassKeystroke(c)
 			}

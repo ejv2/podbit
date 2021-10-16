@@ -287,6 +287,13 @@ func (c *Cache) IsDownloading(path string) (bool, int) {
 	return false, 0
 }
 
+func (c *Cache) Ongoing() int {
+	c.downloadsMutex.Lock()
+	defer c.downloadsMutex.Unlock()
+
+	return c.ongoing
+}
+
 // Query returns cached data about an episode on disk
 func (c *Cache) Query(path string) (ep Episode, ok bool) {
 	e, ok := c.episodes.Load(path)

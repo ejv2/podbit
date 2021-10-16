@@ -292,6 +292,10 @@ func (p *Player) Seek(off int) {
 }
 
 func (p *Player) seek(off int) {
+	if !p.playing {
+		return
+	}
+
 	p.ctrl.Seek(off, mpv.SeekModeRelative)
 }
 

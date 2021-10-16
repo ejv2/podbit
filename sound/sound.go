@@ -15,7 +15,6 @@ package sound
 
 import (
 	"fmt"
-	"io"
 	"os/exec"
 	"time"
 
@@ -67,9 +66,6 @@ type Player struct {
 
 	ipcc *mpv.IPCClient
 	ctrl *mpv.Client
-
-	output io.ReadCloser
-	times  io.ReadCloser
 
 	waiting  bool
 	download *data.Download
@@ -149,8 +145,6 @@ func (p *Player) connect() (err error) {
 
 func (p *Player) start(filename string) (err error) {
 	p.proc = exec.Command(PlayerName, append(PlayerArgs, filename)...)
-	p.output, err = p.proc.StdoutPipe()
-	p.times, err = p.proc.StderrPipe()
 	p.proc.Start()
 
 	for err = p.connect(); err != nil; {

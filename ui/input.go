@@ -60,11 +60,7 @@ func InputLoop(exit chan int) {
 			switch c {
 
 			case '1':
-				if MenuActive(PlayerMenu) {
-					ActivateMenu(RawPlayerMenu)
-				} else {
-					ActivateMenu(PlayerMenu)
-				}
+				ActivateMenu(PlayerMenu)
 			case '2':
 				ActivateMenu(QueueMenu)
 			case '4':

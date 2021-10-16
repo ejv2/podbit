@@ -68,7 +68,6 @@ var (
 // Menu singletons
 var (
 	PlayerMenu    *Player    = new(Player)    // Full screen player
-	RawPlayerMenu *RawPlayer = new(RawPlayer) // Raw player output
 	QueueMenu     *Queue     = new(Queue)     // Player queue display
 	LibraryMenu   *Library   = new(Library)   // Library of podcasts and episodes
 )

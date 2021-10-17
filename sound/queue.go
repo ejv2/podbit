@@ -46,7 +46,7 @@ func EnqueueByTitle(title string) {
 func EnqueueByPodcast(ident string) {
 	comp := data.DB.GetFriendlyName(ident)
 
-	data.Q.Range(func (i int, elem *data.QueueItem) bool {
+	data.Q.Range(func(i int, elem *data.QueueItem) bool {
 		name := data.DB.GetFriendlyName(elem.URL)
 		if name == comp {
 			Enqueue(&data.Q.Items[i]) // Do not return: we are queueing in bulk

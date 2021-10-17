@@ -6,9 +6,9 @@ import (
 	"sync"
 	"time"
 
+	"github.com/ethanv2/podbit/colors"
 	"github.com/ethanv2/podbit/data"
 	"github.com/ethanv2/podbit/sound"
-	"github.com/ethanv2/podbit/colors"
 
 	"github.com/rthornton128/goncurses"
 )

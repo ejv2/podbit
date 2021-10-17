@@ -4,8 +4,8 @@ import (
 	"os"
 	"unicode/utf8"
 
-	"github.com/ethanv2/podbit/sound"
 	"github.com/ethanv2/podbit/data"
+	"github.com/ethanv2/podbit/sound"
 )
 
 var (

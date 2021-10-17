@@ -168,7 +168,6 @@ func (c *Cache) loadFile(path string, startup bool) {
 		}
 	}()
 
-
 	data, err := tag.ReadFrom(file)
 
 	artist, albumArtist := data.Artist(), data.AlbumArtist()

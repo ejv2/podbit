@@ -63,7 +63,7 @@ func ReloadData() {
 	Q.Reload()
 }
 
-// ReloadLoop is an infinite loop to continually reload the 
+// ReloadLoop is an infinite loop to continually reload the
 // file on disk into memory.
 //
 // Should allow us to hot-reload the queue file - among other
@@ -85,10 +85,10 @@ func IsURL(check string) bool {
 func FormatTime(seconds float64) string {
 	round := int(seconds)
 
-	s := round%60
-	m := round/60
+	s := round % 60
+	m := round / 60
 	h := m / 60
-	m = m%60
+	m = m % 60
 
 	return fmt.Sprintf("%.2d:%.2d:%.2d", h, m, s)
 }

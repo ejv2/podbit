@@ -1,8 +1,8 @@
 package ui
 
 import (
-	"github.com/ethanv2/podbit/sound"
 	"github.com/ethanv2/podbit/data"
+	"github.com/ethanv2/podbit/sound"
 )
 
 // Queue displays the current play queue
@@ -17,7 +17,7 @@ func (l *Queue) Name() string {
 
 func (l *Queue) Render(x, y int) {
 	for i, elem := range sound.GetQueue() {
-		root.MovePrintf(y + i , 0, "Queue index %d: %s", i, data.DB.GetFriendlyName(elem.URL))
+		root.MovePrintf(y+i, 0, "Queue index %d: %s", i, data.DB.GetFriendlyName(elem.URL))
 	}
 }
 

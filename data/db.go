@@ -39,6 +39,8 @@ type Database struct {
 func initDatabase(db *Database) error {
 	var err error
 	file, err := os.Open(db.path)
+	defer file.Close()
+
 	if err != nil {
 		file, err = os.Create(db.path)
 		if err != nil {

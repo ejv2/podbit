@@ -44,10 +44,10 @@ func initDirs() {
 	homedir = filepath.Join(share, homebase)
 	confdir = filepath.Join(config, homebase)
 
-	err := os.MkdirAll(homedir, os.ModeDir|os.ModePerm)
-	err = os.MkdirAll(confdir, os.ModeDir|os.ModePerm)
+	herr := os.MkdirAll(homedir, os.ModeDir|os.ModePerm)
+	cerr := os.MkdirAll(confdir, os.ModeDir|os.ModePerm)
 
-	if err != nil {
+	if herr != nil || cerr != nil {
 		fmt.Println("Error: Failed to required directory(s)")
 		os.Exit(1)
 	}

@@ -169,6 +169,10 @@ func (c *Cache) loadFile(path string, startup bool) {
 	}()
 
 	data, err := tag.ReadFrom(file)
+	if err != nil {
+		fmt.Println("Error: Invalid media file in cache")
+		return
+	}
 
 	artist, albumArtist := data.Artist(), data.AlbumArtist()
 	var host string

@@ -10,7 +10,7 @@
 // user impact as possible. Usually, the user won't even notice anything happened.
 //
 // Sound is played through an idle MPV instance which sits in the background and
-// recieves media to play when appropriate
+// receives media to play when appropriate
 package sound
 
 import (
@@ -31,7 +31,7 @@ var (
 	PlayerRPC = "/tmp/podbit-mpv"
 	// PlayerArgs are the standard arguments to use for the player
 	// These are not the final configs of the player, but just used
-	// to idle mpv ready to recieve instructions
+	// to idle mpv ready to receive instructions
 	PlayerArgs = []string{"--no-video", "--input-ipc-server=" + PlayerRPC}
 	// UpdateTime is the time between queue checks and supervision updates
 	UpdateTime = 200 * time.Millisecond

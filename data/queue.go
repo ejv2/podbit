@@ -224,7 +224,7 @@ func (q *Queue) Save() {
 }
 
 // Range loops through the queue array in a thread-safe fashion
-// using a callback which recieves each item in the queue in the
+// using a callback which receives each item in the queue in the
 // same format as a for range loop.
 //
 // It *IS* save to modify the queue in the callback
@@ -240,7 +240,7 @@ func (q *Queue) Range(callback RangeFunc) {
 }
 
 // RevRange range loops through the queue array in reverse order in a thread
-// safe fashion using a callback which recieves each item in the queue in the
+// safe fashion using a callback which receives each item in the queue in the
 // same format as a range loop.
 //
 // It *IS* safe to modify the queue in this callback

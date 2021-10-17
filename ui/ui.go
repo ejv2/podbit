@@ -12,7 +12,7 @@
 // to draw the screen in sync.
 //
 // The "redraw" chanel is the main channel around which the UI code
-// revolves. It is an integer channel which recieves a "mode". This
+// revolves. It is an integer channel which receives a "mode". This
 // mode allows you to select which part of the UI to redraw. This *can*
 // be all of them. The UI threads wait around for the redraw channel to
 // instruct them as to when they should draw the screen.

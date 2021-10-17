@@ -10,7 +10,10 @@ import (
 	"sync"
 )
 
-// Range function typedefs
+// RangeFunc is the callback definition for a thread-safe
+// cycle through the queue array. The arguments are formed
+// in the style of a for range loop. The returned boolean
+// will exit the looping if it is not true.
 type RangeFunc func(i int, item *QueueItem) bool
 
 // Queue parsing/management errors
@@ -236,9 +239,9 @@ func (q *Queue) Range(callback RangeFunc) {
 	}
 }
 
-// Range loops through the queue array in reverse order in a
-// thread safe fashion using a callback which recieves each
-// item in the queue in the same format as a range loop.
+// RevRange range loops through the queue array in reverse order in a thread
+// safe fashion using a callback which recieves each item in the queue in the
+// same format as a range loop.
 //
 // It *IS* safe to modify the queue in this callback
 func (q *Queue) RevRange(callback RangeFunc) {

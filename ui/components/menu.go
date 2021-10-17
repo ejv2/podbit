@@ -8,6 +8,14 @@ import (
 	"github.com/rthornton128/goncurses"
 )
 
+// Menu represents a vertical panel menu of cellular entries
+// taking up an entire row from X to W
+//
+// Menu handles focus, scrolling and the managing of elements
+// at each render.
+//
+// This component is not thread safe and should only be modified
+// directly one a single thread
 type Menu struct {
 	W, H  int
 	X, Y  int
@@ -22,6 +30,8 @@ type Menu struct {
 	prevw, prevh int
 }
 
+// Render immediately renders the menu to the specified
+// fields X, Y, H and W.
 func (m *Menu) Render() {
 	items := m.Items[m.scroll:]
 	c := m.scroll
@@ -55,6 +65,9 @@ func (m *Menu) Render() {
 	}
 }
 
+// GetSelection returns the text of the currently
+// selected menu element. If there are no items selected,
+// GetSelection returns an empty string.
 func (m *Menu) GetSelection() string {
 	if len(m.Items) < 1 {
 		return ""
@@ -63,6 +76,8 @@ func (m *Menu) GetSelection() string {
 	return m.Items[m.sel]
 }
 
+// ChangeSelection changes the selection to the index specified.
+// If index is out of range, no action is taken.
 func (m *Menu) ChangeSelection(index int) {
 	if index >= len(m.Items) || index < 0 {
 		return
@@ -79,6 +94,9 @@ func (m *Menu) ChangeSelection(index int) {
 	}
 }
 
+// MoveSelection changes the selected item relative to the current
+// position. If the new selection would be out of range, no action
+// is taken.
 func (m *Menu) MoveSelection(offset int) {
 	off := m.sel + offset
 	m.ChangeSelection(off)

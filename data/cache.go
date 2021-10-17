@@ -286,6 +286,9 @@ func (c *Cache) IsDownloading(path string) (bool, int) {
 	return false, 0
 }
 
+// Ongoing returns the current number of ongoing downloads
+// This value may be out of date after returned, but is
+// thread safe.
 func (c *Cache) Ongoing() int {
 	c.downloadsMutex.Lock()
 	defer c.downloadsMutex.Unlock()

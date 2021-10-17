@@ -53,7 +53,9 @@ const (
 // WaitFunc is the function to call waiting between each update
 type WaitFunc func(u chan int)
 
-// Player represents the current player instance
+// Player represents the current player instance. This persists
+// after the media has completed playing and becomes ineffective
+// until the next call to play
 type Player struct {
 	proc *exec.Cmd
 
@@ -76,9 +78,8 @@ type Player struct {
 	NowPodcast string
 }
 
-var (
-	Plr Player
-)
+// Plr is the singleton player instance
+var Plr Player
 
 func updateWait(u chan int) {
 	time.Sleep(UpdateTime)
@@ -170,6 +171,8 @@ func (p *Player) play(q *data.QueueItem) {
 	}
 }
 
+// Stop forces the current player instance to terminate, but does not
+// destroy the sound mainloop
 func (p *Player) Stop() {
 	p.act <- actStop
 }
@@ -183,6 +186,8 @@ func (p *Player) stop() {
 	p.playing = false
 }
 
+// Destroy forces the current player instance to terminate and destroys
+// the sound mainloop
 func (p *Player) Destroy() {
 	done := make(chan int)
 
@@ -190,6 +195,10 @@ func (p *Player) Destroy() {
 	<-done
 }
 
+// IsPaused requests the sound mainloop to return if it is paused. If
+// the mainloop is not playing, this function returns false. If the mainloop
+// is busy or processing audio, this function blocks until the mainloop is
+// ready
 func (p *Player) IsPaused() bool {
 	p.act <- reqPaused
 
@@ -206,6 +215,9 @@ func (p *Player) isPaused() bool {
 	return paused
 }
 
+// IsPlaying requests that the sound mainloop return if it is currently
+// playing audio. If the mainloop is busy or processing audio, this function
+// blocks until the mainloop is ready
 func (p *Player) IsPlaying() bool {
 	p.act <- reqPlaying
 
@@ -243,6 +255,7 @@ func (p *Player) unpause() {
 	p.ctrl.SetPause(false)
 }
 
+// Toggle pauses if the mainloop is unpaused, otherwise unpauses
 func (p *Player) Toggle() {
 	p.act <- actToggle
 }
@@ -280,6 +293,8 @@ func (p *Player) getTimings() (float64, float64) {
 	return pos, dur
 }
 
+// Seek moves the player head relative to the current
+// position
 func (p *Player) Seek(off int) {
 	p.act <- actSeek
 	p.dat <- off
@@ -302,6 +317,11 @@ func (p *Player) Wait() {
 	p.proc.Wait()
 }
 
+// Mainloop - Main sound handling thread loop
+//
+// Loops infinitely waiting for sound events, managing the queue, mpv
+// processes and player data handling. Can be communicated with through
+// a series of channels indicating different actions.
 func Mainloop() {
 	var wait WaitFunc = updateWait
 	var elem *data.QueueItem

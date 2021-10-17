@@ -78,9 +78,9 @@ func InputLoop(exit chan int) {
 			case 'q':
 				if data.Caching.Ongoing() == 0 {
 					return
-				} else {
-					StatusMessage("Error: Cannot quit with ongoing downloads")
 				}
+
+				StatusMessage("Error: Cannot quit with ongoing downloads")
 			default:
 				PassKeystroke(c)
 			}

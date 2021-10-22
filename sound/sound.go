@@ -164,7 +164,13 @@ func (p *Player) play(q *data.QueueItem) {
 			p.NowPlaying = ""
 			p.NowPodcast = ""
 		}
-		p.NowPlaying = now.Title
+
+		if now.Title == "" {
+			p.NowPlaying = q.URL
+		} else {
+			p.NowPlaying = now.Title
+		}
+
 		p.NowPodcast = data.DB.GetFriendlyName(q.URL)
 
 		p.playing = true

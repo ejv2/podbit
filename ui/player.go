@@ -29,8 +29,8 @@ func (l *Player) Render(x, y int) {
 	percent := pos / dur
 	p, d := data.FormatTime(pos), data.FormatTime(dur)
 
-	maxwt := int(math.Min(float64(w), float64(len(sound.Plr.NowPlaying))))
-	maxwp := int(math.Min(float64(w), float64(len(sound.Plr.NowPodcast))))
+	maxwt := int(math.Min(float64(w-1), float64(len(sound.Plr.NowPlaying))))
+	maxwp := int(math.Min(float64(w-1), float64(len(sound.Plr.NowPodcast))))
 
 	minxt := int(math.Max(0, float64((w-len(sound.Plr.NowPlaying))/2)))
 	minxp := int(math.Max(0, float64((w-len(sound.Plr.NowPodcast))/2)))

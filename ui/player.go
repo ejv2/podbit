@@ -31,21 +31,19 @@ func (l *Player) Render(x, y int) {
 
 	maxwt := int(math.Min(float64(w-1), float64(len(sound.Plr.NowPlaying))))
 	maxwp := int(math.Min(float64(w-1), float64(len(sound.Plr.NowPodcast))))
+	ep, pod := sound.Plr.NowPlaying[:maxwt], sound.Plr.NowPodcast[:maxwp]
 
-	minxt := int(math.Max(0, float64((w-len(sound.Plr.NowPlaying))/2)))
-	minxp := int(math.Max(0, float64((w-len(sound.Plr.NowPodcast))/2)))
+	minxt := int(math.Max(0, float64((w-maxwt)/2)))
+	minxp := int(math.Max(0, float64((w-maxwp)/2)))
 
-	var stat, play, div, pod string
+
+	var stat, div string
 	if sound.Plr.IsPlaying() {
 		stat = "Now Playing: "
-		play = sound.Plr.NowPlaying[:maxwt]
 		div = "by"
-		pod = sound.Plr.NowPodcast[:maxwp]
 	} else {
 		stat = "Not playing"
-		play = ""
 		div = ""
-		pod = ""
 	}
 
 	// Now playing
@@ -55,7 +53,7 @@ func (l *Player) Render(x, y int) {
 
 	// [episode name]
 	root.AttrOn(goncurses.A_BOLD)
-	root.MovePrint(x+6, minxt, play)
+	root.MovePrint(x+6, minxt, ep)
 	root.AttrOff(goncurses.A_BOLD)
 
 	// by

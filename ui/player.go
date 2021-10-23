@@ -83,5 +83,14 @@ func (l *Player) Input(c rune) {
 	switch c {
 	case ' ':
 		sound.Plr.Toggle()
+	case 'h':
+		sound.Plr.Seek(-5)
+	case 'l':
+		sound.Plr.Seek(5)
+
+	case 'H':
+		sound.Plr.Seek(-60)
+	case 'L':
+		sound.Plr.Seek(60)
 	}
 }

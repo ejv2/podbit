@@ -9,7 +9,7 @@ import (
 
 var queueHeadings []components.Column = []components.Column{
 	{
-		Label: "Status",
+		Label: "",
 		Width: 0.1,
 		Color: colors.BackgroundRed,
 	},

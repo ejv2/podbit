@@ -78,12 +78,12 @@ func (t *Table) Render() {
 
 			if len(capped) > colw {
 				// Trim to fit row
-				capped = capped[:colw]
-			} else {
-				// Pad out to fill row
-				for i := len(capped); i <= colw; i++ {
-					capped += " "
-				}
+				capped = capped[:colw-1]
+			}
+
+			// Pad out to fill row
+			for i := len(capped); i <= colw; i++ {
+				capped += " "
 			}
 
 			if sel {

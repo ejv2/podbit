@@ -48,7 +48,6 @@ func (q *Queue) Render(x, y int) {
 		dat, ok := data.Caching.Query(elem.Path)
 		pod := data.DB.GetFriendlyName(elem.URL)
 
-
 		if !ok || dat.Title == "" {
 			item[1] = elem.URL
 		} else {

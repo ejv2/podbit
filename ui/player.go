@@ -36,7 +36,6 @@ func (l *Player) Render(x, y int) {
 	minxt := int(math.Max(0, float64((w-maxwt)/2)))
 	minxp := int(math.Max(0, float64((w-maxwp)/2)))
 
-
 	var stat, div string
 	if sound.Plr.IsPlaying() {
 		stat = "Now Playing: "

@@ -1,10 +1,7 @@
 package components
 
 import (
-	"fmt"
-
 	"github.com/ethanv2/podbit/colors"
-
 	"github.com/rthornton128/goncurses"
 )
 
@@ -42,13 +39,12 @@ func (m *Menu) Render() {
 	m.prevw, m.prevh = m.W, m.H
 
 	for i, elem := range items {
-		var sel string
 		if c == m.sel && m.Selected {
 			m.Win.ColorOn(colors.BackgroundBlue)
 		}
 
 		var capped string
-		capped = fmt.Sprintf("%s%s", sel, elem)
+		capped = elem
 		if len(capped) > m.W {
 			capped = capped[:m.W+1]
 		} else {

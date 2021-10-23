@@ -28,21 +28,21 @@ var queueHeadings []components.Column = []components.Column{
 // Queue displays the current play queue
 // Not to be confused with the current download queue, Download
 type Queue struct {
+	tbl components.Table
 }
 
-func (l *Queue) Name() string {
+func (q *Queue) Name() string {
 	return "Queue"
 }
 
-func (l *Queue) Render(x, y int) {
-	var tbl components.Table
+func (q *Queue) Render(x, y int) {
+	q.tbl.X, q.tbl.Y = x, y
+	q.tbl.W, q.tbl.H = w, h
+	q.tbl.Win = root
 
-	tbl.X, tbl.Y = x, y
-	tbl.W, tbl.H = w, h
-	tbl.Win = root
+	q.tbl.Columns = queueHeadings
 
-	tbl.Columns = queueHeadings
-
+	q.tbl.Items = nil
 	for _, elem := range sound.GetQueue() {
 		item := make([]string, len(queueHeadings))
 		dat, ok := data.Caching.Query(elem.Path)
@@ -65,11 +65,17 @@ func (l *Queue) Render(x, y int) {
 
 		item[2] = pod
 
-		tbl.Items = append(tbl.Items, item)
+		q.tbl.Items = append(q.tbl.Items, item)
 	}
 
-	tbl.Render()
+	q.tbl.Render()
 }
 
-func (l *Queue) Input(c rune) {
+func (q *Queue) Input(c rune) {
+	switch c {
+	case 'j':
+		q.tbl.MoveSelection(1)
+	case 'k':
+		q.tbl.MoveSelection(-1)
+	}
 }

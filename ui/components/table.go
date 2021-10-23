@@ -100,3 +100,40 @@ func (t *Table) Render() {
 		off += colw
 	}
 }
+
+// GetSelection returns the text of the currently
+// selected menu element. If there are no items selected,
+// GetSelection returns an empty slice.
+func (m *Table) GetSelection() []string {
+	if len(m.Items) < 1 {
+		return []string{}
+	}
+
+	return m.Items[m.sel]
+}
+
+// ChangeSelection changes the selection to the index specified.
+// If index is out of range, no action is taken.
+func (m *Table) ChangeSelection(index int) {
+	if index >= len(m.Items) || index < 0 {
+		return
+	}
+
+	m.sel = index
+
+	scrollAt := m.H + m.scroll + 1
+	underscrollAt := m.scroll - 1
+	if m.sel == scrollAt {
+		m.scroll++
+	} else if m.sel == underscrollAt {
+		m.scroll--
+	}
+}
+
+// MoveSelection changes the selected item relative to the current
+// position. If the new selection would be out of range, no action
+// is taken.
+func (m *Table) MoveSelection(offset int) {
+	off := m.sel + offset
+	m.ChangeSelection(off)
+}

@@ -39,6 +39,8 @@ type Table struct {
 	prevw, prevh int
 }
 
+// Render immediately renders the table to the requested coords X and Y
+// with the space taken up limited to the space W*H
 func (t *Table) Render() {
 	items := t.Items[t.scroll:]
 	if t.prevw != t.W || t.prevh != t.H {

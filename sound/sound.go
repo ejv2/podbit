@@ -235,6 +235,8 @@ func (p *Player) isPlaying() bool {
 	return p.playing
 }
 
+// Pause will stop audio playback, but preserve the position in the audio and
+// queue. Will block until this is complete. Has no effect if not playing.
 func (p *Player) Pause() {
 	p.act <- actPause
 }
@@ -248,6 +250,9 @@ func (p *Player) pause() {
 	p.ctrl.SetPause(true)
 }
 
+// Unpause will restore the position into the audio and queue from a pause
+// and resume playback. Will block until this is complete. Has no effect if
+// not paused or playing.
 func (p *Player) Unpause() {
 	p.act <- actUnpause
 }

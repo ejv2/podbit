@@ -1,5 +1,5 @@
 // Package components implements re-usable sections of UI which can be
-// used by multiple sections of the program in multiple differeny ways.
+// used by multiple sections of the program in multiple different ways.
 //
 // They are designed to be as self-contained and as simple to use as
 // possible, with immediate-mode UI used as a reference model.

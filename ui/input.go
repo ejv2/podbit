@@ -73,6 +73,10 @@ func InputLoop(exit chan int) {
 				sound.Plr.Seek(5)
 			case '[':
 				sound.Plr.Seek(-5)
+			case '}':
+				sound.Plr.Seek(60)
+			case '{':
+				sound.Plr.Seek(-60)
 			case '\f': // Control-L
 				UpdateDimensions(root, true)
 			case 'q':

@@ -67,9 +67,10 @@ var (
 
 // Menu singletons
 var (
-	PlayerMenu  *Player  = new(Player)  // Full screen player
-	QueueMenu   *Queue   = new(Queue)   // Player queue display
-	LibraryMenu *Library = new(Library) // Library of podcasts and episodes
+	PlayerMenu   *Player    = new(Player) // Full screen player
+	QueueMenu    *Queue     = new(Queue)  // Player queue display
+	DownloadMenu *Downloads = new(Downloads)
+	LibraryMenu  *Library   = new(Library) // Library of podcasts and episodes
 )
 
 // Watch the terminal for resizes and redraw when needed

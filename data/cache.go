@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -248,16 +247,12 @@ func (c *Cache) Download(item *QueueItem) (id int, err error) {
 			}
 		}
 
-		if err != io.EOF {
-			return
-		}
-
 		stop <- 1
 
 		c.downloadsMutex.Lock()
 		c.Downloads[id].Completed = true
 		item.State = StateReady
-		if err != nil {
+		if err != nil && err.Error() != "EOF" {
 			c.Downloads[id].Success = false
 		} else {
 			c.Downloads[id].Success = true

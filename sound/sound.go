@@ -124,8 +124,6 @@ func NewPlayer(exit chan int) (p Player, err error) {
 	p.watchStop = make(chan int)
 	p.end = make(chan chan int)
 
-	p.start()
-
 	return
 }
 
@@ -146,15 +144,13 @@ func (p *Player) connect() (err error) {
 	return
 }
 
-func (p *Player) start() (err error) {
+func (p *Player) start() {
 	p.proc = exec.Command(PlayerName, PlayerArgs...)
 	p.proc.Start()
 
-	for err = p.connect(); err != nil; {
+	for err := p.connect(); err != nil; {
 		err = p.connect()
 	}
-
-	return
 }
 
 func (p *Player) load(filename string) {
@@ -386,7 +382,9 @@ func Mainloop() {
 		for keepWaiting {
 			select {
 			case resp := <-Plr.end:
-				Plr.proc.Process.Kill()
+				if Plr.proc != nil {
+					Plr.proc.Process.Kill()
+				}
 
 				Plr.playing = false
 

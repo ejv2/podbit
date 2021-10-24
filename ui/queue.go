@@ -76,5 +76,8 @@ func (q *Queue) Input(c rune) {
 		q.tbl.MoveSelection(1)
 	case 'k':
 		q.tbl.MoveSelection(-1)
+	case 'd':
+		i, _ := q.tbl.GetSelection()
+		sound.Dequeue(i)
 	}
 }

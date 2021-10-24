@@ -69,6 +69,8 @@ func InputLoop(exit chan int) {
 				sound.Plr.Toggle()
 			case 's':
 				sound.Plr.Stop()
+			case 'c':
+				sound.ClearQueue()
 			case ']':
 				sound.Plr.Seek(5)
 			case '[':

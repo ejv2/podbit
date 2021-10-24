@@ -59,6 +59,32 @@ func EnqueueByPodcast(ident string) {
 // ClearQueue truncates the queue to zero items
 func ClearQueue() {
 	queue = queue[:0]
+	head = 0
+
+	Plr.Stop()
+}
+
+// Dequeue removes an item from the queue at index
+// If index is invalid, no action is taken
+func Dequeue(index int) {
+	if index >= len(queue) {
+		return
+	}
+
+	var after []*data.QueueItem
+	prior := queue[:index]
+	if index < len(queue)-1 {
+		after = queue[index+1:]
+	} else {
+		after = make([]*data.QueueItem, 0)
+	}
+
+	queue = append(prior, after...)
+
+	if index == head-1 {
+		Plr.Stop()
+		head--
+	}
 }
 
 // GetQueue returns the raw queue in QueueItem slice form

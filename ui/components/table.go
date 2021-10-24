@@ -111,36 +111,36 @@ func (t *Table) Render() {
 // GetSelection returns the text of the currently
 // selected menu element. If there are no items selected,
 // GetSelection returns an empty slice.
-func (m *Table) GetSelection() (int, []string) {
-	if len(m.Items) < 1 {
+func (t *Table) GetSelection() (int, []string) {
+	if len(t.Items) < 1 {
 		return 0, []string{}
 	}
 
-	return m.sel, m.Items[m.sel]
+	return t.sel, t.Items[t.sel]
 }
 
 // ChangeSelection changes the selection to the index specified.
 // If index is out of range, no action is taken.
-func (m *Table) ChangeSelection(index int) {
-	if index >= len(m.Items) || index < 0 {
+func (t *Table) ChangeSelection(index int) {
+	if index >= len(t.Items) || index < 0 {
 		return
 	}
 
-	m.sel = index
+	t.sel = index
 
-	scrollAt := m.H + m.scroll + 1
-	underscrollAt := m.scroll - 1
-	if m.sel == scrollAt {
-		m.scroll++
-	} else if m.sel == underscrollAt {
-		m.scroll--
+	scrollAt := t.H + t.scroll + 1
+	underscrollAt := t.scroll - 1
+	if t.sel == scrollAt {
+		t.scroll++
+	} else if t.sel == underscrollAt {
+		t.scroll--
 	}
 }
 
 // MoveSelection changes the selected item relative to the current
 // position. If the new selection would be out of range, no action
 // is taken.
-func (m *Table) MoveSelection(offset int) {
-	off := m.sel + offset
-	m.ChangeSelection(off)
+func (t *Table) MoveSelection(offset int) {
+	off := t.sel + offset
+	t.ChangeSelection(off)
 }

@@ -79,5 +79,8 @@ func (q *Queue) Input(c rune) {
 	case 'd':
 		i, _ := q.tbl.GetSelection()
 		sound.Dequeue(i)
+	case 13: // Enter key - Jump to this position
+		i, _ := q.tbl.GetSelection()
+		sound.JumpTo(i)
 	}
 }

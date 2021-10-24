@@ -56,6 +56,27 @@ func EnqueueByPodcast(ident string) {
 	})
 }
 
+// JumpTo will force the head to the specified location.
+// If the new location is invalid, no action is taken.
+// After the jump, the player is instructed to play the
+// new head.
+func JumpTo(index int) {
+	if index >= len(queue) {
+		return
+	}
+
+	head = index
+
+	Plr.Stop()
+}
+
+// PlayNow enqueues an episode and jumps to it, followed
+// by a call to the player to play the new head
+func PlayNow(item *data.QueueItem) {
+	Enqueue(item)
+	JumpTo(len(queue)-1)
+}
+
 // ClearQueue truncates the queue to zero items
 func ClearQueue() {
 	queue = queue[:0]
@@ -81,9 +102,10 @@ func Dequeue(index int) {
 
 	queue = append(prior, after...)
 
-	if index == head-1 {
+	head--
+
+	if index == head {
 		Plr.Stop()
-		head--
 	}
 }
 
@@ -117,7 +139,7 @@ func PopHead() (*data.QueueItem, bool) {
 // queue (playing) and the index into the queue. This function
 // does not pop any items (the head remains unchanged).
 func GetHead() (h *data.QueueItem, pos int) {
-	if len(queue) > 0 && len(queue)-1 > pos {
+	if len(queue) > 0 && len(queue)-1 > head {
 		pos = head
 		h = queue[pos]
 	}

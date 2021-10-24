@@ -80,28 +80,6 @@ type Download struct {
 	Success   bool
 }
 
-func (c *Cache) progressWatcher(watch *Download, stop chan int) {
-	for {
-		c.downloadsMutex.Lock()
-
-		fi, err := watch.File.Stat()
-		if err != nil {
-			return
-		}
-		watch.Done = fi.Size()
-		watch.Percentage = float64(watch.Done) / float64(watch.Size)
-
-		c.downloadsMutex.Unlock()
-
-		select {
-		case <-stop:
-			return
-		default:
-			time.Sleep(1 * time.Second)
-		}
-	}
-}
-
 // Dig through newsboat stuff to guess the download dir
 // If we can't find it, just use the newsboat default and hope for the best
 func (c *Cache) guessDir() string {
@@ -203,7 +181,6 @@ func (c *Cache) loadFile(path string, startup bool) {
 // Does not block until completion, but spawns two goroutines to
 // complete the work as efficiently as possible.
 func (c *Cache) Download(item *QueueItem) (id int, err error) {
-
 	f, err := os.Create(item.Path)
 	if err != nil {
 		return 0, ErrorIO
@@ -216,7 +193,6 @@ func (c *Cache) Download(item *QueueItem) (id int, err error) {
 	}
 
 	size, _ := strconv.ParseInt(resp.Header.Get("Content-Length"), 10, 64)
-	stop := make(chan int)
 
 	c.downloadsMutex.Lock()
 	var dl Download = Download{
@@ -227,9 +203,8 @@ func (c *Cache) Download(item *QueueItem) (id int, err error) {
 	}
 	c.ongoing++
 	c.Downloads = append(c.Downloads, dl)
-
 	id = len(c.Downloads) - 1
-	go c.progressWatcher(&c.Downloads[id], stop)
+
 	c.downloadsMutex.Unlock()
 
 	go func() {
@@ -242,12 +217,15 @@ func (c *Cache) Download(item *QueueItem) (id int, err error) {
 			f.WriteAt(buf, count)
 			count += int64(read)
 
+			c.downloadsMutex.Lock()
+			c.Downloads[id].Done = count
+			c.Downloads[id].Percentage = float64(c.Downloads[id].Done) / float64(c.Downloads[id].Size)
+			c.downloadsMutex.Unlock()
+
 			if c.ongoing > 1 {
 				runtime.Gosched() // Give the other threads a turn
 			}
 		}
-
-		stop <- 1
 
 		c.downloadsMutex.Lock()
 		c.Downloads[id].Completed = true

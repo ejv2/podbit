@@ -102,10 +102,13 @@ func Dequeue(index int) {
 
 	queue = append(prior, after...)
 
-	head--
+	if index < head-1 && head > 0 {
+		head--
+	}
 
-	if index == head {
+	if index == head-1 {
 		Plr.Stop()
+		head--
 	}
 }
 

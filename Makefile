@@ -10,8 +10,7 @@ ${EXE}: ${SRC}
 	CGO_LDFLAGS_ALLOW=".*" go build
 
 check:
-	CGO_LDFLAGS_ALLOW=".*" go run -race .
-
+	CGO_LDFLAGS_ALLOW=".*" go run -race . 2>race.log
 clean:
 	go clean
 

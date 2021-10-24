@@ -9,17 +9,18 @@ SRC = main.go ver.go ${INPUTSRC} ${UISRC} ${DATASRC} ${UICOMPS} ${SOUNDSRC}
 ${EXE}: ${SRC}
 	CGO_LDFLAGS_ALLOW=".*" go build
 
-check: ${EXE}
+check:
 	CGO_LDFLAGS_ALLOW=".*" go run -race .
 
 clean:
 	go clean
 
-install:
+install: ${EXE}
 	go install
+	make
 
 uninstall:
 	go clean
 	rm -f ${GOPATH}/bin/${EXE}
 
-.PHONY = clean
+.PHONY = check clean install uninstall

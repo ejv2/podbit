@@ -43,6 +43,7 @@ const (
 	actUnpause
 	actToggle
 	actStop
+	actTerm
 	actSeek
 
 	reqPaused
@@ -63,7 +64,6 @@ type Player struct {
 	dat chan interface{}
 
 	exit      chan int
-	end       chan chan int
 	watchStop chan int
 
 	ipcc *mpv.IPCClient
@@ -120,9 +120,7 @@ func NewPlayer(exit chan int) (p Player, err error) {
 
 	p.act = make(chan int)
 	p.dat = make(chan interface{})
-
 	p.watchStop = make(chan int)
-	p.end = make(chan chan int)
 
 	return
 }
@@ -161,7 +159,7 @@ func (p *Player) load(filename string) {
 	p.ctrl.Loadfile(filename, mpv.LoadFileModeAppendPlay)
 
 	// Wait for track to load
-	for loaded := ""; loaded != "\"" + filename + "\""; loaded, _ = p.ctrl.Path() {
+	for loaded := ""; loaded != "\""+filename+"\""; loaded, _ = p.ctrl.Path() {
 	}
 }
 
@@ -209,10 +207,8 @@ func (p *Player) stop() {
 // the sound mainloop.
 // Blocks until the process is guaranteed destroyed.
 func (p *Player) Destroy() {
-	done := make(chan int)
-
-	p.end <- done
-	<-done
+	p.act <- actTerm
+	<-p.dat
 }
 
 // IsPaused requests the sound mainloop to return if it is paused. If
@@ -385,20 +381,20 @@ func Mainloop() {
 		keepWaiting := true
 		for keepWaiting {
 			select {
-			case resp := <-Plr.end:
-				if Plr.proc != nil {
-					Plr.proc.Process.Kill()
-				}
-
-				Plr.playing = false
-
-				resp <- 1
-				return
 			case <-u:
 				keepWaiting = false
 
 			case action := <-Plr.act:
 				switch action {
+				case actTerm:
+					if Plr.proc != nil {
+						Plr.proc.Process.Kill()
+					}
+
+					Plr.playing = false
+
+					Plr.dat <- 1
+					return
 				case actStop:
 					Plr.stop()
 				case actPause:

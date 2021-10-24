@@ -159,6 +159,10 @@ func (p *Player) load(filename string) {
 	}
 
 	p.ctrl.Loadfile(filename, mpv.LoadFileModeAppendPlay)
+
+	// Wait for track to load
+	for loaded := ""; loaded != "\"" + filename + "\""; loaded, _ = p.ctrl.Path() {
+	}
 }
 
 func (p *Player) play(q *data.QueueItem) {

@@ -32,7 +32,7 @@ var (
 	// PlayerArgs are the standard arguments to use for the player
 	// These are not the final configs of the player, but just used
 	// to idle mpv ready to receive instructions
-	PlayerArgs = []string{"--no-video", "--input-ipc-server=" + PlayerRPC}
+	PlayerArgs = []string{"--idle", "--no-video", "--input-ipc-server=" + PlayerRPC}
 	// UpdateTime is the time between queue checks and supervision updates
 	UpdateTime = 200 * time.Millisecond
 )
@@ -124,6 +124,8 @@ func NewPlayer(exit chan int) (p Player, err error) {
 	p.watchStop = make(chan int)
 	p.end = make(chan chan int)
 
+	p.start()
+
 	return
 }
 
@@ -144,8 +146,8 @@ func (p *Player) connect() (err error) {
 	return
 }
 
-func (p *Player) start(filename string) (err error) {
-	p.proc = exec.Command(PlayerName, append(PlayerArgs, filename)...)
+func (p *Player) start() (err error) {
+	p.proc = exec.Command(PlayerName, PlayerArgs...)
 	p.proc.Start()
 
 	for err = p.connect(); err != nil; {
@@ -155,8 +157,16 @@ func (p *Player) start(filename string) (err error) {
 	return
 }
 
+func (p *Player) load(filename string) {
+	if p.proc == nil || p.ctrl == nil {
+		p.start()
+	}
+
+	p.ctrl.Loadfile(filename, mpv.LoadFileModeAppendPlay)
+}
+
 func (p *Player) play(q *data.QueueItem) {
-	p.start(q.Path)
+	p.load(q.Path)
 
 	if q.State != data.StatePending {
 		now, ok := data.Caching.Query(q.Path)
@@ -177,8 +187,11 @@ func (p *Player) play(q *data.QueueItem) {
 	}
 }
 
-// Stop forces the current player instance to terminate, but does not
-// destroy the sound mainloop
+// Stop ends playback of the current audio track, but does not
+// destroy the sound mainloop. This will usually result in the
+// next podcast playing.
+//
+// TODO: Add some way of stopping the sound mainloop
 func (p *Player) Stop() {
 	p.act <- actStop
 }
@@ -188,12 +201,13 @@ func (p *Player) stop() {
 		return
 	}
 
-	p.proc.Process.Kill()
+	p.ctrl.Exec("stop")
 	p.playing = false
 }
 
 // Destroy forces the current player instance to terminate and destroys
-// the sound mainloop
+// the sound mainloop.
+// Blocks until the process is guaranteed destroyed.
 func (p *Player) Destroy() {
 	done := make(chan int)
 
@@ -325,7 +339,10 @@ func (p *Player) Wait() {
 		return
 	}
 
-	p.proc.Wait()
+	now, _ := p.ctrl.Filename()
+	for filename := now; filename == now; filename, _ = p.ctrl.Filename() {
+		time.Sleep(UpdateTime)
+	}
 }
 
 // Mainloop - Main sound handling thread loop
@@ -369,9 +386,7 @@ func Mainloop() {
 		for keepWaiting {
 			select {
 			case resp := <-Plr.end:
-				if Plr.playing {
-					Plr.proc.Process.Kill()
-				}
+				Plr.proc.Process.Kill()
 
 				Plr.playing = false
 

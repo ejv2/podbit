@@ -67,6 +67,8 @@ func InputLoop(exit chan int) {
 				ActivateMenu(DownloadMenu)
 			case '4':
 				ActivateMenu(LibraryMenu)
+			case 'r':
+				data.Q.Reload()
 			case 'p':
 				sound.Plr.Toggle()
 			case 's':

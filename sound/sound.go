@@ -91,6 +91,8 @@ func endWait(u chan int) {
 	time.Sleep(time.Second)
 
 	Plr.playing = false
+	Plr.NowPlaying = ""
+	Plr.NowPodcast = ""
 
 	u <- 1
 }

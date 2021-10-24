@@ -37,6 +37,7 @@ type Table struct {
 	sel    int
 
 	prevw, prevh int
+	prevlen      int
 }
 
 // Render immediately renders the table to the requested coords X and Y
@@ -46,7 +47,11 @@ func (t *Table) Render() {
 	if t.prevw != t.W || t.prevh != t.H {
 		t.scroll = 0
 	}
+	if len(items) != t.prevlen {
+		t.sel = 0
+	}
 	t.prevw, t.prevh = t.W, t.H
+	t.prevlen = len(items)
 
 	t.Win.AttrOn(goncurses.A_BOLD)
 	t.Win.HLine(t.Y+1, t.X, goncurses.ACS_HLINE, t.W)
@@ -106,12 +111,12 @@ func (t *Table) Render() {
 // GetSelection returns the text of the currently
 // selected menu element. If there are no items selected,
 // GetSelection returns an empty slice.
-func (m *Table) GetSelection() []string {
+func (m *Table) GetSelection() (int, []string) {
 	if len(m.Items) < 1 {
-		return []string{}
+		return 0, []string{}
 	}
 
-	return m.Items[m.sel]
+	return m.sel, m.Items[m.sel]
 }
 
 // ChangeSelection changes the selection to the index specified.

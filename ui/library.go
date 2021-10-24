@@ -148,21 +148,21 @@ func (l *Library) StartDownload() {
 		go StatusMessage(fmt.Sprintf("Download of %s started...", item.URL))
 
 		return
-	} else {
-		for _, elem := range targets {
-			if data.IsURL(elem) {
-				item := data.Q.GetEpisodeByURL(elem)
-				if item == nil {
-					continue
-				}
+	}
 
-				if y, _ := data.Caching.IsDownloading(item.Path); y {
-					go StatusMessage(fmt.Sprintf("Episode already downloading"))
-					return
-				}
-
-				go data.Caching.Download(item)
+	for _, elem := range targets {
+		if data.IsURL(elem) {
+			item := data.Q.GetEpisodeByURL(elem)
+			if item == nil {
+				continue
 			}
+
+			if y, _ := data.Caching.IsDownloading(item.Path); y {
+				go StatusMessage(fmt.Sprintf("Episode already downloading"))
+				return
+			}
+
+			go data.Caching.Download(item)
 		}
 	}
 

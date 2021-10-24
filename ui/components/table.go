@@ -87,7 +87,7 @@ func (t *Table) Render() {
 			}
 
 			// Pad out to fill row
-			for i := len(capped); i <= colw; i++ {
+			for i := len(capped); i <= colw && off+len(capped) < t.W; i++ {
 				capped += " "
 			}
 

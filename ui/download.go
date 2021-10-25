@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"fmt"
 	"strconv"
 
 	"github.com/ethanv2/podbit/colors"
@@ -53,14 +54,14 @@ func (q *Downloads) Render(x, y int) {
 		item := make([]string, len(downloadHeadings))
 
 		item[0] = strconv.FormatInt(int64(i), 10)
-		item[1] = strconv.FormatFloat(elem.Percentage*100,'f', 2, 64)
+		item[1] = strconv.FormatFloat(elem.Percentage*100, 'f', 2, 64)
 		item[2] = elem.Path
 
 		if elem.Completed {
 			if elem.Success {
 				item[3] = "Finished"
 			} else {
-				item[3] = "Failed"
+				item[3] = fmt.Sprintf("Failed (%s)", elem.Error)
 			}
 		} else {
 			item[3] = "In progress"

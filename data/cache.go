@@ -78,6 +78,7 @@ type Download struct {
 
 	Completed bool
 	Success   bool
+	Error     string
 }
 
 // Dig through newsboat stuff to guess the download dir
@@ -183,13 +184,46 @@ func (c *Cache) loadFile(path string, startup bool) {
 func (c *Cache) Download(item *QueueItem) (id int, err error) {
 	f, err := os.Create(item.Path)
 	if err != nil {
-		return 0, ErrorIO
+		c.downloadsMutex.Lock()
+		var dl Download = Download{
+			Path:       item.Path,
+			File:       f,
+			Size:       0,
+			Started:    time.Now(),
+			Percentage: 0,
+			Done:       0,
+			Completed:  true,
+			Success:    false,
+			Error:      "IO Error",
+		}
+		c.Downloads = append(c.Downloads, dl)
+		id = len(c.Downloads) - 1
+		c.downloadsMutex.Unlock()
+
+		return id, ErrorIO
 	}
 
 	resp, err := http.Get(item.URL)
 	if err != nil || resp.StatusCode != http.StatusOK {
+		c.downloadsMutex.Lock()
+		var dl Download = Download{
+			Path:       item.Path,
+			File:       f,
+			Size:       0,
+			Started:    time.Now(),
+			Percentage: 0,
+			Done:       0,
+			Completed:  true,
+			Success:    false,
+			Error:      "Download failed",
+		}
+		c.Downloads = append(c.Downloads, dl)
+		id = len(c.Downloads) - 1
+
+		c.downloadsMutex.Unlock()
+
 		os.Remove(item.Path)
-		return 0, fmt.Errorf(ErrorDownloadFailed, item.URL)
+		return id, fmt.Errorf(ErrorDownloadFailed, item.URL)
 	}
 
 	size, _ := strconv.ParseInt(resp.Header.Get("Content-Length"), 10, 64)

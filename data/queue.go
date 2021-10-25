@@ -232,8 +232,8 @@ func (q *Queue) Range(callback RangeFunc) {
 	q.mutex.Lock()
 	defer q.mutex.Unlock()
 
-	for i, item := range q.Items {
-		if !callback(i, &item) {
+	for i := range q.Items {
+		if !callback(i, &q.Items[i]) {
 			return
 		}
 	}
@@ -249,9 +249,7 @@ func (q *Queue) RevRange(callback RangeFunc) {
 	defer q.mutex.Unlock()
 
 	for i := len(q.Items) - 1; i >= 0; i-- {
-		item := q.Items[i]
-
-		if !callback(i, &item) {
+		if !callback(i, &q.Items[i]) {
 			return
 		}
 	}

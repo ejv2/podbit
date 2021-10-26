@@ -6,6 +6,10 @@ SOUNDSRC = sound/sound.go sound/queue.go
 DATASRC  = data/data.go data/queue.go data/db.go data/cache.go
 SRC = main.go ver.go ${INPUTSRC} ${UISRC} ${DATASRC} ${UICOMPS} ${SOUNDSRC}
 
+ifndef PREFIX
+	PREFIX = /usr/local
+endif
+
 ${EXE}: ${SRC}
 	CGO_LDFLAGS_ALLOW=".*" go build
 
@@ -15,11 +19,11 @@ clean:
 	go clean
 
 install: ${EXE}
-	go install
-	make
+	mkdir -p ${DESTDIR}${PREFIX}/bin
+	cp -f ${EXE} ${DESTDIR}${PREFIX}/bin/
+	chmod 755 ${DESTDIR}${PREFIX}/bin/${EXE}
 
 uninstall:
-	go clean
-	rm -f ${GOPATH}/bin/${EXE}
+	rm -f ${DESTDIR}${PREFIX}/bin/${EXE}
 
 .PHONY = check clean install uninstall

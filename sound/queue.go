@@ -74,7 +74,7 @@ func JumpTo(index int) {
 // by a call to the player to play the new head
 func PlayNow(item *data.QueueItem) {
 	Enqueue(item)
-	JumpTo(len(queue)-1)
+	JumpTo(len(queue) - 1)
 }
 
 // ClearQueue truncates the queue to zero items
@@ -142,10 +142,21 @@ func PopHead() (*data.QueueItem, bool) {
 // queue (playing) and the index into the queue. This function
 // does not pop any items (the head remains unchanged).
 func GetHead() (h *data.QueueItem, pos int) {
-	if len(queue) > 0 && len(queue)-1 > head {
-		pos = head
+	if len(queue) > 0 && len(queue) > head-1 && head-1 >= 0 {
+		pos = head - 1
 		h = queue[pos]
 	}
 
 	return
+}
+
+// GetNext returns the item which is enqueued to play next
+// after the current entry has finished. If there is not an
+// item enqueued next, returns nil and -1
+func GetNext() (*data.QueueItem, int) {
+	if len(queue) > head {
+		return queue[head], head
+	}
+
+	return nil, -1
 }

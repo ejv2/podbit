@@ -77,6 +77,27 @@ func (l *Player) Render(x, y int) {
 	root.ColorOn(colors.ColorBlue)
 	root.HLine(h-(h/3), len(p)+1, goncurses.ACS_HLINE, wid)
 	root.ColorOff(colors.ColorBlue)
+
+	// Next up
+	cur, _ := sound.GetNext()
+	lbl := "Next up: "
+	if cur != nil {
+		var txt string
+		if entry, ok := data.Caching.Query(cur.Path); ok && entry.Title != "" {
+			txt = entry.Title
+		} else {
+			txt = cur.URL
+		}
+
+		max := int(math.Min(float64(w-1), float64(len(txt))))
+		clipped := txt[:max]
+
+		root.ColorOn(colors.ColorRed)
+		root.MovePrint(h-(h/3)+2, (w-len(lbl))/2, lbl)
+		root.ColorOff(colors.ColorRed)
+
+		root.MovePrint(h-(h/3)+3, (w-len(clipped))/2, clipped)
+	}
 }
 
 func (l *Player) Input(c rune) {

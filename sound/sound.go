@@ -48,6 +48,7 @@ const (
 
 	reqPaused
 	reqPlaying
+	reqWaiting
 	reqTimings
 )
 
@@ -72,7 +73,8 @@ type Player struct {
 	waiting  bool
 	download *data.Download
 
-	playing bool
+	exhausted bool
+	playing   bool
 
 	NowPlaying string
 	NowPodcast string
@@ -247,6 +249,19 @@ func (p *Player) isPlaying() bool {
 	return p.playing
 }
 
+// IsWaiting checks if the mainloop is waiting on an episode to download
+// before playing it
+func (p *Player) IsWaiting() bool {
+	p.act <- reqWaiting
+
+	r := <-p.dat
+	return r.(bool)
+}
+
+func (p *Player) isWaiting() bool {
+	return p.waiting
+}
+
 // Pause will stop audio playback, but preserve the position in the audio and
 // queue. Will block until this is complete. Has no effect if not playing.
 func (p *Player) Pause() {
@@ -353,9 +368,9 @@ func Mainloop() {
 	var elem *data.QueueItem
 
 	for {
-		elem, Plr.waiting = PopHead()
+		elem, Plr.exhausted = PopHead()
 
-		if !Plr.playing && !Plr.waiting && len(queue) > 0 {
+		if !Plr.playing && !Plr.waiting && !Plr.exhausted && len(queue) > 0 {
 			if elem.State != data.StatePending && data.Caching.EntryExists(elem.Path) {
 				Plr.play(elem)
 				wait = endWait
@@ -413,6 +428,8 @@ func Mainloop() {
 					Plr.dat <- Plr.isPaused()
 				case reqPlaying:
 					Plr.dat <- Plr.isPlaying()
+				case reqWaiting:
+					Plr.dat <- Plr.isWaiting()
 				case reqTimings:
 					d, p := Plr.getTimings()
 					arr := [2]float64{d, p}

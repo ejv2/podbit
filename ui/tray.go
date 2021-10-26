@@ -75,6 +75,10 @@ func RenderTray(scr *goncurses.Window, w, h int) {
 			root.ColorOn(colors.ColorRed)
 			scr.MovePrintf(h-1, w-len(code), "%s", code)
 			root.ColorOff(colors.ColorRed)
+		} else if sound.Plr.IsWaiting() {
+			root.ColorOn(colors.ColorRed)
+			scr.MovePrint(h-1, 0, "Waiting for download...")
+			root.ColorOff(colors.ColorRed)
 		} else {
 			root.ColorOn(colors.ColorRed)
 			scr.MovePrint(h-1, 0, "Not playing")

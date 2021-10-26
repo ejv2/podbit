@@ -1,5 +1,6 @@
 # Podbit - **Podboat Improved**
 
+[![AUR Release](https://img.shields.io/aur/version/podbit?color=1793d1&label=podbit&logo=arch-linux)](https://aur.archlinux.org/packages/podbit/)
 [![Makefile CI](https://github.com/ethanv2/podbit/actions/workflows/makefile.yml/badge.svg)](https://github.com/ethanv2/podbit/actions/workflows/makefile.yml)
 [![Go Report Card](https://goreportcard.com/badge/github.com/ethanv2/podbit)](https://goreportcard.com/report/github.com/ethanv2/podbit)
 

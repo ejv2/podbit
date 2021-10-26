@@ -235,6 +235,8 @@ func (c *Cache) Download(item *QueueItem) (id int, err error) {
 		Size:    size,
 		Started: time.Now(),
 	}
+	item.State = StatePending
+
 	c.ongoing++
 	c.Downloads = append(c.Downloads, dl)
 	id = len(c.Downloads) - 1

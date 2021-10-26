@@ -6,6 +6,7 @@ import (
 
 	"github.com/ethanv2/podbit/colors"
 	"github.com/ethanv2/podbit/data"
+	"github.com/ethanv2/podbit/sound"
 	"github.com/ethanv2/podbit/ui/components"
 )
 
@@ -79,7 +80,26 @@ func (q *Downloads) Input(c rune) {
 		q.tbl.MoveSelection(1)
 	case 'k':
 		q.tbl.MoveSelection(-1)
-	case 'v':
+	case 13:
+		q.Enqueue()
+	}
+}
 
+func (q *Downloads) Enqueue() {
+	i, _ := q.tbl.GetSelection()
+	d := data.Caching.Downloads[i].Path
+
+	var found *data.QueueItem
+	data.Q.Range(func(i int, item *data.QueueItem) bool {
+		if item.Path == d {
+			found = item
+		}
+
+		return true
+	})
+
+	if found != nil {
+		go StatusMessage("Enqueued: Download will play once completed")
+		sound.Enqueue(found)
 	}
 }

@@ -1,3 +1,9 @@
+// Package data implements data loading, management and serialisation.
+// It maintains a set of singleton instances of the data sources which
+// should be used directly by clients.
+//
+// Although most of the data sources are designed to be thread safe,
+// some, such as the cache, cannot guarantee this in all use cases.
 package data
 
 import (

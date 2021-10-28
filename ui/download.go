@@ -80,6 +80,8 @@ func (q *Downloads) Input(c rune) {
 		q.tbl.MoveSelection(1)
 	case 'k':
 		q.tbl.MoveSelection(-1)
+	case 'd':
+		q.Cancel()
 	case 13:
 		q.Enqueue()
 	}
@@ -101,5 +103,14 @@ func (q *Downloads) Enqueue() {
 	if found != nil {
 		go StatusMessage("Enqueued: Download will play once completed")
 		sound.Enqueue(found)
+	}
+}
+
+func (q *Downloads) Cancel() {
+	i, _ := q.tbl.GetSelection()
+
+	dl := data.Caching.Downloads[i]
+	if !dl.Completed {
+		dl.Stop <- 1
 	}
 }

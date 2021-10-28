@@ -52,33 +52,36 @@ type Episode struct {
 // Once the associated download is complete, the watcher goroutine
 // terminates.
 //
-// You should treat this struct as read only - including the contained
-// file handle, despite write permissions being granted.
-//
-// Contained fields have no guarantees of thread safety: this struct is
-// merely an approximation and a convenience.
-//
-// Path is the absolute path of the destination
-// File is the current live handle of the download file. DO NOT TOUCH!
-// Size is the size of the download to be completed
-// Done is the size of the download which *has* completed
-// Started is the timestamp of the download start
-// Completed will be true when the nanny goroutine terminates
-// Success will be true if the download completed with no errors
+// This struct is *not* thread safe; don't write to it
 type Download struct {
+	// Path is the absolute path of the download destination
 	Path string
+	// File is the live file handle of the download
+	// Will be closed once Completed == true
 	File *os.File
 
+	// Percentage is the calculated percentage currently completed
 	Percentage float64
 
+	// Size is the total size to download
 	Size int64
+	// Done is the currently downloaded size present on disk
 	Done int64
 
+	// Started is the timestamp of the download commencing
 	Started time.Time
 
+	// Completed == true once the operations has either finished or failed
 	Completed bool
+	// Success == true if the full download completed successfully
 	Success   bool
+	// Error is the error which caused the download to fail
+	// Empty if the download did not fail
 	Error     string
+
+	// Stop will cause the download to cease immediately
+	// Will be closed once the download completes
+	Stop chan int
 }
 
 // Dig through newsboat stuff to guess the download dir
@@ -186,12 +189,7 @@ func (c *Cache) Download(item *QueueItem) (id int, err error) {
 	if err != nil {
 		c.downloadsMutex.Lock()
 		var dl Download = Download{
-			Path:       item.Path,
-			File:       f,
-			Size:       0,
 			Started:    time.Now(),
-			Percentage: 0,
-			Done:       0,
 			Completed:  true,
 			Success:    false,
 			Error:      "IO Error",
@@ -209,10 +207,7 @@ func (c *Cache) Download(item *QueueItem) (id int, err error) {
 		var dl Download = Download{
 			Path:       item.Path,
 			File:       f,
-			Size:       0,
 			Started:    time.Now(),
-			Percentage: 0,
-			Done:       0,
 			Completed:  true,
 			Success:    false,
 			Error:      "Download failed",
@@ -234,6 +229,7 @@ func (c *Cache) Download(item *QueueItem) (id int, err error) {
 		File:    f,
 		Size:    size,
 		Started: time.Now(),
+		Stop: make(chan int),
 	}
 	item.State = StatePending
 
@@ -253,28 +249,35 @@ func (c *Cache) Download(item *QueueItem) (id int, err error) {
 			f.WriteAt(buf, count)
 			count += int64(read)
 
-			c.downloadsMutex.Lock()
 			c.Downloads[id].Done = count
 			c.Downloads[id].Percentage = float64(c.Downloads[id].Done) / float64(c.Downloads[id].Size)
-			c.downloadsMutex.Unlock()
 
 			if c.ongoing > 1 {
 				runtime.Gosched() // Give the other threads a turn
 			}
+
+			select {
+			case <-c.Downloads[id].Stop:
+				err = errors.New("Cancelled")
+				break
+			default:
+			}
 		}
 
-		c.downloadsMutex.Lock()
 		c.Downloads[id].Completed = true
 		item.State = StateReady
 		if err != nil && err.Error() != "EOF" {
 			c.Downloads[id].Success = false
+			c.Downloads[id].Error = err.Error()
 		} else {
 			c.Downloads[id].Success = true
 		}
+		close(c.Downloads[id].Stop)
 
+
+		c.downloadsMutex.Lock()
 		c.loadFile(c.Downloads[id].Path, false)
 		c.ongoing--
-
 		c.downloadsMutex.Unlock()
 
 		resp.Body.Close()

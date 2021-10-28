@@ -1,16 +1,25 @@
 package sound
 
 import (
+	"sync"
+
 	"github.com/ethanv2/podbit/data"
 )
 
 // Singleton state
-var head int
-var queue []*data.QueueItem
+var (
+	mut sync.RWMutex
+
+	head  int
+	queue []*data.QueueItem
+)
 
 // Enqueue is the low-level enqueue routine
 // Enqueues a raw QueueItem for playback
 func Enqueue(item *data.QueueItem) {
+	mut.Lock()
+	defer mut.Unlock()
+
 	queue = append(queue, item)
 }
 
@@ -88,6 +97,9 @@ func ClearQueue() {
 // Dequeue removes an item from the queue at index
 // If index is invalid, no action is taken
 func Dequeue(index int) {
+	mut.Lock()
+	defer mut.Unlock()
+
 	if index >= len(queue) {
 		return
 	}
@@ -116,6 +128,9 @@ func Dequeue(index int) {
 // You should not edit the returned values, as this looses
 // all thread protection
 func GetQueue() []*data.QueueItem {
+	mut.RLock()
+	defer mut.RUnlock()
+
 	return queue
 }
 
@@ -124,6 +139,9 @@ func GetQueue() []*data.QueueItem {
 // indicates if the player should stop - which occurs in the
 // case of the end of the queue or an empty queue
 func PopHead() (*data.QueueItem, bool) {
+	mut.Lock()
+	defer mut.Unlock()
+
 	if len(queue) > 0 {
 		if head >= len(queue) {
 			return nil, true
@@ -142,6 +160,9 @@ func PopHead() (*data.QueueItem, bool) {
 // queue (playing) and the index into the queue. This function
 // does not pop any items (the head remains unchanged).
 func GetHead() (h *data.QueueItem, pos int) {
+	mut.RLock()
+	defer mut.RUnlock()
+
 	if len(queue) > 0 && len(queue) > head-1 && head-1 >= 0 {
 		pos = head - 1
 		h = queue[pos]

@@ -231,7 +231,10 @@ func (c *Cache) Download(item *QueueItem) (id int, err error) {
 		Started: time.Now(),
 		Stop: make(chan int),
 	}
+
+	Q.mutex.Lock()
 	item.State = StatePending
+	Q.mutex.Unlock()
 
 	c.ongoing++
 	c.Downloads = append(c.Downloads, dl)
@@ -264,8 +267,11 @@ func (c *Cache) Download(item *QueueItem) (id int, err error) {
 			}
 		}
 
-		c.Downloads[id].Completed = true
+		Q.mutex.Lock()
 		item.State = StateReady
+		Q.mutex.Unlock()
+
+		c.Downloads[id].Completed = true
 		if err != nil && err.Error() != "EOF" {
 			c.Downloads[id].Success = false
 			c.Downloads[id].Error = err.Error()

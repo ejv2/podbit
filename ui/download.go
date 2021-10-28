@@ -51,7 +51,7 @@ func (q *Downloads) Render(x, y int) {
 	q.tbl.Columns = downloadHeadings
 
 	q.tbl.Items = nil
-	for i, elem := range data.Caching.Downloads {
+	for i, elem := range data.Caching.Downloads() {
 		item := make([]string, len(downloadHeadings))
 
 		item[0] = strconv.FormatInt(int64(i), 10)
@@ -89,7 +89,7 @@ func (q *Downloads) Input(c rune) {
 
 func (q *Downloads) Enqueue() {
 	i, _ := q.tbl.GetSelection()
-	d := data.Caching.Downloads[i].Path
+	d := data.Caching.Downloads()[i].Path
 
 	var found *data.QueueItem
 	data.Q.Range(func(i int, item *data.QueueItem) bool {
@@ -109,7 +109,7 @@ func (q *Downloads) Enqueue() {
 func (q *Downloads) Cancel() {
 	i, _ := q.tbl.GetSelection()
 
-	dl := data.Caching.Downloads[i]
+	dl := data.Caching.Downloads()[i]
 	if !dl.Completed {
 		dl.Stop <- 1
 	}

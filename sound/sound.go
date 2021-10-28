@@ -71,7 +71,7 @@ type Player struct {
 	ctrl *mpv.Client
 
 	waiting  bool
-	download *data.Download
+	download *data.QueueItem
 
 	exhausted bool
 	playing   bool
@@ -100,7 +100,7 @@ func endWait(u chan int) {
 }
 
 func downloadWait(u chan int) {
-	for !Plr.download.Completed {
+	for y := true ; y; y, _ = data.Caching.IsDownloading(Plr.download.Path) {
 	}
 
 	Plr.waiting = false
@@ -377,16 +377,16 @@ func Mainloop() {
 			} else {
 				Plr.waiting = true
 
-				if y, dow := data.Caching.IsDownloading(elem.Path); y {
-					Plr.download = &data.Caching.Downloads[dow]
+				if y, _ := data.Caching.IsDownloading(elem.Path); y {
+					Plr.download = elem
 				} else {
 
-					id, err := data.Caching.Download(elem)
+					_, err := data.Caching.Download(elem)
 					if err != nil {
 						continue
 					}
 
-					Plr.download = &data.Caching.Downloads[id]
+					Plr.download = elem
 				}
 
 				wait = downloadWait

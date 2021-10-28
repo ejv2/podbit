@@ -34,7 +34,7 @@ type Cache struct {
 	episodes sync.Map
 
 	downloadsMutex sync.Mutex // Protects the below two variables
-	Downloads      []Download
+	downloads      []Download
 	ongoing        int
 }
 
@@ -174,11 +174,8 @@ func (c *Cache) loadFile(path string, startup bool) {
 }
 
 // Download Starts a download and return its ID in the downloads table
-// This can be used to retrieve information about said download
-//
-// WARNING: DO NOT modify this table without taking out the mutex!
-// This code is NOT THREAD SAFE witout this mutex being used. In most
-// situations, use the entry as a read-only reference *only*.
+// This can be used to retrieve information about said download by passing
+// to GetDownload.
 //
 // Returns as soon as the download has been initialised - which could be
 // significant. We recommend calling this function in a goroutine.
@@ -194,8 +191,8 @@ func (c *Cache) Download(item *QueueItem) (id int, err error) {
 			Success:    false,
 			Error:      "IO Error",
 		}
-		c.Downloads = append(c.Downloads, dl)
-		id = len(c.Downloads) - 1
+		c.downloads = append(c.downloads, dl)
+		id = len(c.downloads) - 1
 		c.downloadsMutex.Unlock()
 
 		return id, ErrorIO
@@ -212,8 +209,8 @@ func (c *Cache) Download(item *QueueItem) (id int, err error) {
 			Success:    false,
 			Error:      "Download failed",
 		}
-		c.Downloads = append(c.Downloads, dl)
-		id = len(c.Downloads) - 1
+		c.downloads = append(c.downloads, dl)
+		id = len(c.downloads) - 1
 
 		c.downloadsMutex.Unlock()
 
@@ -237,8 +234,8 @@ func (c *Cache) Download(item *QueueItem) (id int, err error) {
 	Q.mutex.Unlock()
 
 	c.ongoing++
-	c.Downloads = append(c.Downloads, dl)
-	id = len(c.Downloads) - 1
+	c.downloads = append(c.downloads, dl)
+	id = len(c.downloads) - 1
 
 	c.downloadsMutex.Unlock()
 
@@ -252,15 +249,17 @@ func (c *Cache) Download(item *QueueItem) (id int, err error) {
 			f.WriteAt(buf, count)
 			count += int64(read)
 
-			c.Downloads[id].Done = count
-			c.Downloads[id].Percentage = float64(c.Downloads[id].Done) / float64(c.Downloads[id].Size)
+			c.downloadsMutex.Lock()
+			c.downloads[id].Done = count
+			c.downloads[id].Percentage = float64(c.downloads[id].Done) / float64(c.downloads[id].Size)
+			c.downloadsMutex.Unlock()
 
 			if c.ongoing > 1 {
 				runtime.Gosched() // Give the other threads a turn
 			}
 
 			select {
-			case <-c.Downloads[id].Stop:
+			case <-c.downloads[id].Stop:
 				err = errors.New("Cancelled")
 				break
 			default:
@@ -271,18 +270,18 @@ func (c *Cache) Download(item *QueueItem) (id int, err error) {
 		item.State = StateReady
 		Q.mutex.Unlock()
 
-		c.Downloads[id].Completed = true
-		if err != nil && err.Error() != "EOF" {
-			c.Downloads[id].Success = false
-			c.Downloads[id].Error = err.Error()
-		} else {
-			c.Downloads[id].Success = true
-		}
-		close(c.Downloads[id].Stop)
-
 
 		c.downloadsMutex.Lock()
-		c.loadFile(c.Downloads[id].Path, false)
+		c.downloads[id].Completed = true
+		if err != nil && err.Error() != "EOF" {
+			c.downloads[id].Success = false
+			c.downloads[id].Error = err.Error()
+		} else {
+			c.downloads[id].Success = true
+		}
+		close(c.downloads[id].Stop)
+
+		c.loadFile(c.downloads[id].Path, false)
 		c.ongoing--
 		c.downloadsMutex.Unlock()
 
@@ -299,13 +298,23 @@ func (c *Cache) IsDownloading(path string) (bool, int) {
 	c.downloadsMutex.Lock()
 	defer c.downloadsMutex.Unlock()
 
-	for i, elem := range c.Downloads {
+	for i, elem := range c.downloads {
 		if elem.Path == path && !elem.Completed {
 			return true, i
 		}
 	}
 
 	return false, 0
+}
+
+// GetDownload returns the specified download in a thread-safely
+// This should be used to get the details of a specified download
+// via the ID
+func (c *Cache) GetDownload(ind int) Download {
+	c.downloadsMutex.Lock()
+	defer c.downloadsMutex.Unlock()
+
+	return c.downloads[ind]
 }
 
 // Ongoing returns the current number of ongoing downloads
@@ -316,6 +325,13 @@ func (c *Cache) Ongoing() int {
 	defer c.downloadsMutex.Unlock()
 
 	return c.ongoing
+}
+
+func (c *Cache) Downloads() []Download {
+	c.downloadsMutex.Lock()
+	defer c.downloadsMutex.Unlock()
+
+	return c.downloads
 }
 
 // Query returns cached data about an episode on disk

@@ -84,7 +84,7 @@ func InputLoop(exit chan int) {
 			case '{':
 				sound.Plr.Seek(-60)
 			case '\f': // Control-L
-				UpdateDimensions(root, true)
+				UpdateDimensions(root)
 			case 'q':
 				if data.Caching.Ongoing() == 0 {
 					return

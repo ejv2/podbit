@@ -44,6 +44,7 @@ const (
 	RedrawAll  = iota // Redraw everything
 	RedrawMenu        // Redraw just the menu
 	RedrawTray        // Redraw just the tray
+	RedrawResize      // Redraw and recalculate dimensions
 )
 
 // Info request types
@@ -77,7 +78,8 @@ var (
 func watchResize(sig chan os.Signal, scr *goncurses.Window) {
 	for {
 		<-sig
-		UpdateDimensions(scr, true)
+
+		Redraw(RedrawResize)
 	}
 }
 
@@ -97,14 +99,14 @@ func InitUI(scr *goncurses.Window, initialMenu Menu, r chan int, k chan rune, m 
 	go watchResize(resizeChan, scr)
 	go trayWatcher()
 
-	UpdateDimensions(scr, false)
+	UpdateDimensions(scr)
 }
 
 // UpdateDimensions changes the dimensions of the drawable area
 //
 // Called automatically on detected terminal resizes by the resizeLoop
 // thread
-func UpdateDimensions(scr *goncurses.Window, shouldRedraw bool) {
+func UpdateDimensions(scr *goncurses.Window) {
 	var err error
 	w, h, err = terminal.GetSize(int(os.Stdin.Fd()))
 
@@ -117,10 +119,6 @@ func UpdateDimensions(scr *goncurses.Window, shouldRedraw bool) {
 	}
 
 	goncurses.ResizeTerm(h, w)
-
-	if shouldRedraw {
-		redraw <- RedrawAll
-	}
 }
 
 func renderMenu() {
@@ -208,6 +206,11 @@ func RenderLoop() {
 			case RedrawMenu:
 				renderMenu()
 			case RedrawTray:
+				renderTray()
+			case RedrawResize:
+				UpdateDimensions(root)
+
+				renderMenu()
 				renderTray()
 			default:
 				goncurses.Flash()

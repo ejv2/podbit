@@ -99,7 +99,7 @@ func main() {
 	go data.ReloadLoop()
 
 	fmt.Print("Initialising sound system...")
-	sound.Plr, err = sound.NewPlayer(exit)
+	sound.Plr, err = sound.NewPlayer()
 	if err != nil {
 		fmt.Printf("\nError: Failed to initialise sound system: %s\n", err.Error())
 		os.Exit(1)

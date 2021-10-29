@@ -64,9 +64,6 @@ type Player struct {
 	act chan int
 	dat chan interface{}
 
-	exit      chan int
-	watchStop chan int
-
 	ipcc *mpv.IPCClient
 	ctrl *mpv.Client
 
@@ -101,6 +98,7 @@ func endWait(u chan int) {
 
 func downloadWait(u chan int) {
 	for y := true ; y; y, _ = data.Caching.IsDownloading(Plr.download.Path) {
+		time.Sleep(UpdateTime)
 	}
 
 	Plr.waiting = false
@@ -109,8 +107,9 @@ func downloadWait(u chan int) {
 	u <- 1
 }
 
-func waitNew(u chan int) {
+func newWait(u chan int) {
 	for head >= len(queue) {
+		time.Sleep(UpdateTime)
 	}
 
 	Plr.waiting = false
@@ -119,12 +118,9 @@ func waitNew(u chan int) {
 
 // NewPlayer constructs a new player. This does not yet
 // launch any processes or play any media
-func NewPlayer(exit chan int) (p Player, err error) {
-	p.exit = exit
-
+func NewPlayer() (p Player, err error) {
 	p.act = make(chan int)
 	p.dat = make(chan interface{})
-	p.watchStop = make(chan int)
 
 	return
 }

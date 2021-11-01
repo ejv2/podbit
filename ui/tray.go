@@ -19,7 +19,7 @@ const (
 
 var (
 	statusMessage = make(chan string)
-	lastStatus time.Time
+	lastStatus    time.Time
 
 	status string
 )

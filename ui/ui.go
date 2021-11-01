@@ -41,10 +41,10 @@ type Menu interface {
 
 // Redraw types
 const (
-	RedrawAll  = iota // Redraw everything
-	RedrawMenu        // Redraw just the menu
-	RedrawTray        // Redraw just the tray
-	RedrawResize      // Redraw and recalculate dimensions
+	RedrawAll    = iota // Redraw everything
+	RedrawMenu          // Redraw just the menu
+	RedrawTray          // Redraw just the tray
+	RedrawResize        // Redraw and recalculate dimensions
 )
 
 // Info request types

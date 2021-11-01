@@ -74,10 +74,10 @@ type Download struct {
 	// Completed == true once the operations has either finished or failed
 	Completed bool
 	// Success == true if the full download completed successfully
-	Success   bool
+	Success bool
 	// Error is the error which caused the download to fail
 	// Empty if the download did not fail
-	Error     string
+	Error string
 
 	// Stop will cause the download to cease immediately
 	// Will be closed once the download completes
@@ -186,10 +186,10 @@ func (c *Cache) Download(item *QueueItem) (id int, err error) {
 	if err != nil {
 		c.downloadsMutex.Lock()
 		var dl Download = Download{
-			Started:    time.Now(),
-			Completed:  true,
-			Success:    false,
-			Error:      "IO Error",
+			Started:   time.Now(),
+			Completed: true,
+			Success:   false,
+			Error:     "IO Error",
 		}
 		c.downloads = append(c.downloads, dl)
 		id = len(c.downloads) - 1
@@ -202,12 +202,12 @@ func (c *Cache) Download(item *QueueItem) (id int, err error) {
 	if err != nil || resp.StatusCode != http.StatusOK {
 		c.downloadsMutex.Lock()
 		var dl Download = Download{
-			Path:       item.Path,
-			File:       f,
-			Started:    time.Now(),
-			Completed:  true,
-			Success:    false,
-			Error:      "Download failed",
+			Path:      item.Path,
+			File:      f,
+			Started:   time.Now(),
+			Completed: true,
+			Success:   false,
+			Error:     "Download failed",
 		}
 		c.downloads = append(c.downloads, dl)
 		id = len(c.downloads) - 1
@@ -226,7 +226,7 @@ func (c *Cache) Download(item *QueueItem) (id int, err error) {
 		File:    f,
 		Size:    size,
 		Started: time.Now(),
-		Stop: make(chan int),
+		Stop:    make(chan int),
 	}
 
 	Q.mutex.Lock()
@@ -269,7 +269,6 @@ func (c *Cache) Download(item *QueueItem) (id int, err error) {
 		Q.mutex.Lock()
 		item.State = StateReady
 		Q.mutex.Unlock()
-
 
 		c.downloadsMutex.Lock()
 		c.downloads[id].Completed = true

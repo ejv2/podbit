@@ -19,8 +19,8 @@ const (
 
 // Dependent data structures
 var (
-	Q       Queue
-	DB      Database
+	Q         Queue
+	DB        Database
 	Downloads Cache
 )
 

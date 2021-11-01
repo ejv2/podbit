@@ -108,7 +108,7 @@ func (q *Downloads) Enqueue() {
 
 func (q *Downloads) Cancel() {
 	i, _ := q.tbl.GetSelection()
-	if i >= len(data.Caching.Downloads()) {
+	if i >= len(data.Downloads.Downloads()) {
 		return
 	}
 

@@ -316,9 +316,8 @@ func (c *Cache) GetDownload(ind int) Download {
 	return c.downloads[ind]
 }
 
-// Ongoing returns the current number of ongoing downloads
-// This value may be out of date after returned, but is
-// thread safe.
+// Ongoing returns the current number of ongoing downloads.
+// The value cannot change while this function is executing.
 func (c *Cache) Ongoing() int {
 	c.downloadsMutex.Lock()
 	defer c.downloadsMutex.Unlock()
@@ -326,6 +325,10 @@ func (c *Cache) Ongoing() int {
 	return c.ongoing
 }
 
+// Downloads returns all recorded downloads at this point,
+// including completed or failed downloads.
+// in time thread safely. No downloads can start or end
+// while this function is executing.
 func (c *Cache) Downloads() []Download {
 	c.downloadsMutex.Lock()
 	defer c.downloadsMutex.Unlock()

@@ -83,7 +83,7 @@ func (l *Player) Render(x, y int) {
 	lbl := "Next up: "
 	if cur != nil {
 		var txt string
-		if entry, ok := data.Caching.Query(cur.Path); ok && entry.Title != "" {
+		if entry, ok := data.Downloads.Query(cur.Path); ok && entry.Title != "" {
 			txt = entry.Title
 		} else {
 			txt = cur.URL

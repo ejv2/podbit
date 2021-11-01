@@ -21,7 +21,7 @@ const (
 var (
 	Q       Queue
 	DB      Database
-	Caching Cache
+	Downloads Cache
 )
 
 // InitData initialises all dependent data structures
@@ -42,7 +42,7 @@ func InitData() error {
 	fmt.Println("done")
 
 	fmt.Print("Initialising cache...")
-	err = Caching.Open()
+	err = Downloads.Open()
 	if err != nil {
 		return err
 	}

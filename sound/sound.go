@@ -97,7 +97,7 @@ func endWait(u chan int) {
 }
 
 func downloadWait(u chan int) {
-	for y := true ; y; y, _ = data.Caching.IsDownloading(Plr.download.Path) {
+	for y := true ; y; y, _ = data.Downloads.IsDownloading(Plr.download.Path) {
 		time.Sleep(UpdateTime)
 	}
 
@@ -167,7 +167,7 @@ func (p *Player) play(q *data.QueueItem) {
 	p.load(q.Path)
 
 	if q.State != data.StatePending {
-		now, ok := data.Caching.Query(q.Path)
+		now, ok := data.Downloads.Query(q.Path)
 		if !ok {
 			p.NowPlaying = ""
 			p.NowPodcast = ""
@@ -367,17 +367,17 @@ func Mainloop() {
 		elem, Plr.exhausted = PopHead()
 
 		if !Plr.playing && !Plr.waiting && !Plr.exhausted && len(queue) > 0 {
-			if elem.State != data.StatePending && data.Caching.EntryExists(elem.Path) {
+			if elem.State != data.StatePending && data.Downloads.EntryExists(elem.Path) {
 				Plr.play(elem)
 				wait = endWait
 			} else {
 				Plr.waiting = true
 
-				if y, _ := data.Caching.IsDownloading(elem.Path); y {
+				if y, _ := data.Downloads.IsDownloading(elem.Path); y {
 					Plr.download = elem
 				} else {
 
-					_, err := data.Caching.Download(elem)
+					_, err := data.Downloads.Download(elem)
 					if err != nil {
 						continue
 					}

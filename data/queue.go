@@ -296,7 +296,7 @@ func (q *Queue) GetEpisodeByURL(url string) (found *QueueItem) {
 // with the requested title from cache
 func (q *Queue) GetEpisodeByTitle(title string) (found *QueueItem) {
 	q.Range(func(i int, elem *QueueItem) bool {
-		find, ok := Caching.Query(elem.Path)
+		find, ok := Downloads.Query(elem.Path)
 		if ok && find.Title == title {
 			found = elem
 			return false

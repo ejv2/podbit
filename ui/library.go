@@ -55,7 +55,7 @@ func (l *Library) renderEpisodes(x, y int) {
 	data.Q.RevRange(func(i int, elem *data.QueueItem) bool {
 		if data.DB.GetFriendlyName(elem.URL) == l.men[0].GetSelection() {
 			var text string
-			entry, ok := data.Caching.Query(elem.Path)
+			entry, ok := data.Downloads.Query(elem.Path)
 			title := entry.Title
 			if !ok || title == "" {
 				text = elem.URL
@@ -139,12 +139,12 @@ func (l *Library) StartDownload() {
 			return
 		}
 
-		if y, _ := data.Caching.IsDownloading(item.Path); y {
+		if y, _ := data.Downloads.IsDownloading(item.Path); y {
 			go StatusMessage(fmt.Sprintf("Episode already downloading"))
 			return
 		}
 
-		go data.Caching.Download(item)
+		go data.Downloads.Download(item)
 		go StatusMessage(fmt.Sprintf("Download of %s started...", item.URL))
 
 		return
@@ -157,12 +157,12 @@ func (l *Library) StartDownload() {
 				continue
 			}
 
-			if y, _ := data.Caching.IsDownloading(item.Path); y {
+			if y, _ := data.Downloads.IsDownloading(item.Path); y {
 				go StatusMessage(fmt.Sprintf("Episode already downloading"))
 				return
 			}
 
-			go data.Caching.Download(item)
+			go data.Downloads.Download(item)
 		}
 	}
 

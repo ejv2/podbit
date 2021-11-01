@@ -45,7 +45,7 @@ func (q *Queue) Render(x, y int) {
 	q.tbl.Items = nil
 	for _, elem := range sound.GetQueue() {
 		item := make([]string, len(queueHeadings))
-		dat, ok := data.Caching.Query(elem.Path)
+		dat, ok := data.Downloads.Query(elem.Path)
 		pod := data.DB.GetFriendlyName(elem.URL)
 
 		if !ok || dat.Title == "" {

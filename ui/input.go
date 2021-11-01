@@ -86,7 +86,7 @@ func InputLoop(exit chan int) {
 			case '\f': // Control-L
 				UpdateDimensions(root)
 			case 'q':
-				if data.Caching.Ongoing() == 0 {
+				if data.Downloads.Ongoing() == 0 {
 					return
 				}
 

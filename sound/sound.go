@@ -199,6 +199,9 @@ func (p *Player) stop() {
 		return
 	}
 
+	Plr.NowPlaying = ""
+	Plr.NowPodcast = ""
+
 	p.ctrl.Exec("stop")
 	p.playing = false
 }

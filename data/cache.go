@@ -239,7 +239,7 @@ func (c *Cache) Download(item *QueueItem) (id int, err error) {
 
 	c.downloadsMutex.Unlock()
 
-	go func() {
+	go func(entry int) {
 		var err error
 		var count int64
 		var read int
@@ -250,16 +250,16 @@ func (c *Cache) Download(item *QueueItem) (id int, err error) {
 			count += int64(read)
 
 			c.downloadsMutex.Lock()
-			c.downloads[id].Done = count
-			c.downloads[id].Percentage = float64(c.downloads[id].Done) / float64(c.downloads[id].Size)
+			c.downloads[entry].Done = count
+			c.downloads[entry].Percentage = float64(c.downloads[entry].Done) / float64(c.downloads[entry].Size)
 			c.downloadsMutex.Unlock()
 
-			if c.ongoing > 1 {
+			if c.Ongoing() > 1 {
 				runtime.Gosched() // Give the other threads a turn
 			}
 
 			select {
-			case <-c.downloads[id].Stop:
+			case <-c.downloads[entry].Stop:
 				err = errors.New("Cancelled")
 				break
 			default:
@@ -271,22 +271,22 @@ func (c *Cache) Download(item *QueueItem) (id int, err error) {
 		Q.mutex.Unlock()
 
 		c.downloadsMutex.Lock()
-		c.downloads[id].Completed = true
+		c.downloads[entry].Completed = true
 		if err != nil && err.Error() != "EOF" {
-			c.downloads[id].Success = false
-			c.downloads[id].Error = err.Error()
+			c.downloads[entry].Success = false
+			c.downloads[entry].Error = err.Error()
 		} else {
-			c.downloads[id].Success = true
+			c.downloads[entry].Success = true
 		}
-		close(c.downloads[id].Stop)
+		close(c.downloads[entry].Stop)
 
-		c.loadFile(c.downloads[id].Path, false)
+		c.loadFile(c.downloads[entry].Path, false)
 		c.ongoing--
 		c.downloadsMutex.Unlock()
 
 		resp.Body.Close()
 		f.Close()
-	}()
+	}(id)
 
 	return
 }

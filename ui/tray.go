@@ -30,8 +30,6 @@ func trayWatcher() {
 
 		if sound.Plr.IsPlaying() || data.Downloads.Ongoing() != 0 {
 			Redraw(RedrawAll)
-		} else {
-			Redraw(RedrawTray)
 		}
 	}
 }

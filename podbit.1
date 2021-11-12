@@ -1,0 +1,68 @@
+.TH PODBIT 1
+.SH NAME
+podbit - play and download podcasts
+.SH SYNOPSIS
+.SY podbit
+.YS
+.SH DESCRIPTION
+.P
+.B Podbit
+reads the newsboat queue file for podcasts from RSS. Downloads will be completed
+in parallel. Once downloaded, audio files will be played using
+.B mpv
+in the background, with an
+.B ncmpc
+inspired user interface.
+.SH KEYBINDINGS
+.TP
+.B 1
+Show the player menu
+.TP
+.B 2
+Activate the queue menu
+.TP
+.B 3
+Activate the download menu
+.TP
+.B 4
+Activate the library menu
+.TP
+.B r
+Reload the queue file
+.TP
+.B p
+Pause/unpause
+.TP
+.B s
+Stop playing the current podcast
+.TP
+.B c
+Clear the queue
+.TP
+.B ]
+Seek forwards five seconds
+.TP
+.B [
+Seek backward five seconds
+.TP
+.B }
+Seek forwards one minute
+.TP
+.B {
+Seek backward one minute
+.TP
+.B Control-L
+Redraw the screen
+.TP
+.B q
+Quit
+.SH SEE ALSO
+.BR newsboat (1)
+.BR podboat (1)
+.BR mpv (1)
+.SH CREDITS
+Written by Ethan Marshall - 2021
+.SH BUGS
+Please report bugs to
+.UR https://github.com/ethanv2/podbit/
+.UE

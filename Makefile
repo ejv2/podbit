@@ -9,6 +9,9 @@ SRC = main.go ver.go ${INPUTSRC} ${UISRC} ${DATASRC} ${UICOMPS} ${SOUNDSRC}
 ifndef PREFIX
 	PREFIX = /usr/local
 endif
+ifndef MANPREFIX
+	MANPREFIX = /usr/local/share/man
+endif
 
 ${EXE}: ${SRC}
 	CGO_LDFLAGS_ALLOW=".*" go build
@@ -20,10 +23,15 @@ clean:
 
 install: ${EXE}
 	mkdir -p ${DESTDIR}${PREFIX}/bin
+	mkdir -p ${DESTDIR}${MANPREFIX}/man1
+
 	cp -f ${EXE} ${DESTDIR}${PREFIX}/bin/
 	chmod 755 ${DESTDIR}${PREFIX}/bin/${EXE}
 
-uninstall:
-	rm -f ${DESTDIR}${PREFIX}/bin/${EXE}
+	cp -f ${EXE}.1 ${DESTDIR}${MANPREFIX}/man1/podbit.1
 
-.PHONY = check clean install uninstall
+uninstall:
+	rm -f ${DESTDIR}${PREFIX}/bin/${EXE} \
+		${DESTDIR}${MANPREFIX}/man1/podbit.1
+
+.PHONY: check clean install uninstall

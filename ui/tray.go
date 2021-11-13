@@ -26,7 +26,7 @@ var (
 
 func trayWatcher() {
 	for {
-		time.Sleep(100 * time.Millisecond)
+		time.Sleep(time.Second)
 
 		if sound.Plr.IsPlaying() || data.Downloads.Ongoing() != 0 {
 			Redraw(RedrawAll)

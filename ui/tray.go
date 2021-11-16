@@ -35,6 +35,8 @@ func trayWatcher() {
 			} else {
 				time.Sleep(time.Second)
 			}
+		} else {
+			time.Sleep(time.Second)
 		}
 	}
 }

@@ -26,10 +26,15 @@ var (
 
 func trayWatcher() {
 	for {
-		time.Sleep(time.Second)
 
 		if sound.Plr.IsPlaying() || data.Downloads.Ongoing() != 0 {
 			Redraw(RedrawAll)
+
+			if data.Downloads.Ongoing() != 0 {
+				time.Sleep(100 * time.Millisecond)
+			} else {
+				time.Sleep(time.Second)
+			}
 		}
 	}
 }

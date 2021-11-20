@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"fmt"
 	"os"
 	"unicode/utf8"
 
@@ -69,6 +70,7 @@ func InputLoop(exit chan int) {
 				ActivateMenu(LibraryMenu)
 			case 'r':
 				data.Q.Reload()
+				go StatusMessage("Queue file reloaded")
 			case 'p':
 				sound.Plr.Toggle()
 			case 's':
@@ -80,6 +82,9 @@ func InputLoop(exit chan int) {
 				for _, elem := range pending {
 					go data.Downloads.Download(elem)
 				}
+
+				msg := fmt.Sprintf("Downloading %d episodes in parallel", len(pending))
+				go StatusMessage(msg)
 			case ']':
 				sound.Plr.Seek(5)
 			case '[':

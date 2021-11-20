@@ -307,3 +307,17 @@ func (q *Queue) GetEpisodeByTitle(title string) (found *QueueItem) {
 
 	return
 }
+
+// GetByStatus returns all queue entries which are currently
+// in the status marked in state
+func (q *Queue) GetByStatus(status int) (found []*QueueItem) {
+	q.Range(func(i int, elem *QueueItem) bool {
+		if elem.State == status {
+			found = append(found, elem)
+		}
+
+		return true
+	})
+
+	return
+}

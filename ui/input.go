@@ -75,6 +75,11 @@ func InputLoop(exit chan int) {
 				sound.Plr.Stop()
 			case 'c':
 				sound.ClearQueue()
+			case 'a':
+				pending := data.Q.GetByStatus(data.StatePending)
+				for _, elem := range pending {
+					go data.Downloads.Download(elem)
+				}
 			case ']':
 				sound.Plr.Seek(5)
 			case '[':

@@ -30,11 +30,18 @@ type Menu struct {
 // Render immediately renders the menu to the specified
 // fields X, Y, H and W.
 func (m *Menu) Render() {
+	// Reset scroll if invalid or not selected
+	if len(m.Items) <= m.scroll || !m.Selected {
+		m.scroll = 0
+		m.sel = 0
+	}
+
 	items := m.Items[m.scroll:]
 	c := m.scroll
 
 	if m.prevw != m.W || m.prevh != m.H {
 		m.scroll = 0
+		m.sel = 0
 	}
 	m.prevw, m.prevh = m.W, m.H
 

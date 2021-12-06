@@ -45,7 +45,7 @@ func (q *Downloads) Name() string {
 
 func (q *Downloads) Render(x, y int) {
 	q.tbl.X, q.tbl.Y = x, y
-	q.tbl.W, q.tbl.H = w, h
+	q.tbl.W, q.tbl.H = w, h-5
 	q.tbl.Win = root
 
 	q.tbl.Columns = downloadHeadings

@@ -37,7 +37,7 @@ func (q *Queue) Name() string {
 
 func (q *Queue) Render(x, y int) {
 	q.tbl.X, q.tbl.Y = x, y
-	q.tbl.W, q.tbl.H = w, h
+	q.tbl.W, q.tbl.H = w, h-5
 	q.tbl.Win = root
 
 	q.tbl.Columns = queueHeadings

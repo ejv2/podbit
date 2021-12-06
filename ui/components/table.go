@@ -47,11 +47,12 @@ func (t *Table) Render() {
 	if t.prevw != t.W || t.prevh != t.H {
 		t.scroll = 0
 	}
-	if len(items) != t.prevlen {
+	if len(t.Items) != t.prevlen {
 		t.sel = 0
+		t.scroll = 0
 	}
 	t.prevw, t.prevh = t.W, t.H
-	t.prevlen = len(items)
+	t.prevlen = len(t.Items)
 
 	t.Win.AttrOn(goncurses.A_BOLD)
 	t.Win.HLine(t.Y+1, t.X, goncurses.ACS_HLINE, t.W)
@@ -128,8 +129,11 @@ func (t *Table) ChangeSelection(index int) {
 
 	t.sel = index
 
-	scrollAt := t.H + t.scroll + 1
+	// Scroll at the last possible visible element
+	// Underscroll at the first possible visible element
+	scrollAt := t.H + t.scroll - 1
 	underscrollAt := t.scroll - 1
+
 	if t.sel == scrollAt {
 		t.scroll++
 	} else if t.sel == underscrollAt {

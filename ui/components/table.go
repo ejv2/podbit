@@ -77,6 +77,8 @@ func (t *Table) Render() {
 		for j, entry := range items {
 			if i >= len(entry) {
 				panic("invalid table entry: missing fields")
+			} else if j > t.H-2 {
+				break
 			}
 
 			capped := entry[i]

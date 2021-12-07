@@ -48,6 +48,8 @@ func (m *Menu) Render() {
 	for i, elem := range items {
 		if c == m.sel && m.Selected {
 			m.Win.ColorOn(colors.BackgroundBlue)
+		} else if i > m.H {
+			break
 		}
 
 		var capped string

@@ -36,7 +36,11 @@ func (l *Library) renderPodcasts(x, y int) {
 
 	l.men[0].Selected = true
 
-	l.men[0].Render()
+	if len(l.men[0].Items) > 0 {
+		l.men[0].Render()
+	} else {
+		root.MovePrint(y, x, "No podcasts")
+	}
 }
 
 func (l *Library) renderEpisodes(x, y int) {

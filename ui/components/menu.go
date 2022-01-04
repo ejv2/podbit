@@ -55,7 +55,8 @@ func (m *Menu) Render() {
 		var capped string
 		capped = elem
 		if len(capped) > m.W {
-			capped = capped[:m.W+1]
+			capped = capped[len(capped)-m.W:]
+			capped = "<" + capped
 		} else {
 			// Pad out to fill row
 			for i := len(capped); i <= m.W; i++ {

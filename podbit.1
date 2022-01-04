@@ -11,8 +11,10 @@ reads the newsboat queue file for podcasts from RSS. Downloads will be completed
 in parallel. Once downloaded, audio files will be played using
 .B mpv
 in the background, with an
-.B ncmpc
-inspired user interface.
+.B ncmpcpp
+inspired user interface. Podcasts will be downloaded to your configured download
+directory via the newsboat configuration file. See
+.BR newsboat (1)
 .SH KEYBINDINGS
 .TP
 .B 1
@@ -38,6 +40,9 @@ Stop playing the current podcast
 .TP
 .B c
 Clear the queue
+.TP
+.B a
+Download all undownloaded
 .TP
 .B ]
 Seek forwards five seconds

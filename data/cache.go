@@ -20,6 +20,7 @@ import (
 // Possible cache errors
 var (
 	ErrorIO             error  = errors.New("Error: Failed to create cache entry")
+	ErrorCreation       error  = errors.New("Error: Download directory did not exist and could not be created")
 	ErrorDownloadFailed string = "Error: Failed to download from url %s"
 )
 
@@ -125,7 +126,14 @@ func (c *Cache) guessDir() string {
 func (c *Cache) Open() error {
 	home, _ := os.UserHomeDir()
 	c.dir = strings.ReplaceAll(c.guessDir(), "~", home)
-	files, _ := ioutil.ReadDir(c.dir)
+	files, err := ioutil.ReadDir(c.dir)
+
+	if err != nil {
+		cerr := os.MkdirAll(c.dir, os.ModeDir|os.ModePerm)
+		if cerr != nil {
+			return ErrorCreation
+		}
+	}
 
 	for _, elem := range files {
 		path := filepath.Join(c.dir, elem.Name())
@@ -184,27 +192,18 @@ func (c *Cache) loadFile(path string, startup bool) {
 func (c *Cache) Download(item *QueueItem) (id int, err error) {
 	f, err := os.Create(item.Path)
 	if err != nil {
-		var derr, cerr error
-		dldir := filepath.Dir(item.Path)
-
-		derr = os.MkdirAll(dldir, os.ModeDir|os.ModePerm)
-		f, cerr = os.Create(item.Path)
-
-		// Retry faild, bail out
-		if derr != nil || cerr != nil {
-			c.downloadsMutex.Lock()
-			var dl Download = Download{
-				Started:   time.Now(),
-				Completed: true,
-				Success:   false,
-				Error:     "IO Error",
-			}
-			c.downloads = append(c.downloads, dl)
-			id = len(c.downloads) - 1
-			c.downloadsMutex.Unlock()
-
-			return id, ErrorIO
+		c.downloadsMutex.Lock()
+		var dl Download = Download{
+			Started:   time.Now(),
+			Completed: true,
+			Success:   false,
+			Error:     "IO Error",
 		}
+		c.downloads = append(c.downloads, dl)
+		id = len(c.downloads) - 1
+		c.downloadsMutex.Unlock()
+
+		return id, ErrorIO
 	}
 
 	resp, err := http.Get(item.URL)

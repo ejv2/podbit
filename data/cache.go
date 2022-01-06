@@ -184,18 +184,27 @@ func (c *Cache) loadFile(path string, startup bool) {
 func (c *Cache) Download(item *QueueItem) (id int, err error) {
 	f, err := os.Create(item.Path)
 	if err != nil {
-		c.downloadsMutex.Lock()
-		var dl Download = Download{
-			Started:   time.Now(),
-			Completed: true,
-			Success:   false,
-			Error:     "IO Error",
-		}
-		c.downloads = append(c.downloads, dl)
-		id = len(c.downloads) - 1
-		c.downloadsMutex.Unlock()
+		var derr, cerr error
+		dldir := filepath.Dir(item.Path)
 
-		return id, ErrorIO
+		derr = os.MkdirAll(dldir, os.ModeDir|os.ModePerm)
+		f, cerr = os.Create(item.Path)
+
+		// Retry faild, bail out
+		if derr != nil || cerr != nil {
+			c.downloadsMutex.Lock()
+			var dl Download = Download{
+				Started:   time.Now(),
+				Completed: true,
+				Success:   false,
+				Error:     "IO Error",
+			}
+			c.downloads = append(c.downloads, dl)
+			id = len(c.downloads) - 1
+			c.downloadsMutex.Unlock()
+
+			return id, ErrorIO
+		}
 	}
 
 	resp, err := http.Get(item.URL)

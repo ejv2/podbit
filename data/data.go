@@ -9,12 +9,16 @@ package data
 import (
 	"fmt"
 	"net/url"
+	"os"
 	"time"
 )
 
 const (
 	// QueueReloadInterval is how often the queue will be reloaded
 	QueueReloadInterval = time.Duration(15) * time.Second
+	// EpisodeCacheTime is how long an episode is allowed to stay in cache in seconds
+	// Default value is three days (3 * 24 * 60 * 60)
+	EpisodeCacheTime = 259200
 )
 
 // Dependent data structures
@@ -55,6 +59,7 @@ func InitData() error {
 // First ensures we have hot-reloaded any required data
 func SaveData() {
 	ReloadData()
+	CleanData()
 
 	Q.Save()
 	DB.Save()
@@ -67,6 +72,34 @@ func SaveData() {
 // and upon saving to ensure up-to-date data
 func ReloadData() {
 	Q.Reload()
+}
+
+// CleanData cleans out the cache based on items which are both finished/played
+// and with a last listen time of more than EpisodeCacheTime seconds ago
+// (defaults to three days). Removed episodes are set to "pending" status (to
+// be downloaded) and have their cache file removed
+func CleanData() {
+	now := time.Now().Unix()
+	count := 0
+
+	Q.Range(func(i int, item *QueueItem) bool {
+		if item.Date == -1 || (item.State != StatePlayed && item.State != StateFinished) {
+			return true
+		}
+
+		diff := now - item.Date
+		if diff >= EpisodeCacheTime {
+			item.Date = -1
+			item.State = StatePending
+
+			os.Remove(item.Path)
+			count++
+		}
+
+		return true
+	})
+
+	fmt.Printf("Cache cleanup...done (removed %d items)\n", count)
 }
 
 // ReloadLoop is an infinite loop to continually reload the

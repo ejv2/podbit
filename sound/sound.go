@@ -373,6 +373,16 @@ func Mainloop() {
 			if elem.State != data.StatePending && data.Downloads.EntryExists(elem.Path) {
 				Plr.play(elem)
 				wait = endWait
+
+				// Set status to played
+				data.Q.Range(func(i int, item *data.QueueItem) bool {
+					if item.Path == elem.Path {
+						item.State = data.StatePlayed
+						return false
+					}
+
+					return true
+				})
 			} else {
 				Plr.waiting = true
 

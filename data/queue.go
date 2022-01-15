@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"sync"
 )
@@ -57,6 +58,7 @@ type QueueItem struct {
 	URL   string
 	Path  string
 	State int
+	Date  int64
 }
 
 // Queue represents the newsboat queue
@@ -75,8 +77,11 @@ func (q *Queue) parseField(fields []string, num int) {
 	item.Path = strings.ReplaceAll(fields[1], "\"", "")
 
 	f, err := os.Open(item.Path)
+	defer f.Close()
+
 	if num == 2 || (err != nil && os.IsNotExist(err)) {
 		item.State = StatePending
+		item.Date = -1
 	} else {
 		switch fields[2] {
 		case "downloaded":
@@ -88,9 +93,17 @@ func (q *Queue) parseField(fields []string, num int) {
 		default:
 			item.State = StateReady
 		}
+
+		if num > 3 {
+			item.Date, err = strconv.ParseInt(fields[3], 10, 64)
+			if err != nil {
+				item.Date = -1
+			}
+		} else {
+			item.Date = -1
+		}
 	}
 
-	f.Close()
 	q.Items = append(q.Items, item)
 }
 
@@ -218,7 +231,12 @@ func (q *Queue) Save() {
 	defer file.Close()
 
 	for _, elem := range q.Items {
-		fmt.Fprintf(file, "%s \"%s\" %s\n", elem.URL, elem.Path, StateStrings[elem.State])
+		date := ""
+		if elem.Date != -1 {
+			date = fmt.Sprint(elem.Date)
+		}
+
+		fmt.Fprintf(file, "%s \"%s\" %s %s\n", elem.URL, elem.Path, StateStrings[elem.State], date)
 	}
 
 }

@@ -2,6 +2,6 @@ package main
 
 const (
 	verMaj   = 1
-	verMin   = 2
-	verPatch = 2
+	verMin   = 3
+	verPatch = 0
 )

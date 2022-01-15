@@ -73,6 +73,7 @@ type Player struct {
 	exhausted bool
 	playing   bool
 
+	Now	   *data.QueueItem
 	NowPlaying string
 	NowPodcast string
 }
@@ -92,6 +93,16 @@ func endWait(u chan int) {
 	Plr.playing = false
 	Plr.NowPlaying = ""
 	Plr.NowPodcast = ""
+
+	// Set state to finished
+	data.Q.Range(func(i int, item *data.QueueItem) bool {
+		if item.Path == Plr.Now.Path {
+			item.State = data.StateFinished
+			return false
+		}
+
+		return true
+	})
 
 	u <- 1
 }
@@ -167,6 +178,8 @@ func (p *Player) play(q *data.QueueItem) {
 	p.load(q.Path)
 
 	if q.State != data.StatePending {
+		Plr.Now = q
+
 		now, ok := data.Downloads.Query(q.Path)
 		if !ok {
 			p.NowPlaying = ""

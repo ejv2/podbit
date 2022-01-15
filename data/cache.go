@@ -159,7 +159,7 @@ func (c *Cache) loadFile(path string, startup bool) {
 
 	data, err := tag.ReadFrom(file)
 	if err != nil {
-		fmt.Println("Error: Invalid media file in cache")
+		fmt.Printf("\nError: Invalid media file %q in cache! Ignoring...\n", path)
 		return
 	}
 

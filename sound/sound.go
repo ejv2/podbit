@@ -98,6 +98,7 @@ func endWait(u chan int) {
 	data.Q.Range(func(i int, item *data.QueueItem) bool {
 		if item.Path == Plr.Now.Path {
 			item.State = data.StateFinished
+			item.Date = time.Now().Unix()
 			return false
 		}
 
@@ -391,6 +392,7 @@ func Mainloop() {
 				data.Q.Range(func(i int, item *data.QueueItem) bool {
 					if item.Path == elem.Path {
 						item.State = data.StatePlayed
+						item.Date = time.Now().Unix()
 						return false
 					}
 

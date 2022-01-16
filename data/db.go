@@ -82,6 +82,11 @@ func initDatabase(db *Database) error {
 // Returned errors are usually fatal to the application
 func (db *Database) Open() error {
 	data := os.Getenv("XDG_DATA_HOME")
+	if data == "" {
+		home, _ := os.UserHomeDir()
+		data = filepath.Join(home, ".local/share")
+	}
+
 	db.path = filepath.Join(data, DatabaseDirname, DatabaseFilename)
 
 	// Ensure the database exists and is initialised

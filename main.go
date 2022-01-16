@@ -30,7 +30,7 @@ var (
 )
 
 func banner() {
-	fmt.Printf("Starting Podbit %d.%d.%d...\n", verMaj, verMin, verPatch)
+	fmt.Printf("Starting Podbit v%d.%d.%d...\n", verMaj, verMin, verPatch)
 }
 
 func initDirs() {

@@ -51,7 +51,7 @@ func RenderTray(scr *goncurses.Window, w, h int) {
 	percent := pos / dur
 
 	scr.ColorOn(colors.ColorBlue)
-	scr.HLine(h-2, 0, '=', int(percent*float64(w)))
+	scr.HLine(h-2, 0, '-', int(percent*float64(w)))
 
 	head := int(math.Max((percent*float64(w))-1, 0))
 	scr.MovePrint(h-2, head, ">")

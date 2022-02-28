@@ -196,6 +196,7 @@ func (p *Player) play(q *data.QueueItem) {
 		p.NowPodcast = data.DB.GetFriendlyName(q.URL)
 
 		p.playing = true
+		p.unpause()
 	}
 }
 

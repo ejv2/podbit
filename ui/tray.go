@@ -68,14 +68,12 @@ func RenderTray(scr *goncurses.Window, w, h int) {
 	}
 
 	if status != "" {
-		root.ColorOn(colors.ColorRed)
+		root.ColorOn(colors.ColorYellow)
+		root.AttrOn(goncurses.A_BOLD)
 		scr.MovePrint(h-1, 0, status)
-		root.ColorOff(colors.ColorRed)
+		root.AttrOff(goncurses.A_BOLD)
+		root.ColorOff(colors.ColorYellow)
 	} else {
-		pos, dur := sound.Plr.GetTimings()
-		p, d := data.FormatTime(pos), data.FormatTime(dur)
-		code := fmt.Sprintf("[%s/%s]", p, d)
-
 		if sound.Plr.IsPlaying() {
 			var status string
 			if sound.Plr.IsPaused() {
@@ -92,9 +90,6 @@ func RenderTray(scr *goncurses.Window, w, h int) {
 			scr.MovePrintf(h-1, len(status)+2, "%s - %s", sound.Plr.NowPlaying, sound.Plr.NowPodcast)
 			root.ColorOff(colors.ColorBlue)
 
-			root.ColorOn(colors.ColorRed)
-			scr.MovePrintf(h-1, w-len(code), "%s", code)
-			root.ColorOff(colors.ColorRed)
 		} else if sound.Plr.IsWaiting() {
 			root.ColorOn(colors.ColorRed)
 			scr.MovePrint(h-1, 0, "Waiting for download...")
@@ -105,6 +100,14 @@ func RenderTray(scr *goncurses.Window, w, h int) {
 			root.ColorOff(colors.ColorRed)
 		}
 	}
+
+	// Timing tray
+	pos, dur = sound.Plr.GetTimings()
+	p, d := data.FormatTime(pos), data.FormatTime(dur)
+	code := fmt.Sprintf("[%s/%s]", p, d)
+	root.ColorOn(colors.ColorRed)
+	scr.MovePrintf(h-1, w-len(code), "%s", code)
+	root.ColorOff(colors.ColorRed)
 }
 
 // StatusMessage sends a status message

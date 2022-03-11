@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/ethanv2/podbit/colors"
 	"github.com/ethanv2/podbit/data"
@@ -90,6 +91,7 @@ func main() {
 	}
 	defer lock.Unlock()
 
+	now := time.Now()
 	err := data.InitData()
 	if err != nil {
 		fmt.Println("\n" + err.Error())
@@ -123,6 +125,15 @@ func main() {
 
 	// Initial UI draw
 	ui.Redraw(ui.RedrawAll)
+
+	// Welcome message
+	startup := time.Now().Sub(now)
+	ui.StatusMessage(fmt.Sprintf("Podbit v%d.%d.%d -- %d episodes of %d podcasts loaded in %.2fs",
+		verMaj,
+		verMin,
+		verPatch,
+		len(data.Q.Items), len(data.Q.GetPodcasts()),
+		startup.Seconds()))
 
 	// Initialisation is done; use this thread as the input loop
 	ui.InputLoop(exit)

@@ -83,7 +83,7 @@ func (q *Downloads) Input(c rune) {
 	case 'g':
 		q.tbl.ChangeSelection(0)
 	case 'G':
-		q.tbl.ChangeSelection(len(q.tbl.Items)-1)
+		q.tbl.ChangeSelection(len(q.tbl.Items) - 1)
 	case 'd':
 		q.Cancel()
 	case 13:

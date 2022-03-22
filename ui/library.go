@@ -101,7 +101,7 @@ func (l *Library) Input(c rune) {
 	case 'g':
 		l.men[l.menSel].ChangeSelection(0)
 	case 'G':
-		l.men[l.menSel].ChangeSelection(len(l.men[l.menSel].Items)-1)
+		l.men[l.menSel].ChangeSelection(len(l.men[l.menSel].Items) - 1)
 	case ' ':
 		l.StartDownload()
 	case 13:

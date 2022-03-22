@@ -73,7 +73,7 @@ type Player struct {
 	exhausted bool
 	playing   bool
 
-	Now	   *data.QueueItem
+	Now        *data.QueueItem
 	NowPlaying string
 	NowPodcast string
 }

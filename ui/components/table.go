@@ -136,10 +136,10 @@ func (t *Table) ChangeSelection(index int) {
 	scrollAt := t.H + t.scroll - 1
 	underscrollAt := t.scroll - 1
 
-	if t.sel == scrollAt {
-		t.scroll++
-	} else if t.sel == underscrollAt {
-		t.scroll--
+	if t.sel >= scrollAt {
+		t.scroll += (t.sel-scrollAt)+1
+	} else if t.sel <= underscrollAt {
+		t.scroll -= (t.sel-underscrollAt)+1
 	}
 }
 

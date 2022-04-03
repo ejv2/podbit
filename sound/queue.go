@@ -182,6 +182,8 @@ func GetNext() (*data.QueueItem, int) {
 	return nil, -1
 }
 
+// DownloadAtHead returns if the item next to play (before the head)
+// is the expected ongoing download. Used by the sound system to detect download dequeues
 func DownloadAtHead(expect *data.QueueItem) bool {
 	mut.RLock()
 	defer mut.RUnlock()

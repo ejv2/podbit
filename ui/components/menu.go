@@ -97,9 +97,9 @@ func (m *Menu) ChangeSelection(index int) {
 	scrollAt := m.H + m.scroll + 1
 	underscrollAt := m.scroll - 1
 	if m.sel >= scrollAt {
-		m.scroll += (m.sel-scrollAt)+1
+		m.scroll += (m.sel - scrollAt) + 1
 	} else if m.sel <= underscrollAt {
-		m.scroll -= (m.sel-underscrollAt)+1
+		m.scroll -= (m.sel - underscrollAt) + 1
 	}
 }
 

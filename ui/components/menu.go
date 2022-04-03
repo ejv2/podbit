@@ -41,9 +41,12 @@ func (m *Menu) Render() {
 
 	if m.prevw != m.W || m.prevh != m.H {
 		m.scroll = 0
-		m.sel = 0
 	}
 	m.prevw, m.prevh = m.W, m.H
+
+	if m.scroll+m.H < m.sel {
+		m.sel = m.H
+	}
 
 	for i, elem := range items {
 		if c == m.sel && m.Selected {

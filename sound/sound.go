@@ -109,12 +109,15 @@ func endWait(u chan int) {
 }
 
 func downloadWait(u chan int) {
-	for y := true; y; y, _ = data.Downloads.IsDownloading(Plr.download.Path) {
+	for y := true; y && DownloadAtHead(Plr.download); y, _ = data.Downloads.IsDownloading(Plr.download.Path) {
 		time.Sleep(UpdateTime)
 	}
 
 	Plr.waiting = false
-	head--
+
+	if DownloadAtHead(Plr.download) {
+		head--
+	}
 
 	u <- 1
 }

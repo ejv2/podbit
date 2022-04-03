@@ -181,3 +181,10 @@ func GetNext() (*data.QueueItem, int) {
 
 	return nil, -1
 }
+
+func DownloadAtHead(expect *data.QueueItem) bool {
+	mut.RLock()
+	defer mut.RUnlock()
+
+	return len(queue) != 0 && queue[head-1] == expect
+}

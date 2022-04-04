@@ -190,15 +190,19 @@ func (c *Cache) loadFile(path string, startup bool) {
 // Does not block until completion, but spawns two goroutines to
 // complete the work as efficiently as possible.
 func (c *Cache) Download(item *QueueItem) (id int, err error) {
+	var dl Download
+	idc, idl := make(chan int), make(chan Download)
 	f, err := os.Create(item.Path)
+
 	if err != nil {
-		c.downloadsMutex.Lock()
-		var dl Download = Download{
+		dl = Download{
 			Started:   time.Now(),
 			Completed: true,
 			Success:   false,
 			Error:     "IO Error",
 		}
+
+		c.downloadsMutex.Lock()
 		c.downloads = append(c.downloads, dl)
 		id = len(c.downloads) - 1
 		c.downloadsMutex.Unlock()
@@ -206,10 +210,50 @@ func (c *Cache) Download(item *QueueItem) (id int, err error) {
 		return id, ErrorIO
 	}
 
+	if item.Youtube {
+		go c.downloadYoutube(item, f, idc, idl)
+	} else {
+		go c.downloadHTTP(item, f, idc, idl)
+	}
+
+	dl = <-idl
+	c.downloadsMutex.Lock()
+	c.downloads = append(c.downloads, dl)
+	id = len(c.downloads) - 1
+	c.downloadsMutex.Unlock()
+	idc <- id
+
+	return
+}
+
+func (c *Cache) downloadYoutube(item *QueueItem, f *os.File, centry chan int, cresp chan Download) {
+	f.Close()
+
+	dl := Download{
+		Path: item.Path,
+		File: nil,
+		Percentage: 0,
+		Size: 0,
+		Done: 0,
+		Started: time.Now(),
+		Completed: true,
+		Success: false,
+		Error: "Not implemented",
+		Stop: make(chan int),
+	}
+
+	cresp <- dl
+	<-centry
+
+	return
+}
+
+func (c *Cache) downloadHTTP(item *QueueItem, f *os.File, centry chan int, cresp chan Download) {
+	var dl Download
+
 	resp, err := http.Get(item.URL)
 	if err != nil || resp.StatusCode != http.StatusOK {
-		c.downloadsMutex.Lock()
-		var dl Download = Download{
+		dl = Download{
 			Path:      item.Path,
 			File:      f,
 			Started:   time.Now(),
@@ -217,19 +261,16 @@ func (c *Cache) Download(item *QueueItem) (id int, err error) {
 			Success:   false,
 			Error:     "Download failed",
 		}
-		c.downloads = append(c.downloads, dl)
-		id = len(c.downloads) - 1
-
-		c.downloadsMutex.Unlock()
+		cresp <- dl
 
 		os.Remove(item.Path)
-		return id, fmt.Errorf(ErrorDownloadFailed, item.URL)
+		return
 	}
 
 	size, _ := strconv.ParseInt(resp.Header.Get("Content-Length"), 10, 64)
 
 	c.downloadsMutex.Lock()
-	var dl Download = Download{
+	dl = Download{
 		Path:    item.Path,
 		File:    f,
 		Size:    size,
@@ -242,59 +283,56 @@ func (c *Cache) Download(item *QueueItem) (id int, err error) {
 	Q.mutex.Unlock()
 
 	c.ongoing++
-	c.downloads = append(c.downloads, dl)
-	id = len(c.downloads) - 1
-
 	c.downloadsMutex.Unlock()
 
-	go func(entry int) {
-		var err error
-		var count int64
-		var read int
-		var buf []byte = make([]byte, 32*1024) // 32kb
-		for err == nil {
-			read, err = resp.Body.Read(buf)
-			f.WriteAt(buf, count)
-			count += int64(read)
+	var count int64
+	var read int
+	buf := make([]byte, 32*1024) // 32kb
+	cresp <- dl
+	entry := <-centry
 
-			c.downloadsMutex.Lock()
-			c.downloads[entry].Done = count
-			c.downloads[entry].Percentage = float64(c.downloads[entry].Done) / float64(c.downloads[entry].Size)
-			c.downloadsMutex.Unlock()
-
-			if c.Ongoing() > 1 {
-				runtime.Gosched() // Give the other threads a turn
-			}
-
-			select {
-			case <-c.downloads[entry].Stop:
-				err = errors.New("Cancelled")
-				break
-			default:
-			}
-		}
-
-		Q.mutex.Lock()
-		item.State = StateReady
-		Q.mutex.Unlock()
+	for err == nil {
+		read, err = resp.Body.Read(buf)
+		f.WriteAt(buf, count)
+		count += int64(read)
 
 		c.downloadsMutex.Lock()
-		c.downloads[entry].Completed = true
-		if err != nil && err.Error() != "EOF" {
-			c.downloads[entry].Success = false
-			c.downloads[entry].Error = err.Error()
-		} else {
-			c.downloads[entry].Success = true
-		}
-		close(c.downloads[entry].Stop)
-
-		c.loadFile(c.downloads[entry].Path, false)
-		c.ongoing--
+		c.downloads[entry].Done = count
+		c.downloads[entry].Percentage = float64(c.downloads[entry].Done) / float64(c.downloads[entry].Size)
 		c.downloadsMutex.Unlock()
 
-		resp.Body.Close()
-		f.Close()
-	}(id)
+		if c.Ongoing() > 1 {
+			runtime.Gosched() // Give the other threads a turn
+		}
+
+		select {
+		case <-c.downloads[entry].Stop:
+			err = errors.New("Cancelled")
+			break
+		default:
+		}
+	}
+
+	Q.mutex.Lock()
+	item.State = StateReady
+	Q.mutex.Unlock()
+
+	c.downloadsMutex.Lock()
+	c.downloads[entry].Completed = true
+	if err != nil && err.Error() != "EOF" {
+		c.downloads[entry].Success = false
+		c.downloads[entry].Error = err.Error()
+	} else {
+		c.downloads[entry].Success = true
+	}
+	close(c.downloads[entry].Stop)
+
+	c.loadFile(c.downloads[entry].Path, false)
+	c.ongoing--
+	c.downloadsMutex.Unlock()
+
+	resp.Body.Close()
+	f.Close()
 
 	return
 }

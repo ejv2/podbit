@@ -55,10 +55,11 @@ var StateStrings [4]string = [4]string{
 // QueueItem represents an item in the player queue
 // as provided by newsboat
 type QueueItem struct {
-	URL   string
-	Path  string
-	State int
-	Date  int64
+	URL     string
+	Path    string
+	State   int
+	Date    int64
+	Youtube bool
 }
 
 // Queue represents the newsboat queue
@@ -70,11 +71,13 @@ type Queue struct {
 	Items []QueueItem
 }
 
-func (q *Queue) parseField(fields []string, num int) {
-	var item QueueItem
-
+func (q *Queue) parseField(fields []string, num int) (item QueueItem) {
 	item.URL = fields[0]
 	item.Path = strings.ReplaceAll(fields[1], "\"", "")
+	if strings.HasPrefix(item.URL, "+") {
+		item.Youtube = true
+		item.URL = item.URL[1:]
+	}
 
 	f, err := os.Open(item.Path)
 	defer f.Close()
@@ -104,7 +107,7 @@ func (q *Queue) parseField(fields []string, num int) {
 		}
 	}
 
-	q.Items = append(q.Items, item)
+	return
 }
 
 // Open opens and parses the newsboat queue file
@@ -161,8 +164,7 @@ func (q *Queue) Open() error {
 			return fmt.Errorf(ErrorQueueSyntax, i)
 		}
 
-		q.parseField(fields, num)
-
+		q.Items = append(q.Items, q.parseField(fields, num))
 		i++
 	}
 
@@ -205,14 +207,14 @@ scanloop:
 			return
 		}
 
+		parsed := q.parseField(fields, num)
 		for _, elem := range q.Items {
-			if elem.URL == fields[0] {
+			if elem.URL == parsed.URL {
 				continue scanloop
 			}
 		}
 
-		q.parseField(fields, num)
-
+		q.Items = append(q.Items, parsed)
 	}
 }
 
@@ -232,11 +234,15 @@ func (q *Queue) Save() {
 
 	for _, elem := range q.Items {
 		date := ""
+		prefix := ""
 		if elem.Date != -1 {
 			date = fmt.Sprint(elem.Date)
 		}
+		if elem.Youtube {
+			prefix = "+"
+		}
 
-		fmt.Fprintf(file, "%s \"%s\" %s %s\n", elem.URL, elem.Path, StateStrings[elem.State], date)
+		fmt.Fprintf(file, "%s%s \"%s\" %s %s\n", prefix, elem.URL, elem.Path, StateStrings[elem.State], date)
 	}
 
 }

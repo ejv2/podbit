@@ -1,7 +1,6 @@
 package data
 
 import (
-	"errors"
 	"net/http"
 	"os"
 	"os/exec"
@@ -75,6 +74,7 @@ func (d *Download) DownloadYoutube() {
 		Downloads.ongoing--
 		Downloads.downloadsMutex.Unlock()
 	}()
+	defer close(d.Stop)
 
 	// Determine downloader program - use yt-dlp if available, else use ytdl
 	loader := ""
@@ -124,6 +124,19 @@ func (d *Download) DownloadYoutube() {
 		d.Percentage, _ = strconv.ParseFloat(fields[1][:len(fields[1])-1], 64)
 		d.Percentage /= 100
 		d.mut.Unlock()
+
+		select {
+		case <-d.Stop:
+			d.mut.Lock()
+			d.Error = "Cancelled"
+			d.Completed = true
+			d.Success = false
+			d.mut.Unlock()
+
+			proc.Process.Kill()
+			return
+		default:
+		}
 	}
 
 	if err != nil && err.Error() != "EOF" {
@@ -132,6 +145,7 @@ func (d *Download) DownloadYoutube() {
 		d.Success = false
 		d.Error = "Downloader IO Error"
 		d.mut.Unlock()
+		return
 	}
 
 	// Move from temp location
@@ -151,8 +165,6 @@ func (d *Download) DownloadYoutube() {
 	Downloads.downloadsMutex.Unlock()
 
 	d.mut.Unlock()
-
-	close(d.Stop)
 	return
 }
 
@@ -184,8 +196,10 @@ func (d *Download) DownloadHTTP() {
 
 	var count int64
 	var read int
+	dlerr := ""
 	buf := make([]byte, 32*1024) // 32kb
 
+outer:
 	for err == nil {
 		read, err = resp.Body.Read(buf)
 		d.File.WriteAt(buf, count)
@@ -202,23 +216,25 @@ func (d *Download) DownloadHTTP() {
 
 		select {
 		case <-d.Stop:
-			err = errors.New("Cancelled")
-			break
+			dlerr = "Cancelled"
+			break outer
 		default:
 		}
 	}
 
-	Q.mutex.Lock()
-	d.Elem.State = StateReady
-	Q.mutex.Unlock()
 
 	d.mut.Lock()
 	d.Completed = true
-	if err != nil && err.Error() != "EOF" {
+	if (err != nil && err.Error() != "EOF") || dlerr != "" {
 		d.Success = false
-		d.Error = err.Error()
+		d.Error = dlerr
 	} else {
 		d.Success = true
+
+
+		Q.mutex.Lock()
+		d.Elem.State = StateReady
+		Q.mutex.Unlock()
 	}
 	d.mut.Unlock()
 

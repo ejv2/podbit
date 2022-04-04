@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"runtime"
 	"strconv"
@@ -22,6 +23,13 @@ var (
 	ErrorIO             error  = errors.New("Error: Failed to create cache entry")
 	ErrorCreation       error  = errors.New("Error: Download directory did not exist and could not be created")
 	ErrorDownloadFailed string = "Error: Failed to download from url %s"
+)
+
+// YouTube downloading constants
+const (
+	YoutubeDL    string = "youtube-dl"
+	YoutubeDLP   string = "yt-dlp"
+	YoutubeFlags string = "--add-metadata --newline --no-colors -f bestaudio --extract-audio --audio-format mp3"
 )
 
 // Cache is the current state of the on-disk cache and associated
@@ -227,24 +235,99 @@ func (c *Cache) Download(item *QueueItem) (id int, err error) {
 }
 
 func (c *Cache) downloadYoutube(item *QueueItem, f *os.File, centry chan int, cresp chan Download) {
+	if !item.Youtube {
+		panic("download: downloading non-youtube with youtube-dl")
+	}
+
+	// Work around "already downloaded" errors from youtube-dl
 	f.Close()
+	os.Remove(f.Name())
 
 	dl := Download{
-		Path: item.Path,
-		File: nil,
-		Percentage: 0,
-		Size: 0,
-		Done: 0,
+		Path:    item.Path,
+		File:    nil,
 		Started: time.Now(),
-		Completed: true,
-		Success: false,
-		Error: "Not implemented",
-		Stop: make(chan int),
+		Stop:    make(chan int),
 	}
 
 	cresp <- dl
-	<-centry
+	entry := <-centry
 
+
+	c.downloadsMutex.Lock()
+	c.ongoing++
+	c.downloadsMutex.Unlock()
+
+	// Determine downloader program - use yt-dlp if available, else use ytdl
+	loader := ""
+	if _, err := exec.LookPath(YoutubeDLP); err == nil {
+		loader = YoutubeDLP
+	} else if _, err := exec.LookPath(YoutubeDL); err == nil {
+		loader = YoutubeDL
+	} else {
+		c.downloadsMutex.Lock()
+		c.downloads[entry].Completed = true
+		c.downloads[entry].Success = false
+		c.downloads[entry].Error = "No YouTube downloader"
+		c.downloadsMutex.Unlock()
+
+		return
+	}
+
+	h, _ := os.UserHomeDir()
+	tmppath := filepath.Join(h, "podbit-ytdl" + strconv.FormatInt(time.Now().UnixMicro(), 10))
+	flags := append(strings.Split(YoutubeFlags, " "), "-o", tmppath + ".%(ext)s", item.URL)
+
+	proc := exec.Command(loader, flags...)
+	r, err := proc.StdoutPipe()
+	defer r.Close()
+	if err != nil {
+		c.downloadsMutex.Lock()
+		c.downloads[entry].Completed = true
+		c.downloads[entry].Success = false
+		c.downloads[entry].Error = "Downloader IO Error"
+		c.downloadsMutex.Unlock()
+
+		return
+	}
+	proc.Start()
+
+	buf := make([]byte, 4096)
+	for err == nil {
+		_, err = r.Read(buf)
+		line := string(buf)
+		fields := strings.Split(line, " ")
+
+		if fields[0] != "[download]" {
+			continue
+		}
+	}
+
+	if (err != nil && err.Error() != "EOF") {
+		c.downloadsMutex.Lock()
+		c.downloads[entry].Completed = true
+		c.downloads[entry].Success = false
+		c.downloads[entry].Error = "Downloader IO Error"
+		c.downloadsMutex.Unlock()
+	}
+
+	// Move from temp location
+	os.Rename(tmppath + ".mp3", item.Path)
+
+	// Final clean up
+	Q.mutex.Lock()
+	item.State = StateReady
+	Q.mutex.Unlock()
+
+	c.downloadsMutex.Lock()
+	c.downloads[entry].Completed = true
+	c.downloads[entry].Success = true
+
+	c.loadFile(c.downloads[entry].Path, false)
+	c.ongoing--
+	c.downloadsMutex.Unlock()
+
+	close(c.downloads[entry].Stop)
 	return
 }
 

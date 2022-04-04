@@ -145,8 +145,12 @@ func (d *Download) DownloadYoutube() {
 	d.mut.Lock()
 	d.Completed = true
 	d.Success = true
-	d.mut.Unlock()
 
+	Downloads.downloadsMutex.Lock()
+	Downloads.loadFile(d.Elem.Path, false)
+	Downloads.downloadsMutex.Unlock()
+
+	d.mut.Unlock()
 
 	close(d.Stop)
 	return

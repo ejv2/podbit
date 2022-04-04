@@ -295,11 +295,16 @@ func (c *Cache) downloadYoutube(item *QueueItem, f *os.File, centry chan int, cr
 	for err == nil {
 		_, err = r.Read(buf)
 		line := string(buf)
-		fields := strings.Split(line, " ")
+		fields := strings.Fields(line)
 
-		if fields[0] != "[download]" {
+		if fields[0] != "[download]" || len(fields) < 2 {
 			continue
 		}
+
+		c.downloadsMutex.Lock()
+		c.downloads[entry].Percentage, _ = strconv.ParseFloat(fields[1][:len(fields[1])-1], 64)
+		c.downloads[entry].Percentage /= 100
+		c.downloadsMutex.Unlock()
 	}
 
 	if err != nil && err.Error() != "EOF" {

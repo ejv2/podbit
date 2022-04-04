@@ -70,6 +70,12 @@ func (d *Download) DownloadYoutube() {
 	d.File.Close()
 	os.Remove(d.File.Name())
 
+	defer func() {
+		Downloads.downloadsMutex.Lock()
+		Downloads.ongoing--
+		Downloads.downloadsMutex.Unlock()
+	}()
+
 	// Determine downloader program - use yt-dlp if available, else use ytdl
 	loader := ""
 	if _, err := exec.LookPath(YoutubeDLP); err == nil {
@@ -141,9 +147,6 @@ func (d *Download) DownloadYoutube() {
 	d.Success = true
 	d.mut.Unlock()
 
-	Downloads.downloadsMutex.Lock()
-	Downloads.ongoing--
-	Downloads.downloadsMutex.Unlock()
 
 	close(d.Stop)
 	return

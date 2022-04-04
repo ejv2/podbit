@@ -253,7 +253,6 @@ func (c *Cache) downloadYoutube(item *QueueItem, f *os.File, centry chan int, cr
 	cresp <- dl
 	entry := <-centry
 
-
 	c.downloadsMutex.Lock()
 	c.ongoing++
 	c.downloadsMutex.Unlock()
@@ -275,8 +274,8 @@ func (c *Cache) downloadYoutube(item *QueueItem, f *os.File, centry chan int, cr
 	}
 
 	h, _ := os.UserHomeDir()
-	tmppath := filepath.Join(h, "podbit-ytdl" + strconv.FormatInt(time.Now().UnixMicro(), 10))
-	flags := append(strings.Split(YoutubeFlags, " "), "-o", tmppath + ".%(ext)s", item.URL)
+	tmppath := filepath.Join(h, "podbit-ytdl"+strconv.FormatInt(time.Now().UnixMicro(), 10))
+	flags := append(strings.Split(YoutubeFlags, " "), "-o", tmppath+".%(ext)s", item.URL)
 
 	proc := exec.Command(loader, flags...)
 	r, err := proc.StdoutPipe()
@@ -303,7 +302,7 @@ func (c *Cache) downloadYoutube(item *QueueItem, f *os.File, centry chan int, cr
 		}
 	}
 
-	if (err != nil && err.Error() != "EOF") {
+	if err != nil && err.Error() != "EOF" {
 		c.downloadsMutex.Lock()
 		c.downloads[entry].Completed = true
 		c.downloads[entry].Success = false
@@ -312,7 +311,7 @@ func (c *Cache) downloadYoutube(item *QueueItem, f *os.File, centry chan int, cr
 	}
 
 	// Move from temp location
-	os.Rename(tmppath + ".mp3", item.Path)
+	os.Rename(tmppath+".mp3", item.Path)
 
 	// Final clean up
 	Q.mutex.Lock()

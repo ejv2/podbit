@@ -5,12 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
-	"net/http"
 	"os"
-	"os/exec"
 	"path/filepath"
-	"runtime"
-	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -25,13 +21,6 @@ var (
 	ErrorDownloadFailed string = "Error: Failed to download from url %s"
 )
 
-// YouTube downloading constants
-const (
-	YoutubeDL    string = "youtube-dl"
-	YoutubeDLP   string = "yt-dlp"
-	YoutubeFlags string = "--add-metadata --newline --no-colors -f bestaudio --extract-audio --audio-format mp3"
-)
-
 // Cache is the current state of the on-disk cache and associated
 // operations.
 //
@@ -43,7 +32,7 @@ type Cache struct {
 	episodes sync.Map
 
 	downloadsMutex sync.Mutex // Protects the below two variables
-	downloads      []Download
+	downloads      []*Download
 	ongoing        int
 }
 
@@ -55,42 +44,6 @@ type Episode struct {
 	Title string
 	Date  int
 	Host  string
-}
-
-// Download represents the statistics of a specific ongoing download.
-// Once the associated download is complete, the watcher goroutine
-// terminates.
-//
-// This struct is *not* thread safe; don't write to it
-type Download struct {
-	// Path is the absolute path of the download destination
-	Path string
-	// File is the live file handle of the download
-	// Will be closed once Completed == true
-	File *os.File
-
-	// Percentage is the calculated percentage currently completed
-	Percentage float64
-
-	// Size is the total size to download
-	Size int64
-	// Done is the currently downloaded size present on disk
-	Done int64
-
-	// Started is the timestamp of the download commencing
-	Started time.Time
-
-	// Completed == true once the operations has either finished or failed
-	Completed bool
-	// Success == true if the full download completed successfully
-	Success bool
-	// Error is the error which caused the download to fail
-	// Empty if the download did not fail
-	Error string
-
-	// Stop will cause the download to cease immediately
-	// Will be closed once the download completes
-	Stop chan int
 }
 
 // Dig through newsboat stuff to guess the download dir
@@ -189,29 +142,30 @@ func (c *Cache) loadFile(path string, startup bool) {
 	c.episodes.Store(path, ep)
 }
 
-// Download Starts a download and return its ID in the downloads table
-// This can be used to retrieve information about said download by passing
-// to GetDownload.
-//
-// Returns as soon as the download has been initialised - which could be
-// significant. We recommend calling this function in a goroutine.
-// Does not block until completion, but spawns two goroutines to
-// complete the work as efficiently as possible.
+// Download starts an asynchronous download in a new goroutine
+// Returns the ID in the downloads table, which must be accessed
+// using a mutex
 func (c *Cache) Download(item *QueueItem) (id int, err error) {
-	var dl Download
-	idc, idl := make(chan int), make(chan Download)
 	f, err := os.Create(item.Path)
+	dl := Download{
+		Path: item.Path,
+		File: f,
+		Elem: item,
+		Started: time.Now(),
+		Stop: make(chan int),
+	}
 
 	if err != nil {
 		dl = Download{
 			Started:   time.Now(),
 			Completed: true,
 			Success:   false,
+			Elem:      item,
 			Error:     "IO Error",
 		}
 
 		c.downloadsMutex.Lock()
-		c.downloads = append(c.downloads, dl)
+		c.downloads = append(c.downloads, &dl)
 		id = len(c.downloads) - 1
 		c.downloadsMutex.Unlock()
 
@@ -219,207 +173,16 @@ func (c *Cache) Download(item *QueueItem) (id int, err error) {
 	}
 
 	if item.Youtube {
-		go c.downloadYoutube(item, f, idc, idl)
+		go dl.DownloadYoutube()
 	} else {
-		go c.downloadHTTP(item, f, idc, idl)
+		go dl.DownloadHTTP()
 	}
 
-	dl = <-idl
 	c.downloadsMutex.Lock()
-	c.downloads = append(c.downloads, dl)
+	c.downloads = append(c.downloads, &dl)
 	id = len(c.downloads) - 1
-	c.downloadsMutex.Unlock()
-	idc <- id
-
-	return
-}
-
-func (c *Cache) downloadYoutube(item *QueueItem, f *os.File, centry chan int, cresp chan Download) {
-	if !item.Youtube {
-		panic("download: downloading non-youtube with youtube-dl")
-	}
-
-	// Work around "already downloaded" errors from youtube-dl
-	f.Close()
-	os.Remove(f.Name())
-
-	dl := Download{
-		Path:    item.Path,
-		File:    nil,
-		Started: time.Now(),
-		Stop:    make(chan int),
-	}
-
-	cresp <- dl
-	entry := <-centry
-
-	c.downloadsMutex.Lock()
 	c.ongoing++
 	c.downloadsMutex.Unlock()
-
-	// Determine downloader program - use yt-dlp if available, else use ytdl
-	loader := ""
-	if _, err := exec.LookPath(YoutubeDLP); err == nil {
-		loader = YoutubeDLP
-	} else if _, err := exec.LookPath(YoutubeDL); err == nil {
-		loader = YoutubeDL
-	} else {
-		c.downloadsMutex.Lock()
-		c.downloads[entry].Completed = true
-		c.downloads[entry].Success = false
-		c.downloads[entry].Error = "No YouTube downloader"
-		c.downloadsMutex.Unlock()
-
-		return
-	}
-
-	h, _ := os.UserHomeDir()
-	tmppath := filepath.Join(h, "podbit-ytdl"+strconv.FormatInt(time.Now().UnixMicro(), 10))
-	flags := append(strings.Split(YoutubeFlags, " "), "-o", tmppath+".%(ext)s", item.URL)
-
-	proc := exec.Command(loader, flags...)
-	r, err := proc.StdoutPipe()
-	defer r.Close()
-	if err != nil {
-		c.downloadsMutex.Lock()
-		c.downloads[entry].Completed = true
-		c.downloads[entry].Success = false
-		c.downloads[entry].Error = "Downloader IO Error"
-		c.downloadsMutex.Unlock()
-
-		return
-	}
-	proc.Start()
-
-	buf := make([]byte, 4096)
-	for err == nil {
-		_, err = r.Read(buf)
-		line := string(buf)
-		fields := strings.Fields(line)
-
-		if fields[0] != "[download]" || len(fields) < 2 {
-			continue
-		}
-
-		c.downloadsMutex.Lock()
-		c.downloads[entry].Percentage, _ = strconv.ParseFloat(fields[1][:len(fields[1])-1], 64)
-		c.downloads[entry].Percentage /= 100
-		c.downloadsMutex.Unlock()
-	}
-
-	if err != nil && err.Error() != "EOF" {
-		c.downloadsMutex.Lock()
-		c.downloads[entry].Completed = true
-		c.downloads[entry].Success = false
-		c.downloads[entry].Error = "Downloader IO Error"
-		c.downloadsMutex.Unlock()
-	}
-
-	// Move from temp location
-	os.Rename(tmppath+".mp3", item.Path)
-
-	// Final clean up
-	Q.mutex.Lock()
-	item.State = StateReady
-	Q.mutex.Unlock()
-
-	c.downloadsMutex.Lock()
-	c.downloads[entry].Completed = true
-	c.downloads[entry].Success = true
-
-	c.loadFile(c.downloads[entry].Path, false)
-	c.ongoing--
-	c.downloadsMutex.Unlock()
-
-	close(c.downloads[entry].Stop)
-	return
-}
-
-func (c *Cache) downloadHTTP(item *QueueItem, f *os.File, centry chan int, cresp chan Download) {
-	var dl Download
-
-	resp, err := http.Get(item.URL)
-	if err != nil || resp.StatusCode != http.StatusOK {
-		dl = Download{
-			Path:      item.Path,
-			File:      f,
-			Started:   time.Now(),
-			Completed: true,
-			Success:   false,
-			Error:     "Download failed",
-		}
-		cresp <- dl
-
-		os.Remove(item.Path)
-		return
-	}
-
-	size, _ := strconv.ParseInt(resp.Header.Get("Content-Length"), 10, 64)
-
-	c.downloadsMutex.Lock()
-	dl = Download{
-		Path:    item.Path,
-		File:    f,
-		Size:    size,
-		Started: time.Now(),
-		Stop:    make(chan int),
-	}
-
-	Q.mutex.Lock()
-	item.State = StatePending
-	Q.mutex.Unlock()
-
-	c.ongoing++
-	c.downloadsMutex.Unlock()
-
-	var count int64
-	var read int
-	buf := make([]byte, 32*1024) // 32kb
-	cresp <- dl
-	entry := <-centry
-
-	for err == nil {
-		read, err = resp.Body.Read(buf)
-		f.WriteAt(buf, count)
-		count += int64(read)
-
-		c.downloadsMutex.Lock()
-		c.downloads[entry].Done = count
-		c.downloads[entry].Percentage = float64(c.downloads[entry].Done) / float64(c.downloads[entry].Size)
-		c.downloadsMutex.Unlock()
-
-		if c.Ongoing() > 1 {
-			runtime.Gosched() // Give the other threads a turn
-		}
-
-		select {
-		case <-c.downloads[entry].Stop:
-			err = errors.New("Cancelled")
-			break
-		default:
-		}
-	}
-
-	Q.mutex.Lock()
-	item.State = StateReady
-	Q.mutex.Unlock()
-
-	c.downloadsMutex.Lock()
-	c.downloads[entry].Completed = true
-	if err != nil && err.Error() != "EOF" {
-		c.downloads[entry].Success = false
-		c.downloads[entry].Error = err.Error()
-	} else {
-		c.downloads[entry].Success = true
-	}
-	close(c.downloads[entry].Stop)
-
-	c.loadFile(c.downloads[entry].Path, false)
-	c.ongoing--
-	c.downloadsMutex.Unlock()
-
-	resp.Body.Close()
-	f.Close()
 
 	return
 }
@@ -443,10 +206,10 @@ func (c *Cache) IsDownloading(path string) (bool, int) {
 // This should be used to get the details of a specified download
 // via the ID
 func (c *Cache) GetDownload(ind int) Download {
-	c.downloadsMutex.Lock()
-	defer c.downloadsMutex.Unlock()
+	c.downloads[ind].mut.RLock()
+	defer c.downloads[ind].mut.RUnlock()
 
-	return c.downloads[ind]
+	return *c.downloads[ind]
 }
 
 // Ongoing returns the current number of ongoing downloads.
@@ -460,13 +223,21 @@ func (c *Cache) Ongoing() int {
 
 // Downloads returns all recorded downloads at this point,
 // including completed or failed downloads.
-// in time thread safely. No downloads can start or end
-// while this function is executing.
+// No downloads can start or end while this function is
+// executing.
 func (c *Cache) Downloads() []Download {
 	c.downloadsMutex.Lock()
 	defer c.downloadsMutex.Unlock()
 
-	return c.downloads
+	dls := make([]Download, len(c.downloads))
+
+	for i, elem := range c.downloads {
+		elem.mut.RLock()
+		dls[i] = *elem
+		elem.mut.RUnlock()
+	}
+
+	return dls
 }
 
 // Query returns cached data about an episode on disk

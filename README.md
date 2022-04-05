@@ -22,5 +22,7 @@ Podbit is written in Go. So, to build, you will need a copy of the Go command li
 * *ncurses* development libraries and headers
 * A normal install of ``mpv``
 * A copy of GNU Make
+* Newsboat to enqueue podcasts - *(optional)*
+* A YouTube downloader tool, such as ``youtube-dl`` or ``yt-dlp``, to download YouTube podcasts - *(optional)*
 
 Because of security issues in the Go tool, the provided Makefile must be used instead of simply ``go build``.

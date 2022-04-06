@@ -213,7 +213,7 @@ func RenderLoop() {
 				renderMenu()
 				renderTray()
 			default:
-				goncurses.Flash()
+				panic("renderloop: invalid redraw code")
 			}
 
 			root.Refresh()

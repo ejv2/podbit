@@ -23,7 +23,7 @@ const (
 // Once the associated download is complete, the watcher goroutine
 // terminates.
 //
-// This struct is *not* thread safe; don't write to it
+// This struct may only be modified through associated methods
 type Download struct {
 	// Protects this download instance
 	mut sync.RWMutex
@@ -60,6 +60,11 @@ type Download struct {
 	Stop chan int
 }
 
+// DownloadYoutube selects an appropriate downloader (yt-dlp or
+// youtube-dl) and begins a YouTube download on the calling thread
+// (synchronously).
+//
+// Used internally by cache; avoid calling directly
 func (d *Download) DownloadYoutube() {
 	if !d.Elem.Youtube {
 		panic("download: downloading non-youtube with youtube-dl")
@@ -109,6 +114,10 @@ func (d *Download) DownloadYoutube() {
 		return
 	}
 	proc.Start()
+
+	// NOTE: Do not need to runtime.Gosched here to prevent contention, because IO waiting
+	// occurs on this thread and the runtime will implicitly call it for us when there's no
+	// pending data. Manually calling causes net performance loss
 
 	buf := make([]byte, 4096)
 	for err == nil {
@@ -168,6 +177,11 @@ func (d *Download) DownloadYoutube() {
 	return
 }
 
+// DownloadHTTP connects to the URL of the specified download
+// and downloads to download path on the calling thread
+// (synchronously)
+//
+// Used internally by cache; avoid calling directly
 func (d *Download) DownloadHTTP() {
 	resp, err := http.Get(d.Elem.URL)
 	if err != nil || resp.StatusCode != http.StatusOK {
@@ -222,7 +236,6 @@ outer:
 		}
 	}
 
-
 	d.mut.Lock()
 	d.Completed = true
 	if (err != nil && err.Error() != "EOF") || dlerr != "" {
@@ -230,7 +243,6 @@ outer:
 		d.Error = dlerr
 	} else {
 		d.Success = true
-
 
 		Q.mutex.Lock()
 		d.Elem.State = StateReady

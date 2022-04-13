@@ -148,6 +148,7 @@ func (c *Cache) loadFile(path string, startup bool) {
 func (c *Cache) Download(item *QueueItem) (id int, err error) {
 	f, err := os.Create(item.Path)
 	dl := Download{
+		mut:     new(sync.RWMutex),
 		Path:    item.Path,
 		File:    f,
 		Elem:    item,

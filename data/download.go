@@ -26,7 +26,7 @@ const (
 // This struct may only be modified through associated methods
 type Download struct {
 	// Protects this download instance
-	mut sync.RWMutex
+	mut *sync.RWMutex
 
 	// Path is the absolute path of the download destination
 	Path string

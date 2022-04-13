@@ -94,6 +94,7 @@ func InputLoop(exit chan int) {
 			case '{':
 				sound.Plr.Seek(-60)
 			case '\f': // Control-L
+				root.Clear()
 				UpdateDimensions(root)
 			case 'q':
 				if data.Downloads.Ongoing() == 0 {

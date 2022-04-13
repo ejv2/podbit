@@ -31,7 +31,7 @@ type Cache struct {
 
 	episodes sync.Map
 
-	downloadsMutex sync.Mutex // Protects the below two variables
+	downloadsMutex sync.RWMutex // Protects the below two variables
 	downloads      []*Download
 	ongoing        int
 }
@@ -191,13 +191,16 @@ func (c *Cache) Download(item *QueueItem) (id int, err error) {
 // IsDownloading queries the download cache to check
 // if a podcast is currently downloading
 func (c *Cache) IsDownloading(path string) (bool, int) {
-	c.downloadsMutex.Lock()
-	defer c.downloadsMutex.Unlock()
+	c.downloadsMutex.RLock()
+	defer c.downloadsMutex.RUnlock()
 
 	for i, elem := range c.downloads {
+		elem.mut.RLock()
 		if elem.Path == path && !elem.Completed {
+			elem.mut.RUnlock()
 			return true, i
 		}
+		elem.mut.RUnlock()
 	}
 
 	return false, 0
@@ -216,8 +219,8 @@ func (c *Cache) GetDownload(ind int) Download {
 // Ongoing returns the current number of ongoing downloads.
 // The value cannot change while this function is executing.
 func (c *Cache) Ongoing() int {
-	c.downloadsMutex.Lock()
-	defer c.downloadsMutex.Unlock()
+	c.downloadsMutex.RLock()
+	defer c.downloadsMutex.RUnlock()
 
 	return c.ongoing
 }
@@ -227,8 +230,8 @@ func (c *Cache) Ongoing() int {
 // No downloads can start or end while this function is
 // executing.
 func (c *Cache) Downloads() []Download {
-	c.downloadsMutex.Lock()
-	defer c.downloadsMutex.Unlock()
+	c.downloadsMutex.RLock()
+	defer c.downloadsMutex.RUnlock()
 
 	dls := make([]Download, len(c.downloads))
 

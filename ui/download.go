@@ -65,7 +65,11 @@ func (q *Downloads) Render(x, y int) {
 				item[3] = fmt.Sprintf("Failed (%s)", elem.Error)
 			}
 		} else {
-			item[3] = "In progress"
+			if elem.Elem.Youtube && elem.Percentage == 1 {
+				item[3] = "Encoding"
+			} else {
+				item[3] = "In progress"
+			}
 		}
 
 		q.tbl.Items = append(q.tbl.Items, item)

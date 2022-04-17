@@ -152,7 +152,7 @@ func (l *Library) StartDownload() {
 			return
 		}
 
-		go data.Downloads.Download(item)
+		data.Downloads.Download(item)
 		go StatusMessage(fmt.Sprintf("Download of %s started...", item.URL))
 
 		return

@@ -1,6 +1,6 @@
 module github.com/ethanv2/podbit
 
-go 1.17
+go 1.18
 
 require (
 	github.com/blang/mpv v0.0.0-20160810175505-d56d7352e068

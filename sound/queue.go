@@ -122,6 +122,11 @@ func Dequeue(index int) {
 	if index < head-1 && head > 0 {
 		head--
 	}
+
+	// Catch all - prevent crashes from spurious deletes
+	if head < 0 {
+		head = 0
+	}
 }
 
 // GetQueue returns the raw queue in QueueItem slice form

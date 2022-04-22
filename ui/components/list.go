@@ -43,7 +43,7 @@ func (l *List[Item]) ChangeSelection(index int) {
 	if l.sel >= scrollAt {
 		l.scroll += (l.sel - scrollAt) + 1
 	} else if l.sel <= underscrollAt {
-		l.scroll -= (l.sel - underscrollAt) + 1
+		l.scroll = l.sel
 	}
 }
 

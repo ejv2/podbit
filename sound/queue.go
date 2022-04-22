@@ -193,5 +193,5 @@ func DownloadAtHead(expect *data.QueueItem) bool {
 	mut.RLock()
 	defer mut.RUnlock()
 
-	return len(queue) != 0 && queue[head-1] == expect
+	return len(queue) != 0 && head-1 >= 0 && queue[head-1] == expect
 }

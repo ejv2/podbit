@@ -57,7 +57,8 @@ func (l *Library) renderEpisodes(x, y int) {
 	l.men[1].Items = l.men[1].Items[:0]
 
 	data.Q.RevRange(func(i int, elem *data.QueueItem) bool {
-		if data.DB.GetFriendlyName(elem.URL) == l.men[0].GetSelection() {
+		_, sel := l.men[0].GetSelection()
+		if data.DB.GetFriendlyName(elem.URL) == sel {
 			var text string
 			entry, ok := data.Downloads.Query(elem.Path)
 			title := entry.Title
@@ -140,7 +141,7 @@ func (l *Library) StartDownload() {
 
 	targets := l.men[1].Items
 	if l.menSel == 1 {
-		target := l.men[1].GetSelection()
+		_, target := l.men[1].GetSelection()
 		item := data.Q.GetEpisodeByURL(target)
 
 		if item == nil {
@@ -186,7 +187,7 @@ func (l *Library) StartPlaying(immediate bool) {
 	}
 
 	if l.menSel == 1 {
-		entry := l.men[1].GetSelection()
+		_, entry := l.men[1].GetSelection()
 		if data.IsURL(entry) {
 			if immediate {
 				sound.PlayNow(data.Q.GetEpisodeByURL(entry))
@@ -207,7 +208,7 @@ func (l *Library) StartPlaying(immediate bool) {
 			return
 		}
 
-		entry := l.men[0].GetSelection()
+		_, entry := l.men[0].GetSelection()
 
 		sound.EnqueueByPodcast(entry)
 

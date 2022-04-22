@@ -10,21 +10,14 @@ import (
 //
 // Menu handles focus, scrolling and the managing of elements
 // at each render.
-//
-// This component is not thread safe and should only be modified
-// directly one a single thread
 type Menu struct {
-	W, H  int
 	X, Y  int
-	Items []string
 	Win   goncurses.Window
 
 	Selected bool
-
-	scroll int
-	sel    int
-
 	prevw, prevh int
+
+	List[string]
 }
 
 // Render immediately renders the menu to the specified
@@ -72,41 +65,4 @@ func (m *Menu) Render() {
 
 		m.Win.ColorOff(colors.BackgroundBlue)
 	}
-}
-
-// GetSelection returns the text of the currently
-// selected menu element. If there are no items selected,
-// GetSelection returns an empty string.
-func (m *Menu) GetSelection() string {
-	if len(m.Items) < 1 {
-		return ""
-	}
-
-	return m.Items[m.sel]
-}
-
-// ChangeSelection changes the selection to the index specified.
-// If index is out of range, no action is taken.
-func (m *Menu) ChangeSelection(index int) {
-	if index >= len(m.Items) || index < 0 {
-		return
-	}
-
-	m.sel = index
-
-	scrollAt := m.H + m.scroll + 1
-	underscrollAt := m.scroll - 1
-	if m.sel >= scrollAt {
-		m.scroll += (m.sel - scrollAt) + 1
-	} else if m.sel <= underscrollAt {
-		m.scroll -= (m.sel - underscrollAt) + 1
-	}
-}
-
-// MoveSelection changes the selected item relative to the current
-// position. If the new selection would be out of range, no action
-// is taken.
-func (m *Menu) MoveSelection(offset int) {
-	off := m.sel + offset
-	m.ChangeSelection(off)
 }

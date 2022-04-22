@@ -25,16 +25,12 @@ type Column struct {
 // for displaying a slice of structs
 type Table struct {
 	X, Y int
-	W, H int
 	Win  *goncurses.Window
 
 	// See column struct for docs
 	Columns []Column
-	// Each sub-slice represents each column entry (eg, 0 = first column)
-	Items [][]string
-
-	scroll int
-	sel    int
+	// Each slice represents each column entry (eg, 0 = first column)
+	List[[]string]
 
 	prevw, prevh int
 	prevlen      int
@@ -43,6 +39,9 @@ type Table struct {
 // Render immediately renders the table to the requested coords X and Y
 // with the space taken up limited to the space W*H
 func (t *Table) Render() {
+	// Reduce height to be actual usable space (minus headings)
+	t.H -= 2
+
 	items := t.Items[t.scroll:]
 	if t.prevw != t.W || t.prevh != t.H {
 		t.scroll = 0
@@ -77,7 +76,7 @@ func (t *Table) Render() {
 		for j, entry := range items {
 			if i >= len(entry) {
 				panic("invalid table entry: missing fields")
-			} else if j > t.H-2 {
+			} else if j > t.H {
 				break
 			}
 
@@ -109,44 +108,4 @@ func (t *Table) Render() {
 
 		off += colw
 	}
-}
-
-// GetSelection returns the text of the currently
-// selected menu element. If there are no items selected,
-// GetSelection returns an empty slice.
-func (t *Table) GetSelection() (int, []string) {
-	if len(t.Items) < 1 {
-		return 0, []string{}
-	}
-
-	return t.sel, t.Items[t.sel]
-}
-
-// ChangeSelection changes the selection to the index specified.
-// If index is out of range, no action is taken.
-func (t *Table) ChangeSelection(index int) {
-	if index >= len(t.Items) || index < 0 {
-		return
-	}
-
-	t.sel = index
-
-	// Scroll at the last possible visible element
-	// Underscroll at the first possible visible element
-	scrollAt := t.H + t.scroll - 1
-	underscrollAt := t.scroll - 1
-
-	if t.sel >= scrollAt {
-		t.scroll += (t.sel - scrollAt) + 1
-	} else if t.sel <= underscrollAt {
-		t.scroll -= (t.sel - underscrollAt) + 1
-	}
-}
-
-// MoveSelection changes the selected item relative to the current
-// position. If the new selection would be out of range, no action
-// is taken.
-func (t *Table) MoveSelection(offset int) {
-	off := t.sel + offset
-	t.ChangeSelection(off)
 }

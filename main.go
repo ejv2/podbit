@@ -123,17 +123,17 @@ func main() {
 	ui.InitUI(scr, ui.LibraryMenu, redraw, keystroke, newMen)
 	go ui.RenderLoop()
 
-	// Initial UI draw
-	ui.Redraw(ui.RedrawAll)
-
 	// Welcome message
 	startup := time.Now().Sub(now)
-	ui.StatusMessage(fmt.Sprintf("Podbit v%d.%d.%d -- %d episodes of %d podcasts loaded in %.2fs",
+	go ui.StatusMessage(fmt.Sprintf("Podbit v%d.%d.%d -- %d episodes of %d podcasts loaded in %.2fs",
 		verMaj,
 		verMin,
 		verPatch,
 		len(data.Q.Items), len(data.Q.GetPodcasts()),
 		startup.Seconds()))
+
+	// Initial UI draw
+	ui.Redraw(ui.RedrawAll)
 
 	// Initialisation is done; use this thread as the input loop
 	ui.InputLoop(exit)

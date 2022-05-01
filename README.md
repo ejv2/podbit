@@ -28,3 +28,22 @@ Podbit is written in Go. So, to build, you will need a copy of the Go command li
 * A YouTube downloader tool, such as ``youtube-dl`` or ``yt-dlp``, to download YouTube podcasts - *(optional)*
 
 Because of security issues in the Go tool, the provided Makefile must be used instead of simply ``go build``.
+
+## Unicode support
+
+By default, Unicode support is not built in for compatability reasons. If you require unicode support, you will need to build the program slightly differently. Run ``make clean`` and then the following:
+
+```bash
+sed -i '/rthornton128\/goncurses/d' go.sum go.mod
+for f in $(grep -rl "github.com/rthornton128/goncurses")
+do
+	sed -i 's/rthornton128\/goncurses/vit1251\/go-ncursesw/' "$f"
+done
+
+go mod tidy
+make
+```
+
+After this, the program should more-or-less perfectly support unicode, as we deal mainly with uninterpreted text. There are some known issues with text truncation at the edges of the screen (slicing mid-rune, for example).
+
+When reporting bugs, please ensure you **mention if you used these steps**! Please note that using these steps will make the program useless on many platforms (which is why it is not built in). This includes Windows (pdcurses does not support wchars) and OpenBSD (for some reason).

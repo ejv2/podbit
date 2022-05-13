@@ -53,7 +53,7 @@ func (t *Table) Render() {
 		t.sel = 0
 	}
 	if t.sel > len(t.Items)-1 {
-		t.sel = len(t.Items)-1
+		t.sel = len(t.Items) - 1
 	}
 	t.prevw, t.prevh = t.W, t.H
 	t.prevlen = len(t.Items)

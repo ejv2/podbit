@@ -11,10 +11,10 @@ import (
 // Menu handles focus, scrolling and the managing of elements
 // at each render.
 type Menu struct {
-	X, Y  int
-	Win   goncurses.Window
+	X, Y int
+	Win  goncurses.Window
 
-	Selected bool
+	Selected     bool
 	prevw, prevh int
 
 	List[string]

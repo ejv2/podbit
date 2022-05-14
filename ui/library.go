@@ -176,6 +176,9 @@ func (l *Library) StartDownload() {
 	}
 
 	go StatusMessage("Download of multiple episodes started...")
+
+	// Move cursor down
+	l.men[l.menSel].MoveSelection(1)
 }
 
 // StartPlaying begins playing the currently focused element
@@ -212,4 +215,7 @@ func (l *Library) StartPlaying(immediate bool) {
 		sound.EnqueueByPodcast(entry)
 		go StatusMessage("Multiple episodes enqueued...")
 	}
+
+	// Move cursor downward
+	l.men[l.menSel].MoveSelection(1)
 }

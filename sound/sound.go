@@ -109,13 +109,19 @@ func endWait(u chan int) {
 }
 
 func downloadWait(u chan int) {
-	for y := true; y && DownloadAtHead(Plr.download); y, _ = data.Downloads.IsDownloading(Plr.download.Path) {
+	var id int
+	for y := true; y && DownloadAtHead(Plr.download); y, id = data.Downloads.IsDownloading(Plr.download.Path) {
 		time.Sleep(UpdateTime)
 	}
 
 	Plr.waiting = false
 
-	if DownloadAtHead(Plr.download) {
+	dl := data.Downloads.GetDownload(id)
+
+	// Only attempt to play if
+	//	a) still present
+	//	b) the download succeeded
+	if DownloadAtHead(Plr.download) && dl.Success {
 		head--
 	}
 

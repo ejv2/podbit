@@ -187,31 +187,29 @@ func (l *Library) StartPlaying(immediate bool) {
 	}
 
 	if l.menSel == 1 {
+		var item *data.QueueItem
 		_, entry := l.men[1].GetSelection()
 		if data.IsURL(entry) {
-			if immediate {
-				sound.PlayNow(data.Q.GetEpisodeByURL(entry))
-			} else {
-				sound.EnqueueByURL(entry)
-			}
+			item = data.Q.GetEpisodeByURL(entry)
 		} else {
-			if immediate {
-				sound.PlayNow(data.Q.GetEpisodeByTitle(entry))
-			} else {
-				sound.EnqueueByTitle(entry)
-			}
+			item = data.Q.GetEpisodeByTitle(entry)
 		}
 
-		go StatusMessage(fmt.Sprintf("Enqueued episode %q to play", entry))
+		if immediate {
+			go StatusMessage(fmt.Sprintf("Now playing episode %q", entry))
+			sound.PlayNow(item)
+		} else {
+			go StatusMessage(fmt.Sprintf("Enqueued episode %q to play", entry))
+			sound.Enqueue(item)
+		}
+
 	} else {
 		if immediate {
 			return
 		}
 
 		_, entry := l.men[0].GetSelection()
-
 		sound.EnqueueByPodcast(entry)
-
 		go StatusMessage("Multiple episodes enqueued...")
 	}
 }

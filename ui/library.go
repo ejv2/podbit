@@ -139,6 +139,11 @@ func (l *Library) StartDownload() {
 		return
 	}
 
+	defer func() {
+		// Move cursor down
+		l.men[l.menSel].MoveSelection(1)
+	}()
+
 	targets := l.men[1].Items
 	if l.menSel == 1 {
 		_, target := l.men[1].GetSelection()
@@ -176,9 +181,6 @@ func (l *Library) StartDownload() {
 	}
 
 	go StatusMessage("Download of multiple episodes started...")
-
-	// Move cursor down
-	l.men[l.menSel].MoveSelection(1)
 }
 
 // StartPlaying begins playing the currently focused element
@@ -188,6 +190,11 @@ func (l *Library) StartPlaying(immediate bool) {
 	if len(l.men[0].Items) < 1 || len(l.men[1].Items) < 1 {
 		return
 	}
+
+	defer func() {
+		// Move cursor down
+		l.men[l.menSel].MoveSelection(1)
+	}()
 
 	if l.menSel == 1 {
 		var item *data.QueueItem
@@ -215,7 +222,4 @@ func (l *Library) StartPlaying(immediate bool) {
 		sound.EnqueueByPodcast(entry)
 		go StatusMessage("Multiple episodes enqueued...")
 	}
-
-	// Move cursor downward
-	l.men[l.menSel].MoveSelection(1)
 }

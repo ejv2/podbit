@@ -103,6 +103,7 @@ func (q *Downloads) Enqueue() {
 	data.Q.Range(func(i int, item *data.QueueItem) bool {
 		if item.Path == d {
 			found = item
+			return false
 		}
 
 		return true

@@ -112,6 +112,8 @@ func (q *Downloads) Enqueue() {
 		go StatusMessage("Enqueued: Download will play once completed")
 		sound.Enqueue(found)
 	}
+
+	q.tbl.MoveSelection(1)
 }
 
 func (q *Downloads) Cancel() {

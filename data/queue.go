@@ -69,6 +69,7 @@ type Queue struct {
 
 	mutex sync.RWMutex
 	Items []QueueItem
+	Deleted []*QueueItem
 }
 
 func (q *Queue) parseField(fields []string, num int) (item QueueItem) {
@@ -213,6 +214,12 @@ scanloop:
 				continue scanloop
 			}
 		}
+		// Ignore deleted items, as they will be overwritten on disk
+		for _, elem := range q.Deleted {
+			if elem.URL == parsed.URL {
+				continue scanloop
+			}
+		}
 
 		q.Items = append(q.Items, parsed)
 	}
@@ -277,6 +284,26 @@ func (q *Queue) RevRange(callback RangeFunc) {
 			return
 		}
 	}
+}
+
+// Delete removes an item from the queue and adds to a list of items which
+// must not be reloaded from disk. This ensures that, when the queue is reloaded,
+// the element is not replaced.
+func (q *Queue) Delete(item *QueueItem) {
+	Q.mutex.Lock()
+	defer Q.mutex.Unlock()
+	var slice int
+	for i, elem := range Q.Items {
+		if elem.URL == item.URL {
+			slice = i
+			break
+		}
+	}
+
+	copy(Q.Items[slice:], Q.Items[slice+1:])
+	Q.Items = Q.Items[:len(Q.Items)-1]
+
+	q.Deleted = append(q.Deleted, item)
 }
 
 // GetPodcasts returns each individual podcast detected

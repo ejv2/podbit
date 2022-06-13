@@ -103,6 +103,8 @@ func (l *Library) Input(c rune) {
 		l.men[l.menSel].ChangeSelection(0)
 	case 'G':
 		l.men[l.menSel].ChangeSelection(len(l.men[l.menSel].Items) - 1)
+	case 'd':
+		l.DeleteEpisode()
 	case ' ':
 		l.StartDownload()
 	case 13:
@@ -131,6 +133,21 @@ func (l *Library) MoveSelection(direction int) {
 
 	off := l.menSel + direction
 	l.ChangeSelection(off)
+}
+
+func (l *Library) DeleteEpisode() {
+	if l.menSel != 1 {
+		return
+	}
+
+	_, target := l.men[1].GetSelection()
+	if data.IsURL(target) {
+		data.DeleteEpisodeByUrl(target)
+	} else {
+		data.DeleteEpisodeByTitle(target)
+	}
+
+	go StatusMessage("Episode deleted")
 }
 
 // StartDownload downloads the currently focused library entry

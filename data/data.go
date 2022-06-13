@@ -74,6 +74,27 @@ func ReloadData() {
 	Q.Reload()
 }
 
+func deleteEpisode(item *QueueItem) {
+	// Delete from queue
+	Q.Delete(item)
+
+	// Delete from cache
+	Downloads.episodes.Delete(item.Path)
+	os.Remove(item.Path)
+}
+
+// DeleteEpisode erases an episode from both cache and the queue
+// selected by URL
+func DeleteEpisodeByUrl(url string) {
+	deleteEpisode(Q.GetEpisodeByURL(url))
+}
+
+// DeleteEpisodeByTitle erases an episode from both cache and the
+// queue selected by title
+func DeleteEpisodeByTitle(title string) {
+	deleteEpisode(Q.GetEpisodeByTitle(title))
+}
+
 // CleanData cleans out the cache based on items which are both finished/played
 // and with a last listen time of more than EpisodeCacheTime seconds ago
 // (defaults to three days). Removed episodes are set to "pending" status (to

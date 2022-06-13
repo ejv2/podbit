@@ -74,13 +74,13 @@ func ReloadData() {
 	Q.Reload()
 }
 
-func deleteEpisode(item *QueueItem) {
+func deleteEpisode(item *QueueItem) error {
 	// Delete from queue
 	Q.Delete(item)
 
 	// Delete from cache
-	Downloads.episodes.Delete(item.Path)
-	os.Remove(item.Path)
+	err := os.Remove(item.Path)
+	return err
 }
 
 // DeleteEpisode erases an episode from both cache and the queue

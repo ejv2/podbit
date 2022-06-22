@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/dhowden/tag"
+	"github.com/ethanv2/podbit/data/escape"
 )
 
 // Possible cache errors.
@@ -134,9 +135,9 @@ func (c *Cache) loadFile(path string, startup bool) {
 
 	ep := Episode{
 		Queued: !startup,
-		Title:  data.Title(),
+		Title:  escape.Escape(data.Title()),
 		Date:   data.Year(),
-		Host:   host,
+		Host:   escape.Escape(host),
 	}
 
 	c.episodes.Store(path, ep)

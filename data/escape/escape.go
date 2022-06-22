@@ -207,3 +207,30 @@ var Convertibles = map[rune]rune{
 	'ｙ': 'y',
 	'ｚ': 'z',
 }
+
+// Escape returns s with all occurrences of unnecessary or confusing Unicode
+// replaced with safe ASCII equivalents.
+func Escape(s string) string {
+	arr := []rune(s)
+	for i, r := range arr {
+		arr[i] = EscapeRune(r)
+	}
+
+	return string(arr)
+}
+
+func EscapeBytes(buf []byte) []byte {
+	return []byte(Escape(string(buf)))
+}
+
+// EscapeRune returns r as a safe rune, meaning that it has been converted if
+// an unsafe, unnecessary or confusing Unicode character to a safe ASCII
+// equivalent.
+func EscapeRune(r rune) rune {
+	rep, ok := Convertibles[r]
+	if ok {
+		return rep
+	}
+
+	return r
+}

@@ -23,21 +23,21 @@ import (
 	"github.com/blang/mpv"
 )
 
-// Useful player vars
+// Useful player vars.
 var (
-	// PlayerName is the name of the player program to spawn
+	// PlayerName is the name of the player program to spawn.
 	PlayerName = "mpv"
-	// The path to the RPC endpoint
+	// The path to the RPC endpoint.
 	PlayerRPC = "/tmp/podbit-mpv"
-	// PlayerArgs are the standard arguments to use for the player
+	// PlayerArgs are the standard arguments to use for the player.
 	// These are not the final configs of the player, but just used
-	// to idle mpv ready to receive instructions
+	// to idle mpv ready to receive instructions.
 	PlayerArgs = []string{"--idle", "--no-video", "--input-ipc-server=" + PlayerRPC}
-	// UpdateTime is the time between queue checks and supervision updates
+	// UpdateTime is the time between queue checks and supervision updates.
 	UpdateTime = 200 * time.Millisecond
 )
 
-// Internal: Types of actions
+// Internal: Types of actions.
 const (
 	actPause = iota
 	actUnpause
@@ -52,12 +52,12 @@ const (
 	reqTimings
 )
 
-// WaitFunc is the function to call waiting between each update
+// WaitFunc is the function to call waiting between each update.
 type WaitFunc func(u chan int)
 
 // Player represents the current player instance. This persists
 // after the media has completed playing and becomes ineffective
-// until the next call to play
+// until the next call to play.
 type Player struct {
 	proc *exec.Cmd
 
@@ -78,7 +78,7 @@ type Player struct {
 	NowPodcast string
 }
 
-// Plr is the singleton player instance
+// Plr is the singleton player instance.
 var Plr Player
 
 func updateWait(u chan int) {
@@ -138,7 +138,7 @@ func newWait(u chan int) {
 }
 
 // NewPlayer constructs a new player. This does not yet
-// launch any processes or play any media
+// launch any processes or play any media.
 func NewPlayer() (p Player, err error) {
 	p.act = make(chan int)
 	p.dat = make(chan interface{})
@@ -149,7 +149,7 @@ func NewPlayer() (p Player, err error) {
 // ConnectPlayer attempts to connect to the RPC endpoint
 // Sadly, this is needed because of an exceptionally bad
 // design choice in the mpv library forcing me to create
-// this bad workaround. :(
+// this bad workaround. :( .
 func (p *Player) connect() (err error) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -213,7 +213,7 @@ func (p *Player) play(q *data.QueueItem) {
 // destroy the sound mainloop. This will usually result in the
 // next podcast playing.
 //
-// TODO: Add some way of stopping the sound mainloop
+// TODO: Add some way of stopping the sound mainloop.
 func (p *Player) Stop() {
 	p.act <- actStop
 }
@@ -241,7 +241,7 @@ func (p *Player) Destroy() {
 // IsPaused requests the sound mainloop to return if it is paused. If
 // the mainloop is not playing, this function returns false. If the mainloop
 // is busy or processing audio, this function blocks until the mainloop is
-// ready
+// ready.
 func (p *Player) IsPaused() bool {
 	p.act <- reqPaused
 
@@ -260,7 +260,7 @@ func (p *Player) isPaused() bool {
 
 // IsPlaying requests that the sound mainloop return if it is currently
 // playing audio. If the mainloop is busy or processing audio, this function
-// blocks until the mainloop is ready
+// blocks until the mainloop is ready.
 func (p *Player) IsPlaying() bool {
 	p.act <- reqPlaying
 
@@ -273,7 +273,7 @@ func (p *Player) isPlaying() bool {
 }
 
 // IsWaiting checks if the mainloop is waiting on an episode to download
-// before playing it
+// before playing it.
 func (p *Player) IsWaiting() bool {
 	p.act <- reqWaiting
 
@@ -316,7 +316,7 @@ func (p *Player) unpause() {
 	p.ctrl.SetPause(false)
 }
 
-// Toggle pauses if the mainloop is unpaused, otherwise unpauses
+// Toggle pauses if the mainloop is unpaused, otherwise unpauses.
 func (p *Player) Toggle() {
 	p.act <- actToggle
 }
@@ -335,11 +335,11 @@ func (p *Player) toggle() {
 // not playing currently.
 //
 // This function is thread safe but may block until
-// data is available
+// data is available.
 func (p *Player) GetTimings() (float64, float64) {
 	p.act <- reqTimings
 
-	var dat [2]float64 = (<-p.dat).([2]float64)
+	dat := (<-p.dat).([2]float64)
 	return dat[0], dat[1]
 }
 
@@ -355,7 +355,7 @@ func (p *Player) getTimings() (float64, float64) {
 }
 
 // Seek moves the player head relative to the current
-// position
+// position.
 func (p *Player) Seek(off int) {
 	p.act <- actSeek
 	p.dat <- off
@@ -369,7 +369,7 @@ func (p *Player) seek(off int) {
 	p.ctrl.Seek(off, mpv.SeekModeRelative)
 }
 
-// Wait for the current episode to complete
+// Wait for the current episode to complete.
 func (p *Player) Wait() {
 	if !p.playing {
 		return

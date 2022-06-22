@@ -4,7 +4,7 @@ import (
 	"github.com/rthornton128/goncurses"
 )
 
-// Color pair ID definitions
+// Color pair ID definitions.
 const (
 	ColorRed = iota + 1
 	ColorGreen
@@ -21,8 +21,8 @@ const (
 	BackgroundCyan
 )
 
-// CreateColors initialises all colors for ncurses usage
-// Should be called only once per application run
+// CreateColors initialises all colors for ncurses usage.
+// Should be called only once per application run.
 func CreateColors() {
 	goncurses.InitPair(ColorRed, goncurses.C_RED, goncurses.C_BLACK)
 	goncurses.InitPair(ColorGreen, goncurses.C_GREEN, goncurses.C_BLACK)

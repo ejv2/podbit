@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	// MessageTime is the time a message will show for
+	// MessageTime is the maximum time a message will show for.
 	MessageTime time.Duration = 2 * time.Second
 )
 
@@ -26,7 +26,7 @@ var (
 
 func trayWatcher() {
 	for {
-		var wait time.Duration = time.Second
+		wait := time.Second
 
 		if sound.Plr.IsPlaying() || data.Downloads.Ongoing() != 0 {
 			Redraw(RedrawAll)
@@ -40,10 +40,10 @@ func trayWatcher() {
 	}
 }
 
-// RenderTray renders the statusbar tray at the bottom of the screen
-// Tray takes up two vertical cells and the entirety of the width
-// The top cell is a horizontal line denoting a player status bar
-// The bottom cell is the status text
+// RenderTray renders the statusbar tray at the bottom of the screen.
+// Tray takes up two vertical cells and the entirety of the width.
+// The top cell is a horizontal line denoting a player status bar.
+// The bottom cell is the status text.
 func RenderTray(scr *goncurses.Window, w, h int) {
 	scr.HLine(h-2, 0, goncurses.ACS_HLINE, w)
 
@@ -110,10 +110,10 @@ func RenderTray(scr *goncurses.Window, w, h int) {
 	root.ColorOff(colors.ColorRed)
 }
 
-// StatusMessage sends a status message
+// StatusMessage sends a status message to the tray.
 //
 // Will block for the previous message to finish first.
-// Every message can be guaranteed MessageTime display time
+// Every message can be guaranteed MessageTime display time.
 func StatusMessage(msg string) {
 	statusMessage <- msg
 }

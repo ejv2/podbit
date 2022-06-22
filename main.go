@@ -24,10 +24,10 @@ var (
 	homedir string
 	confdir string
 
-	redraw    chan int     = make(chan int)
-	keystroke chan rune    = make(chan rune)
-	newMen    chan ui.Menu = make(chan ui.Menu)
-	exit      chan int     = make(chan int)
+	redraw    = make(chan int)
+	keystroke = make(chan rune)
+	newMen    = make(chan ui.Menu)
+	exit      = make(chan int)
 )
 
 func banner() {
@@ -124,7 +124,7 @@ func main() {
 	go ui.RenderLoop()
 
 	// Welcome message
-	startup := time.Now().Sub(now)
+	startup := time.Since(now)
 	go ui.StatusMessage(fmt.Sprintf("Podbit v%d.%d.%d -- %d episodes of %d podcasts loaded in %.2fs",
 		verMaj,
 		verMin,

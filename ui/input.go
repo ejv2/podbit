@@ -41,13 +41,13 @@ func Exit() {
 // If there is no global keybinding for this key, we pass it
 // to the UI subsystem, which can deal with it from there.
 //
-// Any and all key inputs causes an immediate and full UI redraw
+// Any and all key inputs causes an immediate and full UI redraw.
 func InputLoop(exit chan int) {
 	exitChan = exit
 
 	var c rune
-	var char chan rune = make(chan rune)
-	var err chan error = make(chan error, 1)
+	var char = make(chan rune)
+	var err = make(chan error, 1)
 
 	for {
 		go getInput(char, err)

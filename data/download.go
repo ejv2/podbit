@@ -12,7 +12,7 @@ import (
 	"time"
 )
 
-// YouTube downloading constants
+// YouTube downloading constants.
 const (
 	YoutubeDL    string = "youtube-dl"
 	YoutubeDLP   string = "yt-dlp"
@@ -23,7 +23,7 @@ const (
 // Once the associated download is complete, the watcher goroutine
 // terminates.
 //
-// This struct may only be modified through associated methods
+// This struct may only be modified through associated methods.
 type Download struct {
 	// Protects this download instance
 	mut *sync.RWMutex
@@ -64,7 +64,7 @@ type Download struct {
 // youtube-dl) and begins a YouTube download on the calling thread
 // (synchronously).
 //
-// Used internally by cache; avoid calling directly
+// Used internally by cache; avoid calling directly.
 func (d *Download) DownloadYoutube() {
 	if !d.Elem.Youtube {
 		panic("download: downloading non-youtube with youtube-dl")
@@ -103,7 +103,6 @@ func (d *Download) DownloadYoutube() {
 
 	proc := exec.Command(loader, flags...)
 	r, err := proc.StdoutPipe()
-	defer r.Close()
 	if err != nil {
 		d.mut.Lock()
 		d.Completed = true
@@ -113,6 +112,7 @@ func (d *Download) DownloadYoutube() {
 
 		return
 	}
+	defer r.Close()
 	proc.Start()
 
 	// NOTE: Do not need to runtime.Gosched here to prevent contention, because IO waiting
@@ -174,14 +174,13 @@ func (d *Download) DownloadYoutube() {
 	Downloads.downloadsMutex.Unlock()
 
 	d.mut.Unlock()
-	return
 }
 
 // DownloadHTTP connects to the URL of the specified download
 // and downloads to download path on the calling thread
 // (synchronously)
 //
-// Used internally by cache; avoid calling directly
+// Used internally by cache; avoid calling directly.
 func (d *Download) DownloadHTTP() {
 	resp, err := http.Get(d.Elem.URL)
 	if err != nil || resp.StatusCode != http.StatusOK {
@@ -259,5 +258,4 @@ outer:
 	d.File.Close()
 
 	close(d.Stop)
-	return
 }

@@ -14,22 +14,22 @@ import (
 )
 
 const (
-	// QueueReloadInterval is how often the queue will be reloaded
+	// QueueReloadInterval is how often the queue will be reloaded.
 	QueueReloadInterval = time.Duration(15) * time.Second
-	// EpisodeCacheTime is how long an episode is allowed to stay in cache in seconds
-	// Default value is three days (3 * 24 * 60 * 60)
+	// EpisodeCacheTime is how long an episode is allowed to stay in cache in seconds.
+	// Default value is three days (3 * 24 * 60 * 60).
 	EpisodeCacheTime = 259200
 )
 
-// Dependent data structures
+// Dependent data structures.
 var (
 	Q         Queue
 	DB        Database
 	Downloads Cache
 )
 
-// InitData initialises all dependent data structures
-// The only returned errors *will* be fatal to the program
+// InitData initialises all dependent data structures.
+// The only returned errors *will* be fatal to the program.
 func InitData() error {
 	fmt.Print("Reading queue...")
 	err := Q.Open()
@@ -55,8 +55,8 @@ func InitData() error {
 	return nil
 }
 
-// SaveData cleans up and saves data to disk
-// First ensures we have hot-reloaded any required data
+// SaveData cleans up and saves data to disk.
+// First ensures we have hot-reloaded any required data.
 func SaveData() {
 	ReloadData()
 	CleanData()
@@ -66,10 +66,10 @@ func SaveData() {
 }
 
 // ReloadData performs a hot-reload of any data which can/needs
-// to be hot reloaded
+// to be hot reloaded.
 //
 // This is called automatically on an interval by ReloadLoop
-// and upon saving to ensure up-to-date data
+// and upon saving to ensure up-to-date data.
 func ReloadData() {
 	Q.Reload()
 }
@@ -77,7 +77,7 @@ func ReloadData() {
 // CleanData cleans out the cache based on items which are both finished/played
 // and with a last listen time of more than EpisodeCacheTime seconds ago
 // (defaults to three days). Removed episodes are set to "pending" status (to
-// be downloaded) and have their cache file removed
+// be downloaded) and have their cache file removed.
 func CleanData() {
 	now := time.Now().Unix()
 	count := 0
@@ -114,13 +114,13 @@ func ReloadLoop() {
 	}
 }
 
-// IsURL returns true if a string is a valid HTTP(s) URL
+// IsURL returns true if a string is a valid HTTP(s) URL.
 func IsURL(check string) bool {
 	u, err := url.Parse(check)
 	return err == nil && u.Scheme != "" && u.Host != ""
 }
 
-// FormatTime formats a time measured in seconds
+// FormatTime formats a time measured in seconds.
 func FormatTime(seconds float64) string {
 	round := int(seconds)
 

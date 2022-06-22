@@ -14,11 +14,11 @@ import (
 	"github.com/dhowden/tag"
 )
 
-// Possible cache errors
+// Possible cache errors.
 var (
-	ErrorIO             error  = errors.New("Error: Failed to create cache entry")
-	ErrorCreation       error  = errors.New("Error: Download directory did not exist and could not be created")
-	ErrorDownloadFailed string = "Error: Failed to download from url %s"
+	ErrorIO             = errors.New("Error: Failed to create cache entry")
+	ErrorCreation       = errors.New("Error: Download directory did not exist and could not be created")
+	ErrorDownloadFailed = "Error: Failed to download from url %s"
 )
 
 // Cache is the current state of the on-disk cache and associated
@@ -46,8 +46,8 @@ type Episode struct {
 	Host  string
 }
 
-// Dig through newsboat stuff to guess the download dir
-// If we can't find it, just use the newsboat default and hope for the best
+// Dig through newsboat stuff to guess the download dir.
+// If we can't find it, just use the newsboat default and hope for the best.
 func (c *Cache) guessDir() string {
 	conf, _ := os.UserConfigDir()
 	p := filepath.Join(conf, "newsboat/config")
@@ -81,9 +81,9 @@ func (c *Cache) guessDir() string {
 	return ret
 }
 
-// Open opens and initialises the cache
+// Open opens and initialises the cache.
 // Should be called once and once only - further modifications
-// and cache mutations happen exclusively through other methods
+// and cache mutations happen exclusively through other methods.
 func (c *Cache) Open() error {
 	home, _ := os.UserHomeDir()
 	c.dir = strings.ReplaceAll(c.guessDir(), "~", home)
@@ -132,7 +132,7 @@ func (c *Cache) loadFile(path string, startup bool) {
 		host = artist
 	}
 
-	var ep Episode = Episode{
+	ep := Episode{
 		Queued: !startup,
 		Title:  data.Title(),
 		Date:   data.Year(),
@@ -142,9 +142,9 @@ func (c *Cache) loadFile(path string, startup bool) {
 	c.episodes.Store(path, ep)
 }
 
-// Download starts an asynchronous download in a new goroutine
+// Download starts an asynchronous download in a new goroutine.
 // Returns the ID in the downloads table, which must be accessed
-// using a mutex
+// using a mutex.
 func (c *Cache) Download(item *QueueItem) (id int, err error) {
 	f, err := os.Create(item.Path)
 	dl := Download{
@@ -188,8 +188,8 @@ func (c *Cache) Download(item *QueueItem) (id int, err error) {
 	return
 }
 
-// IsDownloading queries the download cache to check
-// if a podcast is currently downloading
+// IsDownloading queries the download cache to check.
+// if a podcast is currently downloading.
 func (c *Cache) IsDownloading(path string) (bool, int) {
 	c.downloadsMutex.RLock()
 	defer c.downloadsMutex.RUnlock()
@@ -206,9 +206,9 @@ func (c *Cache) IsDownloading(path string) (bool, int) {
 	return false, 0
 }
 
-// GetDownload returns the specified download in a thread-safely
+// GetDownload returns the specified download in a thread-safely.
 // This should be used to get the details of a specified download
-// via the ID
+// via the ID.
 func (c *Cache) GetDownload(ind int) Download {
 	c.downloads[ind].mut.RLock()
 	defer c.downloads[ind].mut.RUnlock()
@@ -244,7 +244,7 @@ func (c *Cache) Downloads() []Download {
 	return dls
 }
 
-// Query returns cached data about an episode on disk
+// Query returns cached data about an episode on disk.
 func (c *Cache) Query(path string) (ep Episode, ok bool) {
 	e, ok := c.episodes.Load(path)
 	if e != nil {
@@ -254,7 +254,7 @@ func (c *Cache) Query(path string) (ep Episode, ok bool) {
 	return
 }
 
-// QueryAll returns all known data about the on-disk cache
+// QueryAll returns all known data about the on-disk cache.
 func (c *Cache) QueryAll(allowQueued bool) (e []Episode) {
 	c.episodes.Range(func(key interface{}, value interface{}) bool {
 		ep := value.(Episode)
@@ -270,7 +270,7 @@ func (c *Cache) QueryAll(allowQueued bool) (e []Episode) {
 
 // EntryExists searches the cache to determine if the entry exists
 // Path should be an absolute path
-// If path lies outside the cache dir, false is returned
+// If path lies outside the cache dir, false is returned.
 func (c *Cache) EntryExists(path string) bool {
 	f, err := os.Open(path)
 	if err != nil && os.IsNotExist(err) {

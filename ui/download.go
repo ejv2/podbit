@@ -34,8 +34,6 @@ var downloadHeadings []components.Column = []components.Column{
 }
 
 type Downloads struct {
-	showDone bool
-
 	tbl components.Table
 }
 

@@ -10,15 +10,13 @@ import (
 	"github.com/rthornton128/goncurses"
 )
 
-// Player is the full screen player component
+// Player is the full screen player component.
 //
 // Player displays the currently playing episode, the next up
 // episode, progress through the episode etc.
 //
-// This is mostly for user convenience and visual appeal
-type Player struct {
-	test string
-}
+// This is mostly for user convenience and visual appeal.
+type Player struct{}
 
 func (l *Player) Name() string {
 	return "Now playing"

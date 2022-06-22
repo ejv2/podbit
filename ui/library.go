@@ -10,10 +10,10 @@ import (
 	"github.com/rthornton128/goncurses"
 )
 
-// Library represents the list menu type and state
+// Library represents the list menu type and state.
 //
 // Library displays all detected and configured podcasts, along
-// with associated episodes sorted into said podcasts
+// with associated episodes sorted into said podcasts.
 type Library struct {
 	men [2]components.Menu
 
@@ -133,7 +133,7 @@ func (l *Library) MoveSelection(direction int) {
 	l.ChangeSelection(off)
 }
 
-// StartDownload downloads the currently focused library entry
+// StartDownload downloads the currently focused library entry.
 func (l *Library) StartDownload() {
 	if len(l.men[0].Items) < 1 || len(l.men[1].Items) < 1 {
 		return
@@ -154,7 +154,7 @@ func (l *Library) StartDownload() {
 		}
 
 		if y, _ := data.Downloads.IsDownloading(item.Path); y {
-			go StatusMessage(fmt.Sprintf("Episode already downloading"))
+			go StatusMessage("Episode already downloading")
 			return
 		}
 
@@ -172,7 +172,7 @@ func (l *Library) StartDownload() {
 			}
 
 			if y, _ := data.Downloads.IsDownloading(item.Path); y {
-				go StatusMessage(fmt.Sprintf("Episode already downloading"))
+				go StatusMessage("Episode already downloading")
 				return
 			}
 
@@ -183,9 +183,9 @@ func (l *Library) StartDownload() {
 	go StatusMessage("Download of multiple episodes started...")
 }
 
-// StartPlaying begins playing the currently focused element
+// StartPlaying begins playing the currently focused element.
 // If the current focus requires downloading (and enough information
-// is known to oblige) it will first be downloaded
+// is known to oblige) it will first be downloaded.
 func (l *Library) StartPlaying(immediate bool) {
 	if len(l.men[0].Items) < 1 || len(l.men[1].Items) < 1 {
 		return

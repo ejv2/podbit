@@ -1,7 +1,7 @@
 package components
 
 // A Selecter represents any object which has a visibly selected
-// element and which is capable of changing said element
+// element and which is capable of changing said element.
 type Selecter interface {
 	GetSelection() (int, interface{})
 	ChangeSelection(index int)
@@ -10,7 +10,7 @@ type Selecter interface {
 
 // List represents a generic component which contains elements
 // of an arbitrary type. The list can be scrolled and has an
-// associated selected element
+// associated selected element.
 type List[Item any] struct {
 	W, H  int
 	Items []Item
@@ -20,7 +20,7 @@ type List[Item any] struct {
 }
 
 // GetSelection returns the currently selected menu element, or
-// nil if none is selected
+// nil if none is selected.
 func (l *List[Item]) GetSelection() (int, Item) {
 	if len(l.Items) < 1 {
 		return 0, *new(Item)

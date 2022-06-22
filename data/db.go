@@ -11,26 +11,26 @@ import (
 )
 
 const (
-	// DatabaseDirname is the directory name in which the database will be stored
+	// DatabaseDirname is the directory name in which the database will be stored.
 	DatabaseDirname = "podbit"
 
-	// DatabaseFilename is the file name of the database on disk
+	// DatabaseFilename is the file name of the database on disk.
 	DatabaseFilename = "db"
 )
 
-// Error values
+// DB-related error values.
 var (
-	ErrorDatabaseIOFailed error  = errors.New("Error: IO error while reading from database file")
-	ErrorDatabaseSyntax   string = "Error: Malformed database: Syntax Error on Line %d"
+	ErrorDatabaseIOFailed = errors.New("Error: IO error while reading from database file")
+	ErrorDatabaseSyntax   = "Error: Malformed database: Syntax Error on Line %d"
 )
 
-// Podcast is the human-provided podcast info
+// Podcast is the human-provided podcast info.
 type Podcast struct {
 	RegexPattern string
 	FriendlyName string
 }
 
-// Database aggregates all podcast data from the database
+// Database aggregates all podcast data from the database.
 type Database struct {
 	path     string
 	podcasts []Podcast
@@ -39,14 +39,17 @@ type Database struct {
 func initDatabase(db *Database) error {
 	var err error
 	file, err := os.Open(db.path)
-	defer file.Close()
 
 	if err != nil {
 		file, err = os.Create(db.path)
 		if err != nil {
 			return err
 		}
+
+		file.Close()
 	} else {
+		defer file.Close()
+
 		scanner := bufio.NewScanner(file)
 		scanner.Split(bufio.ScanLines)
 
@@ -78,8 +81,8 @@ func initDatabase(db *Database) error {
 	return nil
 }
 
-// Open opens and parses the database
-// Returned errors are usually fatal to the application
+// Open opens and parses the database.
+// Returned errors are usually fatal to the application.
 func (db *Database) Open() error {
 	data := os.Getenv("XDG_DATA_HOME")
 	if data == "" {
@@ -98,9 +101,9 @@ func (db *Database) Open() error {
 	return nil
 }
 
-// Save saves the database to disk
+// Save saves the database to disk.
 // Errors are ignored, as save operations are usually done during application
-// use and are temporary (or nothing can be done)
+// use and are temporary (or nothing can be done).
 func (db *Database) Save() {
 	file, err := os.OpenFile(db.path, os.O_WRONLY|os.O_TRUNC, os.ModePerm)
 	if err != nil {

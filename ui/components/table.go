@@ -13,8 +13,8 @@ import (
 // of less than zero or greater than one, or if an impossible
 // combination of widths was requested.
 //
-// The width is the label which will be displayed at the top of the table
-// The color is the ncurses color to activate when selected
+// The width is the label which will be displayed at the top of the table.
+// The color is the ncurses color to activate when selected.
 type Column struct {
 	Label string
 	Width float64
@@ -22,7 +22,7 @@ type Column struct {
 }
 
 // Table represents a vertical, headed table structure, useful
-// for displaying a slice of structs
+// for displaying a slice of structs.
 type Table struct {
 	X, Y int
 	Win  *goncurses.Window
@@ -37,7 +37,7 @@ type Table struct {
 }
 
 // Render immediately renders the table to the requested coords X and Y
-// with the space taken up limited to the space W*H
+// with the space taken up limited to the space W*H.
 func (t *Table) Render() {
 	// Reduce height to be actual usable space (minus headings)
 	t.H -= 2

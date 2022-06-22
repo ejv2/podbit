@@ -25,8 +25,8 @@ var queueHeadings []components.Column = []components.Column{
 	},
 }
 
-// Queue displays the current play queue
-// Not to be confused with the current download queue, Download
+// Queue displays the current play queue.
+// Not to be confused with the current download queue, Download.
 type Queue struct {
 	tbl components.Table
 }

@@ -1,7 +1,7 @@
-// Package ui implements podbit's main UI and front end user code
+// Package ui implements podbit's main UI and front end user code.
 //
 // This package runs mostly in a separate UI thread and is as thread-safe
-// as possible
+// as possible.
 //
 // Due to limitations in the C library ncurses, the render loop is
 // designed to only let one thread use ncurses callbacks at a time,
@@ -19,7 +19,7 @@
 //
 // The "exit" channel simply instructs us to exit immediately. This should
 // *NEVER* be used inside a render callback, least a deadlock in the UI
-// code be caused
+// code be caused.
 package ui
 
 import (
@@ -31,15 +31,15 @@ import (
 	"golang.org/x/crypto/ssh/terminal"
 )
 
-// A Menu is a renderable UI element which takes up most of primary
-// screen space and is capable of handling unhandled keybinds
+// A Menu is a renderable UI element which takes up most of primary.
+// screen space and is capable of handling unhandled keybinds.
 type Menu interface {
 	Name() string
 	Render(x, y int)
 	Input(c rune)
 }
 
-// Redraw types
+// Redraw types.
 const (
 	RedrawAll    = iota // Redraw everything
 	RedrawMenu          // Redraw just the menu
@@ -47,7 +47,7 @@ const (
 	RedrawResize        // Redraw and recalculate dimensions
 )
 
-// Info request types
+// Info request types.
 const (
 	InfoName = iota // Requesting the menu's name
 )
@@ -66,15 +66,15 @@ var (
 	infoResponse chan interface{}
 )
 
-// Menu singletons
+// Menu singletons.
 var (
-	PlayerMenu   *Player    = new(Player) // Full screen player
-	QueueMenu    *Queue     = new(Queue)  // Player queue display
-	DownloadMenu *Downloads = new(Downloads)
-	LibraryMenu  *Library   = new(Library) // Library of podcasts and episodes
+	PlayerMenu   = new(Player)    // Full screen player.
+	QueueMenu    = new(Queue)     // Player queue display.
+	DownloadMenu = new(Downloads) // Shows ongoing downloads.
+	LibraryMenu  = new(Library)   // Library of podcasts and episodes.
 )
 
-// Watch the terminal for resizes and redraw when needed
+// Watch the terminal for resizes and redraw when needed.
 func watchResize(sig chan os.Signal, scr *goncurses.Window) {
 	for {
 		<-sig
@@ -83,7 +83,7 @@ func watchResize(sig chan os.Signal, scr *goncurses.Window) {
 	}
 }
 
-// InitUI initialises the UI subsystem
+// InitUI initialises the UI subsystem.
 func InitUI(scr *goncurses.Window, initialMenu Menu, r chan int, k chan rune, m chan Menu) {
 	redraw = r
 	keystroke = k
@@ -102,10 +102,10 @@ func InitUI(scr *goncurses.Window, initialMenu Menu, r chan int, k chan rune, m 
 	UpdateDimensions(scr)
 }
 
-// UpdateDimensions changes the dimensions of the drawable area
+// UpdateDimensions changes the dimensions of the drawable area.
 //
 // Called automatically on detected terminal resizes by the resizeLoop
-// thread
+// thread.
 func UpdateDimensions(scr *goncurses.Window) {
 	var err error
 	w, h, err = terminal.GetSize(int(os.Stdin.Fd()))
@@ -152,17 +152,17 @@ func renderTray() {
 	RenderTray(root, w, h)
 }
 
-// Redraw signals to redraw a specific part of the UI
+// Redraw signals to redraw a specific part of the UI.
 //
 // This call *will* block if a redraw is in progress
-// but will not fail
+// but will not fail.
 func Redraw(mode int) {
 	redraw <- mode
 }
 
 // ActivateMenu sets the current menu to the requested value
-// and orders a redraw of the menu area
-// This function will block until the new menu is being drawn
+// and orders a redraw of the menu area.
+// This function will block until the new menu is being drawn.
 func ActivateMenu(newMenu Menu) {
 	menuChan <- newMenu
 
@@ -170,10 +170,10 @@ func ActivateMenu(newMenu Menu) {
 }
 
 // MenuActive returns true if the current menu claims to be of the same
-// class as the passed menu
+// class as the passed menu.
 //
 // "compare" does not necessarily have to be exactly the same type as
-// the current menu
+// the current menu, but is simply of the same name.
 func MenuActive(compare Menu) bool {
 	infoRequest <- InfoName
 	resp := <-infoResponse
@@ -181,13 +181,13 @@ func MenuActive(compare Menu) bool {
 	return resp.(string) == compare.Name()
 }
 
-// PassKeystroke performs a keystroke passthrough for the active menu
+// PassKeystroke performs a keystroke passthrough for the active menu.
 func PassKeystroke(c rune) {
 	keystroke <- c
 }
 
-// RenderLoop is the main render callback for the program
-// This is intended to run in its own thread
+// RenderLoop is the main render callback for the program.
+// This is intended to run in its own thread.
 func RenderLoop() {
 	for {
 		select {

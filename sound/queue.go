@@ -6,7 +6,7 @@ import (
 	"github.com/ethanv2/podbit/data"
 )
 
-// Singleton state
+// Singleton state.
 var (
 	mut sync.RWMutex
 
@@ -14,8 +14,8 @@ var (
 	queue []*data.QueueItem
 )
 
-// Enqueue is the low-level enqueue routine
-// Enqueues a raw QueueItem for playback
+// Enqueue is the low-level enqueue routine.
+// Enqueues a raw QueueItem for playback.
 func Enqueue(item *data.QueueItem) {
 	mut.Lock()
 	defer mut.Unlock()
@@ -25,7 +25,7 @@ func Enqueue(item *data.QueueItem) {
 
 // EnqueueByURL searches data sources for episodes under <url>
 // Remember to download before playing!
-// If you know episode is downloaded, use EnqueueByTitle - it's faster
+// If you know episode is downloaded, use EnqueueByTitle - it's faster.
 func EnqueueByURL(url string) {
 	item := data.Q.GetEpisodeByURL(url)
 	if item != nil {
@@ -33,10 +33,11 @@ func EnqueueByURL(url string) {
 	}
 }
 
-// EnqueueByTitle searches data sources for episodes under the title <title>
-// Only the first match (if multiple are somehow present) is used
+// EnqueueByTitle searches data sources for episodes under the title <title>.
+// Only the first match (if multiple are somehow present) is used.
 //
-// The availability of a title implies presence in cache, so don't bother to download the episode
+// The availability of a title implies presence in cache, so don't bother to
+// download the episode.
 func EnqueueByTitle(title string) {
 	item := data.Q.GetEpisodeByTitle(title)
 	if item != nil {
@@ -44,14 +45,14 @@ func EnqueueByTitle(title string) {
 	}
 }
 
-// EnqueueByPodcast bulk enqueues episodes by the name/url of their parent podcast <ident>
-// Does not check or care about download status
+// EnqueueByPodcast bulk enqueues episodes by the name/url of their parent podcast <ident>.
+// Does not check or care about download status.
 //
-// If <ident> is empty or does not exist, no action is taken
+// If <ident> is empty or does not exist, no action is taken.
 //
-// If a url is provided, a lookup is performed to find the friendly name
-// If a friendly name could not be found, the url is used instead
-// If a friendly name is provided, no lookup is performed
+// If a url is provided, a lookup is performed to find the friendly name.
+// If a friendly name could not be found, the url is used instead.
+// If a friendly name is provided, no lookup is performed.
 func EnqueueByPodcast(ident string) {
 	comp := data.DB.GetFriendlyName(ident)
 
@@ -80,13 +81,13 @@ func JumpTo(index int) {
 }
 
 // PlayNow enqueues an episode and jumps to it, followed
-// by a call to the player to play the new head
+// by a call to the player to play the new head.
 func PlayNow(item *data.QueueItem) {
 	Enqueue(item)
 	JumpTo(len(queue) - 1)
 }
 
-// ClearQueue truncates the queue to zero items
+// ClearQueue truncates the queue to zero items.
 func ClearQueue() {
 	queue = queue[:0]
 	head = 0
@@ -94,8 +95,8 @@ func ClearQueue() {
 	Plr.Stop()
 }
 
-// Dequeue removes an item from the queue at index
-// If index is invalid, no action is taken
+// Dequeue removes an item from the queue at index.
+// If index is invalid, no action is taken.
 func Dequeue(index int) {
 	mut.Lock()
 	defer mut.Unlock()
@@ -131,7 +132,7 @@ func Dequeue(index int) {
 
 // GetQueue returns the raw queue in QueueItem slice form
 // You should not edit the returned values, as this looses
-// all thread protection
+// all thread protection.
 func GetQueue() []*data.QueueItem {
 	mut.RLock()
 	defer mut.RUnlock()
@@ -142,7 +143,7 @@ func GetQueue() []*data.QueueItem {
 // PopHead returns the head of the queue, increasing
 // the head beyond the end (if present). The boolean returned
 // indicates if the player should stop - which occurs in the
-// case of the end of the queue or an empty queue
+// case of the end of the queue or an empty queue.
 func PopHead() (*data.QueueItem, bool) {
 	mut.Lock()
 	defer mut.Unlock()
@@ -178,7 +179,7 @@ func GetHead() (h *data.QueueItem, pos int) {
 
 // GetNext returns the item which is enqueued to play next
 // after the current entry has finished. If there is not an
-// item enqueued next, returns nil and -1
+// item enqueued next, returns nil and -1.
 func GetNext() (*data.QueueItem, int) {
 	if len(queue) > head {
 		return queue[head], head
@@ -188,7 +189,8 @@ func GetNext() (*data.QueueItem, int) {
 }
 
 // DownloadAtHead returns if the item next to play (before the head)
-// is the expected ongoing download. Used by the sound system to detect download dequeues
+// is the expected ongoing download. Used by the sound system to detect
+// download dequeues.
 func DownloadAtHead(expect *data.QueueItem) bool {
 	mut.RLock()
 	defer mut.RUnlock()

@@ -17,25 +17,25 @@ import (
 // will exit the looping if it is not true.
 type RangeFunc func(i int, item *QueueItem) bool
 
-// Queue parsing/management errors
+// Queue parsing/management errors.
 var (
-	ErrorNotFound    error  = errors.New("Error: Failed to locate newsboat queue file")
-	ErrorNotOpen     error  = errors.New("Error: Cannot parse a queue that is not open")
-	ErrorIOFailed    error  = errors.New("Error: IO error while reading from queue file")
-	ErrorQueueSyntax string = "Error: Malformed queue: Syntax error on line %d"
+	ErrorNotFound    = errors.New("Error: Failed to locate newsboat queue file")
+	ErrorNotOpen     = errors.New("Error: Cannot parse a queue that is not open")
+	ErrorIOFailed    = errors.New("Error: IO error while reading from queue file")
+	ErrorQueueSyntax = "Error: Malformed queue: Syntax error on line %d"
 )
 
 // PossibleDirs are the locations where the queue will search for a newsboat
-// queue file
+// queue file.
 var PossibleDirs = []string{
 	".local/share/newsboat",
 	".newsboat",
 }
 
-// QueueFilename is the name of the file for the queue
+// QueueFilename is the name of the file for the queue.
 const QueueFilename = "queue"
 
-// Possible states of download queue
+// Possible states of download queue.
 const (
 	StatePending  = iota // Pending download
 	StateReady           // Downloaded and ready to play
@@ -44,8 +44,8 @@ const (
 )
 
 // StateStrings are the names used to serialise or display queue
-// statuses to the user
-var StateStrings [4]string = [4]string{
+// statuses to the user.
+var StateStrings = [4]string{
 	"",
 	"downloaded",
 	"played",
@@ -53,7 +53,7 @@ var StateStrings [4]string = [4]string{
 }
 
 // QueueItem represents an item in the player queue
-// as provided by newsboat
+// as provided by newsboat.
 type QueueItem struct {
 	URL     string
 	Path    string
@@ -62,7 +62,7 @@ type QueueItem struct {
 	Youtube bool
 }
 
-// Queue represents the newsboat queue
+// Queue represents the newsboat queue.
 type Queue struct {
 	path string
 	file *os.File
@@ -80,7 +80,11 @@ func (q *Queue) parseField(fields []string, num int) (item QueueItem) {
 	}
 
 	f, err := os.Open(item.Path)
-	defer f.Close()
+
+	// NOTE: Commontly expected error here, so no handling required
+	if err != nil {
+		defer f.Close()
+	}
 
 	if num == 2 || (err != nil && os.IsNotExist(err)) {
 		item.State = StatePending
@@ -110,12 +114,12 @@ func (q *Queue) parseField(fields []string, num int) (item QueueItem) {
 	return
 }
 
-// Open opens and parses the newsboat queue file
-// Returned errors are usually fatal to the application
+// Open opens and parses the newsboat queue file.
+// Returned errors are usually fatal to the application.
 func (q *Queue) Open() error {
 	// First try the most likely places
 	var err error
-	var found bool = false
+	found := false
 	home, _ := os.UserHomeDir()
 	data := os.Getenv("XDG_DATA_HOME")
 
@@ -251,7 +255,7 @@ func (q *Queue) Save() {
 // using a callback which receives each item in the queue in the
 // same format as a for range loop.
 //
-// It *IS* save to modify the queue in the callback
+// It *IS* save to modify the queue in the callback.
 func (q *Queue) Range(callback RangeFunc) {
 	q.mutex.Lock()
 	defer q.mutex.Unlock()
@@ -267,7 +271,7 @@ func (q *Queue) Range(callback RangeFunc) {
 // safe fashion using a callback which receives each item in the queue in the
 // same format as a range loop.
 //
-// It *IS* safe to modify the queue in this callback
+// It *IS* safe to modify the queue in this callback.
 func (q *Queue) RevRange(callback RangeFunc) {
 	q.mutex.Lock()
 	defer q.mutex.Unlock()
@@ -302,7 +306,7 @@ func (q *Queue) GetPodcasts() (podcasts []string) {
 }
 
 // GetEpisodeByURL searches the queue file for an entry
-// with the requested URL
+// with the requested URL.
 func (q *Queue) GetEpisodeByURL(url string) (found *QueueItem) {
 	q.Range(func(i int, elem *QueueItem) bool {
 		if elem.URL == url {
@@ -317,7 +321,7 @@ func (q *Queue) GetEpisodeByURL(url string) (found *QueueItem) {
 }
 
 // GetEpisodeByTitle searches the queue file for an entry
-// with the requested title from cache
+// with the requested title from cache.
 func (q *Queue) GetEpisodeByTitle(title string) (found *QueueItem) {
 	q.Range(func(i int, elem *QueueItem) bool {
 		find, ok := Downloads.Query(elem.Path)
@@ -333,7 +337,7 @@ func (q *Queue) GetEpisodeByTitle(title string) (found *QueueItem) {
 }
 
 // GetByStatus returns all queue entries which are currently
-// in the status marked in state
+// in the status marked in state.
 func (q *Queue) GetByStatus(status int) (found []*QueueItem) {
 	q.Range(func(i int, elem *QueueItem) bool {
 		if elem.State == status {

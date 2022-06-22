@@ -28,7 +28,7 @@ import (
 	"syscall"
 
 	"github.com/rthornton128/goncurses"
-	"golang.org/x/crypto/ssh/terminal"
+	"golang.org/x/term"
 )
 
 // A Menu is a renderable UI element which takes up most of primary.
@@ -108,7 +108,7 @@ func InitUI(scr *goncurses.Window, initialMenu Menu, r chan int, k chan rune, m 
 // thread.
 func UpdateDimensions(scr *goncurses.Window) {
 	var err error
-	w, h, err = terminal.GetSize(int(os.Stdin.Fd()))
+	w, h, err = term.GetSize(int(os.Stdin.Fd()))
 
 	if err != nil {
 		w, h = 72, 90

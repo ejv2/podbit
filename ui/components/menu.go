@@ -2,7 +2,7 @@ package components
 
 import (
 	"github.com/ethanv2/podbit/colors"
-	"github.com/rthornton128/goncurses"
+	"github.com/vit1251/go-ncursesw"
 )
 
 // Menu represents a vertical panel menu of cellular entries

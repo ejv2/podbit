@@ -1,7 +1,7 @@
 package components
 
 import (
-	"github.com/rthornton128/goncurses"
+	"github.com/vit1251/go-ncursesw"
 )
 
 // A Column is a vertical section of a table, defined by a

@@ -24,6 +24,7 @@ package escape
 var Convertibles = map[rune]rune{
 	// Punctuation
 	'″': '"',
+	'‘': '\'',
 	'’': '\'',
 	'‚': ',',
 	'⁎': '*',

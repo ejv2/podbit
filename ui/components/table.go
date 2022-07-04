@@ -88,11 +88,11 @@ func (t *Table) Render() {
 			capped := entry[i]
 			sel := c == t.sel
 
-			capped = data.LimitString(capped, colw)
+			capped = data.LimitString(capped, colw-1)
 			decode := []rune(capped)
 
 			// Pad out to fill row
-			for i := len(decode); i <= colw && off+len(decode) < t.W; i++ {
+			for i := len(decode); i < colw && off+len(decode) < t.W; i++ {
 				capped += " "
 			}
 

@@ -112,7 +112,6 @@ func (d *Download) DownloadYoutube() {
 
 		return
 	}
-	defer r.Close()
 	proc.Start()
 
 	// NOTE: Do not need to runtime.Gosched here to prevent contention, because IO waiting
@@ -142,17 +141,29 @@ func (d *Download) DownloadYoutube() {
 			d.Success = false
 			d.mut.Unlock()
 
+			r.Close()
 			proc.Process.Kill()
 			return
 		default:
 		}
 	}
+	r.Close()
 
 	if err != nil && err.Error() != "EOF" {
 		d.mut.Lock()
 		d.Completed = true
 		d.Success = false
 		d.Error = "Downloader IO Error"
+		d.mut.Unlock()
+		return
+	}
+
+	err = proc.Wait()
+	if err != nil {
+		d.mut.Lock()
+		d.Completed = true
+		d.Success = false
+		d.Error = "Download failed"
 		d.mut.Unlock()
 		return
 	}

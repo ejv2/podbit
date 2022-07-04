@@ -49,7 +49,7 @@ func (m *Menu) Render() {
 		}
 
 		capped, decode := elem, []rune(elem)
-		if len(capped) > m.W {
+		if len(decode) > m.W {
 			capped = capped[len(decode)-m.W:]
 			capped = "<" + capped
 		} else {

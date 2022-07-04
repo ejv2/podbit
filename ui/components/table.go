@@ -1,6 +1,8 @@
 package components
 
 import (
+	"github.com/ethanv2/podbit/data"
+
 	"github.com/vit1251/go-ncursesw"
 )
 
@@ -69,9 +71,7 @@ func (t *Table) Render() {
 			panic("invalid table header: impossible column width")
 		}
 
-		if len(elem.Label) > colw {
-			elem.Label = elem.Label[:colw]
-		}
+		elem.Label = data.LimitString(elem.Label, colw)
 
 		t.Win.AttrOn(goncurses.A_BOLD)
 		t.Win.MovePrint(t.Y, t.X+off, elem.Label)
@@ -88,13 +88,11 @@ func (t *Table) Render() {
 			capped := entry[i]
 			sel := c == t.sel
 
-			if len(capped) > colw {
-				// Trim to fit row
-				capped = capped[:colw-1]
-			}
+			capped = data.LimitString(capped, colw)
+			decode := []rune(capped)
 
 			// Pad out to fill row
-			for i := len(capped); i <= colw && off+len(capped) < t.W; i++ {
+			for i := len(decode); i <= colw && off+len(decode) < t.W; i++ {
 				capped += " "
 			}
 

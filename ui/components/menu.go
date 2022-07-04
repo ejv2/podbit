@@ -48,14 +48,13 @@ func (m *Menu) Render() {
 			break
 		}
 
-		var capped string
-		capped = elem
+		capped, decode := elem, []rune(elem)
 		if len(capped) > m.W {
-			capped = capped[len(capped)-m.W:]
+			capped = capped[len(decode)-m.W:]
 			capped = "<" + capped
 		} else {
 			// Pad out to fill row
-			for i := len(capped); i <= m.W; i++ {
+			for i := len(decode); i <= m.W; i++ {
 				capped += " "
 			}
 		}

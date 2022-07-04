@@ -50,7 +50,7 @@ func (m *Menu) Render() {
 
 		capped, decode := elem, []rune(elem)
 		if len(decode) > m.W {
-			capped = capped[len(decode)-m.W:]
+			capped = string(decode[len(decode)-m.W:])
 			capped = "<" + capped
 		} else {
 			// Pad out to fill row

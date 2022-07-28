@@ -34,7 +34,7 @@ var (
 	// to idle mpv ready to receive instructions.
 	PlayerArgs = []string{"--idle", "--no-video", "--input-ipc-server=" + PlayerRPC}
 	// UpdateTime is the time between queue checks and supervision updates.
-	UpdateTime = 200 * time.Millisecond
+	UpdateTime = time.Second
 )
 
 // Internal: Types of actions.

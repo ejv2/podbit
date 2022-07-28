@@ -8,6 +8,7 @@ import (
 
 	"github.com/ethanv2/podbit/colors"
 	"github.com/ethanv2/podbit/data"
+	ev "github.com/ethanv2/podbit/event"
 	"github.com/ethanv2/podbit/sound"
 	"github.com/ethanv2/podbit/ui"
 
@@ -24,10 +25,11 @@ var (
 	homedir string
 	confdir string
 
+	events    *ev.Handler
 	redraw    = make(chan int)
 	keystroke = make(chan rune)
 	newMen    = make(chan ui.Menu)
-	exit      = make(chan int)
+	exit      = make(chan struct{})
 )
 
 func banner() {
@@ -91,6 +93,7 @@ func main() {
 	}
 	defer lock.Unlock()
 
+	events = ev.NewHandler()
 	now := time.Now()
 	err := data.InitData()
 	if err != nil {

@@ -11,7 +11,7 @@ const (
 
 // ToForeground returns the passed color converted such that a background color
 // is its foreground equivalent.
-func ToForeground(color int) int {
+func ToForeground(color int16) int16 {
 	if color <= colorBoundary {
 		return color
 	}
@@ -21,7 +21,7 @@ func ToForeground(color int) int {
 
 // ToForeground returns the passed color converted such that a foreground color
 // is its background equivalent.
-func ToBackground(color int) int {
+func ToBackground(color int16) int16 {
 	if color > colorBoundary {
 		return color
 	}

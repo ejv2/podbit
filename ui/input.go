@@ -6,6 +6,7 @@ import (
 	"unicode/utf8"
 
 	"github.com/ethanv2/podbit/data"
+	ev "github.com/ethanv2/podbit/event"
 	"github.com/ethanv2/podbit/sound"
 )
 
@@ -106,7 +107,7 @@ func InputLoop(exit chan struct{}) {
 				PassKeystroke(c)
 			}
 
-			Redraw(RedrawAll)
+			events <- ev.Keystroke
 		case <-exit:
 			return
 		}

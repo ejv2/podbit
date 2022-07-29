@@ -24,22 +24,6 @@ var (
 	status string
 )
 
-func trayWatcher() {
-	for {
-		wait := time.Second
-
-		if sound.Plr.IsPlaying() || data.Downloads.Ongoing() != 0 {
-			Redraw(RedrawAll)
-
-			if data.Downloads.Ongoing() != 0 {
-				wait = 100 * time.Millisecond
-			}
-		}
-
-		time.Sleep(wait)
-	}
-}
-
 // RenderTray renders the statusbar tray at the bottom of the screen.
 // Tray takes up two vertical cells and the entirety of the width.
 // The top cell is a horizontal line denoting a player status bar.

@@ -6,6 +6,7 @@ import (
 	"github.com/ethanv2/podbit/colors"
 	"github.com/ethanv2/podbit/data"
 	"github.com/ethanv2/podbit/sound"
+	ev "github.com/ethanv2/podbit/event"
 
 	"github.com/rthornton128/goncurses"
 )
@@ -96,6 +97,10 @@ func (l *Player) Render(x, y int) {
 
 		root.MovePrint(h-(h/3)+3, (w-len(clipped))/2, clipped)
 	}
+}
+
+func (l *Player) Should(event int) bool {
+	return event == ev.Keystroke || event == ev.PlayerChanged
 }
 
 func (l *Player) Input(c rune) {

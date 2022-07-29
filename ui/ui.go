@@ -27,6 +27,8 @@ import (
 	"os/signal"
 	"syscall"
 
+	ev "github.com/ethanv2/podbit/event"
+
 	"github.com/rthornton128/goncurses"
 	"golang.org/x/term"
 )
@@ -36,34 +38,20 @@ import (
 type Menu interface {
 	Name() string
 	Render(x, y int)
+	Should(event int) bool
 	Input(c rune)
 }
-
-// Redraw types.
-const (
-	RedrawAll    = iota // Redraw everything
-	RedrawMenu          // Redraw just the menu
-	RedrawTray          // Redraw just the tray
-	RedrawResize        // Redraw and recalculate dimensions
-)
-
-// Info request types.
-const (
-	InfoName = iota // Requesting the menu's name
-)
 
 var (
 	root *goncurses.Window
 	w, h int
 
+	eventsHndl  ev.Handler
+	events      chan int
 	currentMenu Menu
 
-	redraw    chan int
 	menuChan  chan Menu
 	keystroke chan rune
-
-	infoRequest  chan int
-	infoResponse chan interface{}
 )
 
 // Menu singletons.
@@ -78,26 +66,23 @@ var (
 func watchResize(sig chan os.Signal, scr *goncurses.Window) {
 	for {
 		<-sig
-
-		Redraw(RedrawResize)
+		eventsHndl.Post(ev.Resize)
 	}
 }
 
 // InitUI initialises the UI subsystem.
-func InitUI(scr *goncurses.Window, initialMenu Menu, r chan int, k chan rune, m chan Menu) {
-	redraw = r
+func InitUI(scr *goncurses.Window, initialMenu Menu, hndl *ev.Handler, k chan rune, m chan Menu) {
 	keystroke = k
 	menuChan = m
 	root = scr
 	currentMenu = initialMenu
 
-	infoRequest = make(chan int)
-	infoResponse = make(chan interface{})
+	eventsHndl = *hndl
+	events = hndl.Register()
 
 	resizeChan := make(chan os.Signal, 1)
 	signal.Notify(resizeChan, syscall.SIGWINCH)
 	go watchResize(resizeChan, scr)
-	go trayWatcher()
 
 	UpdateDimensions(scr)
 }
@@ -152,33 +137,10 @@ func renderTray() {
 	RenderTray(root, w, h)
 }
 
-// Redraw signals to redraw a specific part of the UI.
-//
-// This call *will* block if a redraw is in progress
-// but will not fail.
-func Redraw(mode int) {
-	redraw <- mode
-}
-
-// ActivateMenu sets the current menu to the requested value
-// and orders a redraw of the menu area.
-// This function will block until the new menu is being drawn.
+// ActivateMenu sets the current menu to the requested value.
+// This DOES NOT redraw the screen until manually caused by an event.
 func ActivateMenu(newMenu Menu) {
 	menuChan <- newMenu
-
-	Redraw(RedrawMenu)
-}
-
-// MenuActive returns true if the current menu claims to be of the same
-// class as the passed menu.
-//
-// "compare" does not necessarily have to be exactly the same type as
-// the current menu, but is simply of the same name.
-func MenuActive(compare Menu) bool {
-	infoRequest <- InfoName
-	resp := <-infoResponse
-
-	return resp.(string) == compare.Name()
 }
 
 // PassKeystroke performs a keystroke passthrough for the active menu.
@@ -193,29 +155,17 @@ func RenderLoop() {
 		select {
 		case newMenu := <-menuChan:
 			currentMenu = newMenu
-		case req := <-infoRequest:
-			switch req {
-			case InfoName:
-				infoResponse <- currentMenu.Name()
+		case event, ok := <-events:
+			if !ok {
+				return
 			}
-		case toRedraw := <-redraw:
-			switch toRedraw {
-			case RedrawAll:
-				renderMenu()
-				renderTray()
-			case RedrawMenu:
-				renderMenu()
-			case RedrawTray:
-				renderTray()
-			case RedrawResize:
+			if event == ev.Resize {
 				UpdateDimensions(root)
-
 				renderMenu()
-				renderTray()
-			default:
-				panic("renderloop: invalid redraw code")
+			} else if currentMenu.Should(event) {
+				renderMenu()
 			}
-
+			renderTray()
 			root.Refresh()
 		case c := <-keystroke:
 			currentMenu.Input(c)

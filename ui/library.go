@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/ethanv2/podbit/data"
+	ev "github.com/ethanv2/podbit/event"
 	"github.com/ethanv2/podbit/sound"
 	"github.com/ethanv2/podbit/ui/components"
 
@@ -87,6 +88,10 @@ func (l *Library) Render(x, y int) {
 	root.AttrOff(goncurses.A_BOLD)
 
 	l.renderEpisodes(w/2+1, y)
+}
+
+func (l *Library) Should(event int) bool {
+	return event == ev.Keystroke
 }
 
 func (l *Library) Input(c rune) {

@@ -3,6 +3,7 @@ package ui
 import (
 	"github.com/ethanv2/podbit/colors"
 	"github.com/ethanv2/podbit/data"
+	ev "github.com/ethanv2/podbit/event"
 	"github.com/ethanv2/podbit/sound"
 	"github.com/ethanv2/podbit/ui/components"
 )
@@ -68,6 +69,10 @@ func (q *Queue) Render(x, y int) {
 	}
 
 	q.tbl.Render()
+}
+
+func (q *Queue) Should(event int) bool {
+	return event == ev.Keystroke || event == ev.PlayerChanged
 }
 
 func (q *Queue) Input(c rune) {

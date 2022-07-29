@@ -26,7 +26,6 @@ var (
 	confdir string
 
 	events    *ev.Handler
-	redraw    = make(chan int)
 	keystroke = make(chan rune)
 	newMen    = make(chan ui.Menu)
 	exit      = make(chan struct{})
@@ -104,7 +103,7 @@ func main() {
 	go data.ReloadLoop()
 
 	fmt.Print("Initialising sound system...")
-	sound.Plr, err = sound.NewPlayer()
+	sound.Plr, err = sound.NewPlayer(events)
 	if err != nil {
 		fmt.Printf("\nError: Failed to initialise sound system: %s\n", err.Error())
 		os.Exit(1)
@@ -123,7 +122,7 @@ func main() {
 	initColors()
 	defer goncurses.End()
 
-	ui.InitUI(scr, ui.LibraryMenu, redraw, keystroke, newMen)
+	ui.InitUI(scr, ui.LibraryMenu, events, keystroke, newMen)
 	go ui.RenderLoop()
 
 	// Welcome message
@@ -135,8 +134,9 @@ func main() {
 		len(data.Q.Items), len(data.Q.GetPodcasts()),
 		startup.Seconds()))
 
-	// Initial UI draw
-	ui.Redraw(ui.RedrawAll)
+	// Run events handler and kickstart listeners
+	go events.Run()
+	events.Post(ev.Keystroke)
 
 	// Initialisation is done; use this thread as the input loop
 	ui.InputLoop(exit)

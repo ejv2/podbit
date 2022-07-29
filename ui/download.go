@@ -8,6 +8,7 @@ import (
 	"github.com/ethanv2/podbit/data"
 	"github.com/ethanv2/podbit/sound"
 	"github.com/ethanv2/podbit/ui/components"
+	ev "github.com/ethanv2/podbit/event"
 )
 
 var downloadHeadings []components.Column = []components.Column{
@@ -74,6 +75,10 @@ func (q *Downloads) Render(x, y int) {
 	}
 
 	q.tbl.Render()
+}
+
+func (q *Downloads) Should(event int) bool {
+	return event == ev.Keystroke || event == ev.DownloadChanged || event == ev.PlayerChanged
 }
 
 func (q *Downloads) Input(c rune) {

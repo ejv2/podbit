@@ -19,6 +19,7 @@ import (
 	"time"
 
 	"github.com/ethanv2/podbit/data"
+	ev "github.com/ethanv2/podbit/event"
 
 	"github.com/blang/mpv"
 )
@@ -34,7 +35,7 @@ var (
 	// to idle mpv ready to receive instructions.
 	PlayerArgs = []string{"--idle", "--no-video", "--input-ipc-server=" + PlayerRPC}
 	// UpdateTime is the time between queue checks and supervision updates.
-	UpdateTime = time.Second
+	UpdateTime = 500 * time.Millisecond
 )
 
 // Internal: Types of actions.
@@ -61,8 +62,11 @@ type WaitFunc func(u chan int)
 type Player struct {
 	proc *exec.Cmd
 
-	act chan int
-	dat chan interface{}
+	hndl ev.Handler
+	event chan int
+
+	act   chan int
+	dat   chan interface{}
 
 	ipcc *mpv.IPCClient
 	ctrl *mpv.Client
@@ -139,9 +143,12 @@ func newWait(u chan int) {
 
 // NewPlayer constructs a new player. This does not yet
 // launch any processes or play any media.
-func NewPlayer() (p Player, err error) {
+func NewPlayer(events *ev.Handler) (p Player, err error) {
 	p.act = make(chan int)
 	p.dat = make(chan interface{})
+
+	p.hndl = *events
+	p.event = events.Register()
 
 	return
 }
@@ -377,6 +384,7 @@ func (p *Player) Wait() {
 
 	now, _ := p.ctrl.Filename()
 	for filename := now; filename == now; filename, _ = p.ctrl.Filename() {
+		p.hndl.Post(ev.PlayerChanged)
 		time.Sleep(UpdateTime)
 	}
 }
@@ -434,7 +442,9 @@ func Mainloop() {
 			select {
 			case <-u:
 				keepWaiting = false
-
+				Plr.hndl.Post(ev.PlayerChanged)
+			case <-Plr.event:
+				break
 			case action := <-Plr.act:
 				switch action {
 				case actTerm:

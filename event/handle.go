@@ -25,3 +25,13 @@ func (h Handler) Run() {
 		}
 	}
 }
+
+func (h *Handler) Register() chan int {
+	hndl := make(chan int, 1)
+	h.hndl = append(h.hndl, hndl)
+	return hndl
+}
+
+func (h Handler) Post(ev int) {
+	h.msg <- ev
+}

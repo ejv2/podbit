@@ -1,6 +1,8 @@
 package components
 
 import (
+	"github.com/ethanv2/podbit/colors"
+
 	"github.com/rthornton128/goncurses"
 )
 
@@ -100,12 +102,16 @@ func (t *Table) Render() {
 
 			if sel {
 				t.Win.ColorOn(elem.Color)
+			} else {
+				t.Win.ColorOn(colors.ToForeground(elem.Color))
 			}
 
 			t.Win.MovePrint(t.Y+j+2, t.X+off, capped)
 
 			if sel {
 				t.Win.ColorOff(elem.Color)
+			} else {
+				t.Win.ColorOff(colors.ToForeground(elem.Color))
 			}
 
 			c++

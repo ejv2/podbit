@@ -11,6 +11,8 @@ import (
 	"net/url"
 	"os"
 	"time"
+
+	ev "github.com/ethanv2/podbit/event"
 )
 
 const (
@@ -30,7 +32,7 @@ var (
 
 // InitData initialises all dependent data structures.
 // The only returned errors *will* be fatal to the program.
-func InitData() error {
+func InitData(hndl ev.Handler) error {
 	fmt.Print("Reading queue...")
 	err := Q.Open()
 	if err != nil {
@@ -46,7 +48,7 @@ func InitData() error {
 	fmt.Println("done")
 
 	fmt.Print("Initialising cache...")
-	err = Downloads.Open()
+	err = Downloads.Open(hndl)
 	if err != nil {
 		return err
 	}

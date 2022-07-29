@@ -94,7 +94,7 @@ func main() {
 
 	events = ev.NewHandler()
 	now := time.Now()
-	err := data.InitData()
+	err := data.InitData(*events)
 	if err != nil {
 		fmt.Println("\n" + err.Error())
 		return

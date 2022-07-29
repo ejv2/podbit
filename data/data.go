@@ -15,7 +15,7 @@ import (
 
 const (
 	// QueueReloadInterval is how often the queue will be reloaded.
-	QueueReloadInterval = time.Duration(15) * time.Second
+	QueueReloadInterval = time.Minute
 	// EpisodeCacheTime is how long an episode is allowed to stay in cache in seconds.
 	// Default value is three days (3 * 24 * 60 * 60).
 	EpisodeCacheTime = 259200

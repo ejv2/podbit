@@ -485,5 +485,7 @@ func Mainloop() {
 				}
 			}
 		}
+
+		Plr.hndl.Post(ev.PlayerChanged)
 	}
 }

@@ -19,6 +19,7 @@ import (
 	"time"
 
 	"github.com/ethanv2/podbit/data"
+	ev "github.com/ethanv2/podbit/event"
 
 	"github.com/blang/mpv"
 )
@@ -34,7 +35,7 @@ var (
 	// to idle mpv ready to receive instructions.
 	PlayerArgs = []string{"--idle", "--no-video", "--input-ipc-server=" + PlayerRPC}
 	// UpdateTime is the time between queue checks and supervision updates.
-	UpdateTime = 200 * time.Millisecond
+	UpdateTime = 500 * time.Millisecond
 )
 
 // Internal: Types of actions.
@@ -60,6 +61,10 @@ type WaitFunc func(u chan int)
 // until the next call to play.
 type Player struct {
 	proc *exec.Cmd
+
+	hndl   ev.Handler
+	event  chan int
+	dlchan chan struct{}
 
 	act chan int
 	dat chan interface{}
@@ -111,7 +116,7 @@ func endWait(u chan int) {
 func downloadWait(u chan int) {
 	var id int
 	for y := true; y && DownloadAtHead(Plr.download); y, id = data.Downloads.IsDownloading(Plr.download.Path) {
-		time.Sleep(UpdateTime)
+		<-Plr.dlchan
 	}
 
 	Plr.waiting = false
@@ -125,23 +130,19 @@ func downloadWait(u chan int) {
 		head--
 	}
 
-	u <- 1
-}
-
-func newWait(u chan int) {
-	for head >= len(queue) {
-		time.Sleep(UpdateTime)
-	}
-
-	Plr.waiting = false
+	Plr.hndl.Post(ev.PlayerChanged)
 	u <- 1
 }
 
 // NewPlayer constructs a new player. This does not yet
 // launch any processes or play any media.
-func NewPlayer() (p Player, err error) {
+func NewPlayer(events *ev.Handler) (p Player, err error) {
 	p.act = make(chan int)
 	p.dat = make(chan interface{})
+	p.dlchan = make(chan struct{}, 1)
+
+	p.hndl = *events
+	p.event = events.Register()
 
 	return
 }
@@ -377,7 +378,20 @@ func (p *Player) Wait() {
 
 	now, _ := p.ctrl.Filename()
 	for filename := now; filename == now; filename, _ = p.ctrl.Filename() {
+		if !p.isPaused() {
+			p.hndl.Post(ev.PlayerChanged)
+		}
 		time.Sleep(UpdateTime)
+	}
+}
+
+func (p *Player) Event(e int) {
+	switch e {
+	case ev.DownloadChanged:
+		select {
+		case p.dlchan <- struct{}{}:
+		default:
+		}
 	}
 }
 
@@ -434,7 +448,9 @@ func Mainloop() {
 			select {
 			case <-u:
 				keepWaiting = false
-
+				Plr.hndl.Post(ev.PlayerChanged)
+			case e := <-Plr.event:
+				Plr.Event(e)
 			case action := <-Plr.act:
 				switch action {
 				case actTerm:
@@ -472,5 +488,7 @@ func Mainloop() {
 				}
 			}
 		}
+
+		Plr.hndl.Post(ev.PlayerChanged)
 	}
 }

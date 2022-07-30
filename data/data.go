@@ -11,11 +11,13 @@ import (
 	"net/url"
 	"os"
 	"time"
+
+	ev "github.com/ethanv2/podbit/event"
 )
 
 const (
 	// QueueReloadInterval is how often the queue will be reloaded.
-	QueueReloadInterval = time.Duration(15) * time.Second
+	QueueReloadInterval = time.Minute
 	// EpisodeCacheTime is how long an episode is allowed to stay in cache in seconds.
 	// Default value is three days (3 * 24 * 60 * 60).
 	EpisodeCacheTime = 259200
@@ -30,7 +32,7 @@ var (
 
 // InitData initialises all dependent data structures.
 // The only returned errors *will* be fatal to the program.
-func InitData() error {
+func InitData(hndl ev.Handler) error {
 	fmt.Print("Reading queue...")
 	err := Q.Open()
 	if err != nil {
@@ -46,7 +48,7 @@ func InitData() error {
 	fmt.Println("done")
 
 	fmt.Print("Initialising cache...")
-	err = Downloads.Open()
+	err = Downloads.Open(hndl)
 	if err != nil {
 		return err
 	}

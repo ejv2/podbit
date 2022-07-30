@@ -10,6 +10,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	ev "github.com/ethanv2/podbit/event"
 )
 
 // YouTube downloading constants.
@@ -65,7 +67,7 @@ type Download struct {
 // (synchronously).
 //
 // Used internally by cache; avoid calling directly.
-func (d *Download) DownloadYoutube() {
+func (d *Download) DownloadYoutube(hndl ev.Handler) {
 	if !d.Elem.Youtube {
 		panic("download: downloading non-youtube with youtube-dl")
 	}
@@ -133,6 +135,8 @@ func (d *Download) DownloadYoutube() {
 		d.Percentage /= 100
 		d.mut.Unlock()
 
+		hndl.Post(ev.DownloadChanged)
+
 		select {
 		case <-d.Stop:
 			d.mut.Lock()
@@ -185,6 +189,8 @@ func (d *Download) DownloadYoutube() {
 	Downloads.downloadsMutex.Unlock()
 
 	d.mut.Unlock()
+
+	hndl.Post(ev.DownloadChanged)
 }
 
 // DownloadHTTP connects to the URL of the specified download
@@ -192,7 +198,7 @@ func (d *Download) DownloadYoutube() {
 // (synchronously)
 //
 // Used internally by cache; avoid calling directly.
-func (d *Download) DownloadHTTP() {
+func (d *Download) DownloadHTTP(hndl ev.Handler) {
 	resp, err := http.Get(d.Elem.URL)
 	if err != nil || resp.StatusCode != http.StatusOK {
 		d.mut.Lock()
@@ -234,6 +240,7 @@ outer:
 		d.Percentage = float64(d.Done) / float64(d.Size)
 		d.mut.Unlock()
 
+		hndl.Post(ev.DownloadChanged)
 		if Downloads.Ongoing() > 1 {
 			runtime.Gosched() // Give the other threads a turn
 		}

@@ -6,11 +6,12 @@ import (
 	"unicode/utf8"
 
 	"github.com/ethanv2/podbit/data"
+	ev "github.com/ethanv2/podbit/event"
 	"github.com/ethanv2/podbit/sound"
 )
 
 var (
-	exitChan chan int
+	exitChan chan struct{}
 )
 
 func getInput(out chan rune, errc chan error) {
@@ -32,7 +33,7 @@ func getInput(out chan rune, errc chan error) {
 // Exit requests that the input handler shuts down and gracefully
 // exits the program via a return to the main function.
 func Exit() {
-	exitChan <- 1
+	close(exitChan)
 }
 
 // InputLoop - main UI input handler
@@ -42,7 +43,7 @@ func Exit() {
 // to the UI subsystem, which can deal with it from there.
 //
 // Any and all key inputs causes an immediate and full UI redraw.
-func InputLoop(exit chan int) {
+func InputLoop(exit chan struct{}) {
 	exitChan = exit
 
 	var c rune
@@ -106,7 +107,7 @@ func InputLoop(exit chan int) {
 				PassKeystroke(c)
 			}
 
-			Redraw(RedrawAll)
+			events <- ev.Keystroke
 		case <-exit:
 			return
 		}

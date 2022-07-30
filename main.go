@@ -8,6 +8,7 @@ import (
 
 	"github.com/ethanv2/podbit/colors"
 	"github.com/ethanv2/podbit/data"
+	ev "github.com/ethanv2/podbit/event"
 	"github.com/ethanv2/podbit/sound"
 	"github.com/ethanv2/podbit/ui"
 
@@ -24,10 +25,10 @@ var (
 	homedir string
 	confdir string
 
-	redraw    = make(chan int)
+	events    *ev.Handler
 	keystroke = make(chan rune)
 	newMen    = make(chan ui.Menu)
-	exit      = make(chan int)
+	exit      = make(chan struct{})
 )
 
 func banner() {
@@ -91,8 +92,9 @@ func main() {
 	}
 	defer lock.Unlock()
 
+	events = ev.NewHandler()
 	now := time.Now()
-	err := data.InitData()
+	err := data.InitData(*events)
 	if err != nil {
 		fmt.Println("\n" + err.Error())
 		return
@@ -101,7 +103,7 @@ func main() {
 	go data.ReloadLoop()
 
 	fmt.Print("Initialising sound system...")
-	sound.Plr, err = sound.NewPlayer()
+	sound.Plr, err = sound.NewPlayer(events)
 	if err != nil {
 		fmt.Printf("\nError: Failed to initialise sound system: %s\n", err.Error())
 		os.Exit(1)
@@ -120,7 +122,7 @@ func main() {
 	initColors()
 	defer goncurses.End()
 
-	ui.InitUI(scr, ui.LibraryMenu, redraw, keystroke, newMen)
+	ui.InitUI(scr, ui.LibraryMenu, events, keystroke, newMen)
 	go ui.RenderLoop()
 
 	// Welcome message
@@ -132,8 +134,9 @@ func main() {
 		len(data.Q.Items), len(data.Q.GetPodcasts()),
 		startup.Seconds()))
 
-	// Initial UI draw
-	ui.Redraw(ui.RedrawAll)
+	// Run events handler and kickstart listeners
+	go events.Run()
+	events.Post(ev.Keystroke)
 
 	// Initialisation is done; use this thread as the input loop
 	ui.InputLoop(exit)

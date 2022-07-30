@@ -13,6 +13,7 @@ import (
 
 	"github.com/dhowden/tag"
 	"github.com/ethanv2/podbit/data/escape"
+	ev "github.com/ethanv2/podbit/event"
 )
 
 // Possible cache errors.
@@ -35,6 +36,8 @@ type Cache struct {
 	downloadsMutex sync.RWMutex // Protects the below two variables
 	downloads      []*Download
 	ongoing        int
+
+	hndl ev.Handler
 }
 
 // Episode represents the data extracted from a single cached episode
@@ -85,10 +88,11 @@ func (c *Cache) guessDir() string {
 // Open opens and initialises the cache.
 // Should be called once and once only - further modifications
 // and cache mutations happen exclusively through other methods.
-func (c *Cache) Open() error {
+func (c *Cache) Open(hndl ev.Handler) error {
 	home, _ := os.UserHomeDir()
 	c.dir = strings.ReplaceAll(c.guessDir(), "~", home)
 	files, err := ioutil.ReadDir(c.dir)
+	c.hndl = hndl
 
 	if err != nil {
 		cerr := os.MkdirAll(c.dir, os.ModeDir|os.ModePerm)
@@ -175,9 +179,9 @@ func (c *Cache) Download(item *QueueItem) (id int, err error) {
 	}
 
 	if item.Youtube {
-		go dl.DownloadYoutube()
+		go dl.DownloadYoutube(c.hndl)
 	} else {
-		go dl.DownloadHTTP()
+		go dl.DownloadHTTP(c.hndl)
 	}
 
 	c.downloadsMutex.Lock()

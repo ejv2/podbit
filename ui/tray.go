@@ -47,6 +47,10 @@ func RenderTray(scr *goncurses.Window, w, h int) {
 		select {
 		case status = <-statusMessage:
 			lastStatus = now
+			go func() {
+				time.Sleep(MessageTime)
+				eventsHndl.Post(ev.TrayMessage)
+			}()
 		default:
 			status = ""
 		}
@@ -101,5 +105,4 @@ func RenderTray(scr *goncurses.Window, w, h int) {
 // Every message can be guaranteed MessageTime display time.
 func StatusMessage(msg string) {
 	statusMessage <- msg
-	eventsHndl.Post(ev.TrayMessage)
 }

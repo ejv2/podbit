@@ -128,8 +128,10 @@ func (q *Downloads) Cancel() {
 
 	dl := data.Downloads.Downloads()[i]
 	if !dl.Completed {
-		dl.Stop <- 1
-		go StatusMessage("Download cancelled")
+		go func() {
+			dl.Stop <- 1
+			go StatusMessage("Download cancelled")
+		}()
 	} else {
 		go StatusMessage("Cannot cancel completed download")
 	}

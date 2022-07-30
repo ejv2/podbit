@@ -62,11 +62,12 @@ type WaitFunc func(u chan int)
 type Player struct {
 	proc *exec.Cmd
 
-	hndl ev.Handler
-	event chan int
+	hndl   ev.Handler
+	event  chan int
+	dlchan chan struct{}
 
-	act   chan int
-	dat   chan interface{}
+	act chan int
+	dat chan interface{}
 
 	ipcc *mpv.IPCClient
 	ctrl *mpv.Client
@@ -115,7 +116,7 @@ func endWait(u chan int) {
 func downloadWait(u chan int) {
 	var id int
 	for y := true; y && DownloadAtHead(Plr.download); y, id = data.Downloads.IsDownloading(Plr.download.Path) {
-		time.Sleep(UpdateTime)
+		<-Plr.dlchan
 	}
 
 	Plr.waiting = false
@@ -133,20 +134,12 @@ func downloadWait(u chan int) {
 	u <- 1
 }
 
-func newWait(u chan int) {
-	for head >= len(queue) {
-		time.Sleep(UpdateTime)
-	}
-
-	Plr.waiting = false
-	u <- 1
-}
-
 // NewPlayer constructs a new player. This does not yet
 // launch any processes or play any media.
 func NewPlayer(events *ev.Handler) (p Player, err error) {
 	p.act = make(chan int)
 	p.dat = make(chan interface{})
+	p.dlchan = make(chan struct{}, 1)
 
 	p.hndl = *events
 	p.event = events.Register()
@@ -392,6 +385,16 @@ func (p *Player) Wait() {
 	}
 }
 
+func (p *Player) Event(e int) {
+	switch e {
+	case ev.DownloadChanged:
+		select {
+		case p.dlchan <- struct{}{}:
+		default:
+		}
+	}
+}
+
 // Mainloop - Main sound handling thread loop
 //
 // Loops infinitely waiting for sound events, managing the queue, mpv
@@ -446,8 +449,8 @@ func Mainloop() {
 			case <-u:
 				keepWaiting = false
 				Plr.hndl.Post(ev.PlayerChanged)
-			case <-Plr.event:
-				break
+			case e := <-Plr.event:
+				Plr.Event(e)
 			case action := <-Plr.act:
 				switch action {
 				case actTerm:

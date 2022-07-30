@@ -8,6 +8,7 @@ package ev
 const (
 	Keystroke = iota
 	Resize
+	TrayMessage
 	PlayerChanged
 	DownloadChanged
 )

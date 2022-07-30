@@ -7,6 +7,7 @@ import (
 
 	"github.com/ethanv2/podbit/colors"
 	"github.com/ethanv2/podbit/data"
+	ev "github.com/ethanv2/podbit/event"
 	"github.com/ethanv2/podbit/sound"
 
 	"github.com/rthornton128/goncurses"
@@ -100,4 +101,5 @@ func RenderTray(scr *goncurses.Window, w, h int) {
 // Every message can be guaranteed MessageTime display time.
 func StatusMessage(msg string) {
 	statusMessage <- msg
+	eventsHndl.Post(ev.TrayMessage)
 }

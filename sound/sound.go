@@ -129,6 +129,7 @@ func downloadWait(u chan int) {
 		head--
 	}
 
+	Plr.hndl.Post(ev.PlayerChanged)
 	u <- 1
 }
 
@@ -384,7 +385,9 @@ func (p *Player) Wait() {
 
 	now, _ := p.ctrl.Filename()
 	for filename := now; filename == now; filename, _ = p.ctrl.Filename() {
-		p.hndl.Post(ev.PlayerChanged)
+		if !p.isPaused() {
+			p.hndl.Post(ev.PlayerChanged)
+		}
 		time.Sleep(UpdateTime)
 	}
 }

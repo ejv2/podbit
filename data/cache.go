@@ -12,7 +12,7 @@ import (
 	"time"
 
 	"github.com/dhowden/tag"
-	"github.com/ethanv2/podbit/data/escape"
+
 	ev "github.com/ethanv2/podbit/event"
 )
 
@@ -139,9 +139,9 @@ func (c *Cache) loadFile(path string, startup bool) {
 
 	ep := Episode{
 		Queued: !startup,
-		Title:  escape.Escape(data.Title()),
+		Title:  data.Title(),
 		Date:   data.Year(),
-		Host:   escape.Escape(host),
+		Host:   host,
 	}
 
 	c.episodes.Store(path, ep)

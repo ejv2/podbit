@@ -29,7 +29,7 @@ import (
 
 	ev "github.com/ethanv2/podbit/event"
 
-	"github.com/rthornton128/goncurses"
+	"github.com/vit1251/go-ncursesw"
 	"golang.org/x/term"
 )
 

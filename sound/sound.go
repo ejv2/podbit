@@ -110,6 +110,7 @@ func endWait(u chan int) {
 		return true
 	})
 
+	Plr.hndl.Post(ev.PlayerChanged)
 	u <- 1
 }
 
@@ -401,10 +402,12 @@ func (p *Player) Event(e int) {
 // processes and player data handling. Can be communicated with through
 // a series of channels indicating different actions.
 func Mainloop() {
-	var wait WaitFunc = updateWait
+	var wait WaitFunc
 	var elem *data.QueueItem
+	u := make(chan int)
 
 	for {
+		wait = updateWait
 		elem, Plr.exhausted = PopHead()
 
 		if !Plr.playing && !Plr.waiting && !Plr.exhausted && len(queue) > 0 {
@@ -441,14 +444,12 @@ func Mainloop() {
 			}
 		}
 
-		u := make(chan int)
 		go wait(u)
 		keepWaiting := true
 		for keepWaiting {
 			select {
 			case <-u:
 				keepWaiting = false
-				Plr.hndl.Post(ev.PlayerChanged)
 			case e := <-Plr.event:
 				Plr.Event(e)
 			case action := <-Plr.act:
@@ -488,7 +489,5 @@ func Mainloop() {
 				}
 			}
 		}
-
-		Plr.hndl.Post(ev.PlayerChanged)
 	}
 }

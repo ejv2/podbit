@@ -1,7 +1,7 @@
 package main
 
 const (
-	verMaj   = 2
-	verMin   = 1
+	verMaj   = 3
+	verMin   = 0
 	verPatch = 0
 )

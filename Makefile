@@ -4,8 +4,8 @@ UISRC    = ui/ui.go ui/input.go colors/colors.go ui/library.go ui/player.go ui/q
 UICOMPS  = ui/components/menu.go ui/components/table.go ui/components/list.go
 SOUNDSRC = sound/sound.go sound/queue.go
 DATASRC  = data/data.go data/queue.go data/db.go data/cache.go data/download.go
-ESCSRC   = data/escape/escape.go
-SRC = main.go ver.go ${INPUTSRC} ${UISRC} ${DATASRC} ${ESCSRC} ${UICOMPS} ${SOUNDSRC}
+EVNTSRC   = event/event.go event/handle.go
+SRC = main.go ver.go ${INPUTSRC} ${UISRC} ${DATASRC} ${EVNTSRC} ${UICOMPS} ${SOUNDSRC}
 
 ifndef PREFIX
 	PREFIX = /usr/local

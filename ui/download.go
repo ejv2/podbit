@@ -23,7 +23,7 @@ var downloadHeadings []components.Column = []components.Column{
 		Color: colors.BackgroundYellow,
 	},
 	{
-		Label: "Path",
+		Label: "Episode",
 		Width: 0.4,
 		Color: colors.BackgroundBlue,
 	},
@@ -55,7 +55,13 @@ func (q *Downloads) Render(x, y int) {
 
 		item[0] = strconv.FormatInt(int64(i), 10)
 		item[1] = strconv.FormatFloat(elem.Percentage*100, 'f', 2, 64)
-		item[2] = elem.Path
+
+		ep, ok := data.Downloads.Query(elem.Path)
+		if ok {
+			item[2] = ep.Title
+		} else {
+			item[2] = elem.Path
+		}
 
 		if elem.Completed {
 			if elem.Success {

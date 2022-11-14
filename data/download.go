@@ -21,6 +21,11 @@ const (
 	YoutubeFlags string = "--add-metadata --newline --no-colors -f bestaudio --extract-audio --audio-format mp3"
 )
 
+// eventInterval is the minimum time between two DownloadChanged events emitted
+// by a downloader goroutine. This is intended to reduce thread contention
+// between these goroutines.
+const eventInterval = 500 * time.Millisecond
+
 // Download represents the statistics of a specific ongoing download.
 // Once the associated download is complete, the watcher goroutine
 // terminates.
@@ -121,6 +126,7 @@ func (d *Download) DownloadYoutube(hndl ev.Handler) {
 	// pending data. Manually calling causes net performance loss
 
 	buf := make([]byte, 4096)
+	lastPost := time.Now()
 	for err == nil {
 		_, err = r.Read(buf)
 		line := string(buf)
@@ -135,7 +141,10 @@ func (d *Download) DownloadYoutube(hndl ev.Handler) {
 		d.Percentage /= 100
 		d.mut.Unlock()
 
-		hndl.Post(ev.DownloadChanged)
+		if time.Since(lastPost) >= eventInterval {
+			hndl.Post(ev.DownloadChanged)
+			lastPost = time.Now()
+		}
 
 		select {
 		case <-d.Stop:
@@ -212,6 +221,7 @@ func (d *Download) DownloadHTTP(hndl ev.Handler) {
 		Downloads.downloadsMutex.Unlock()
 
 		os.Remove(d.Elem.Path)
+		hndl.Post(ev.DownloadChanged)
 		return
 	}
 
@@ -228,6 +238,7 @@ func (d *Download) DownloadHTTP(hndl ev.Handler) {
 	var read int
 	dlerr := ""
 	buf := make([]byte, 32*1024) // 32kb
+	lastPost := time.Now()
 
 outer:
 	for err == nil {
@@ -240,7 +251,11 @@ outer:
 		d.Percentage = float64(d.Done) / float64(d.Size)
 		d.mut.Unlock()
 
-		hndl.Post(ev.DownloadChanged)
+		if time.Since(lastPost) >= eventInterval {
+			hndl.Post(ev.DownloadChanged)
+			lastPost = time.Now()
+		}
+
 		if Downloads.Ongoing() > 1 {
 			runtime.Gosched() // Give the other threads a turn
 		}
@@ -275,5 +290,6 @@ outer:
 	resp.Body.Close()
 	d.File.Close()
 
+	hndl.Post(ev.DownloadChanged)
 	close(d.Stop)
 }

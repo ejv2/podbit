@@ -3,7 +3,9 @@ package main
 import (
 	"fmt"
 	"os"
+	"os/signal"
 	"path/filepath"
+	"syscall"
 	"time"
 
 	"github.com/ethanv2/podbit/colors"
@@ -13,7 +15,7 @@ import (
 	"github.com/ethanv2/podbit/ui"
 
 	"github.com/juju/fslock"
-	"github.com/vit1251/go-ncursesw"
+	goncurses "github.com/vit1251/go-ncursesw"
 )
 
 const (
@@ -81,9 +83,19 @@ func initTTY() {
 	goncurses.Cursor(0)
 }
 
+func initSignals(exit chan struct{}) {
+	sigchan := make(chan os.Signal, 1)
+	signal.Notify(sigchan, os.Interrupt, syscall.SIGTERM)
+	go func() {
+		<-sigchan
+		exit <- struct{}{}
+	}()
+}
+
 func main() {
 	banner()
 	initDirs()
+	initSignals(exit)
 
 	running, lock := alreadyRunning()
 	if running {

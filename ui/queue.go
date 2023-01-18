@@ -1,11 +1,11 @@
 package ui
 
 import (
-	"github.com/ethanv2/podbit/colors"
-	"github.com/ethanv2/podbit/data"
-	ev "github.com/ethanv2/podbit/event"
-	"github.com/ethanv2/podbit/sound"
-	"github.com/ethanv2/podbit/ui/components"
+	"github.com/ejv2/podbit/colors"
+	"github.com/ejv2/podbit/data"
+	ev "github.com/ejv2/podbit/event"
+	"github.com/ejv2/podbit/sound"
+	"github.com/ejv2/podbit/ui/components"
 )
 
 var queueHeadings []components.Column = []components.Column{

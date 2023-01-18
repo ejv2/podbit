@@ -1,7 +1,7 @@
 package components
 
 import (
-	"github.com/ethanv2/podbit/colors"
+	"github.com/ejv2/podbit/colors"
 	"github.com/vit1251/go-ncursesw"
 )
 

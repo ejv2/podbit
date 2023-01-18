@@ -3,7 +3,7 @@ package sound
 import (
 	"sync"
 
-	"github.com/ethanv2/podbit/data"
+	"github.com/ejv2/podbit/data"
 )
 
 // Singleton state.

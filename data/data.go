@@ -12,7 +12,7 @@ import (
 	"os"
 	"time"
 
-	ev "github.com/ethanv2/podbit/event"
+	ev "github.com/ejv2/podbit/event"
 )
 
 const (

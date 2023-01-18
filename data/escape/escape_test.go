@@ -5,7 +5,7 @@ import (
 	"testing"
 	"unicode/utf8"
 
-	"github.com/ethanv2/podbit/data/escape"
+	"github.com/ejv2/podbit/data/escape"
 )
 
 var EscapeTests = []struct {

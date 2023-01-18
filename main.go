@@ -8,11 +8,11 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/ethanv2/podbit/colors"
-	"github.com/ethanv2/podbit/data"
-	ev "github.com/ethanv2/podbit/event"
-	"github.com/ethanv2/podbit/sound"
-	"github.com/ethanv2/podbit/ui"
+	"github.com/ejv2/podbit/colors"
+	"github.com/ejv2/podbit/data"
+	ev "github.com/ejv2/podbit/event"
+	"github.com/ejv2/podbit/sound"
+	"github.com/ejv2/podbit/ui"
 
 	"github.com/juju/fslock"
 	goncurses "github.com/vit1251/go-ncursesw"

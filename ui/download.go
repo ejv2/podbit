@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/ethanv2/podbit/colors"
-	"github.com/ethanv2/podbit/data"
-	"github.com/ethanv2/podbit/sound"
-	"github.com/ethanv2/podbit/ui/components"
-	ev "github.com/ethanv2/podbit/event"
+	"github.com/ejv2/podbit/colors"
+	"github.com/ejv2/podbit/data"
+	"github.com/ejv2/podbit/sound"
+	"github.com/ejv2/podbit/ui/components"
+	ev "github.com/ejv2/podbit/event"
 )
 
 var downloadHeadings []components.Column = []components.Column{

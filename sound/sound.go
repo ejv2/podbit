@@ -18,8 +18,8 @@ import (
 	"os/exec"
 	"time"
 
-	"github.com/ethanv2/podbit/data"
-	ev "github.com/ethanv2/podbit/event"
+	"github.com/ejv2/podbit/data"
+	ev "github.com/ejv2/podbit/event"
 
 	"github.com/blang/mpv"
 )

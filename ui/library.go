@@ -3,10 +3,10 @@ package ui
 import (
 	"fmt"
 
-	"github.com/ethanv2/podbit/data"
-	ev "github.com/ethanv2/podbit/event"
-	"github.com/ethanv2/podbit/sound"
-	"github.com/ethanv2/podbit/ui/components"
+	"github.com/ejv2/podbit/data"
+	ev "github.com/ejv2/podbit/event"
+	"github.com/ejv2/podbit/sound"
+	"github.com/ejv2/podbit/ui/components"
 
 	"github.com/vit1251/go-ncursesw"
 )

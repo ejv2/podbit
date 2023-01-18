@@ -5,9 +5,9 @@ import (
 	"os"
 	"unicode/utf8"
 
-	"github.com/ethanv2/podbit/data"
-	ev "github.com/ethanv2/podbit/event"
-	"github.com/ethanv2/podbit/sound"
+	"github.com/ejv2/podbit/data"
+	ev "github.com/ejv2/podbit/event"
+	"github.com/ejv2/podbit/sound"
 )
 
 var (

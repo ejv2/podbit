@@ -1,4 +1,4 @@
-module github.com/ethanv2/podbit
+module github.com/ejv2/podbit
 
 go 1.18
 

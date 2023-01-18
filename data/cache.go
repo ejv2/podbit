@@ -13,7 +13,7 @@ import (
 
 	"github.com/dhowden/tag"
 
-	ev "github.com/ethanv2/podbit/event"
+	ev "github.com/ejv2/podbit/event"
 )
 
 // Possible cache errors.

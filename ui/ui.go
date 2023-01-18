@@ -27,7 +27,7 @@ import (
 	"os/signal"
 	"syscall"
 
-	ev "github.com/ethanv2/podbit/event"
+	ev "github.com/ejv2/podbit/event"
 
 	"github.com/vit1251/go-ncursesw"
 	"golang.org/x/term"

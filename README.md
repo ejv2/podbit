@@ -6,7 +6,7 @@
 [![Makefile CI](https://github.com/ejv2/podbit/actions/workflows/makefile.yml/badge.svg)](https://github.com/ejv2/podbit/actions/workflows/makefile.yml)
 [![Go Report Card](https://goreportcard.com/badge/github.com/ejv2/podbit)](https://goreportcard.com/report/github.com/ejv2/podbit)
 
-Podbit is a replacement for ``newsboat``'s standard podboat tool for listening to podcasts. It is minimal, performant and abides by the UNIX-philosophy, with an ncurses terminal user interface and vi-like keybindings.
+Podbit is a replacement for ``newsboat``'s standard podboat tool for listening to podcasts. It is minimal, performant and tries to focus just on being a podcast client, rather than an RSS reader. Podbit has an ncurses terminal user interface and vi-like keybindings.
 
 Podbit runs on Linux and the BSDs.
 

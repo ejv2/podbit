@@ -52,7 +52,7 @@ func initDirs() {
 	cerr := os.MkdirAll(confdir, os.ModeDir|os.ModePerm)
 
 	if herr != nil || cerr != nil {
-		fmt.Println("Error: Failed to required directory(s)")
+		fmt.Println("Error: Failed to create required directory(s)")
 		os.Exit(1)
 	}
 }

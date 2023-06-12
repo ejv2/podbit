@@ -6,9 +6,9 @@ import (
 
 	"github.com/ejv2/podbit/colors"
 	"github.com/ejv2/podbit/data"
+	ev "github.com/ejv2/podbit/event"
 	"github.com/ejv2/podbit/sound"
 	"github.com/ejv2/podbit/ui/components"
-	ev "github.com/ejv2/podbit/event"
 )
 
 var downloadHeadings []components.Column = []components.Column{

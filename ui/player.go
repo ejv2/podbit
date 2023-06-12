@@ -5,8 +5,8 @@ import (
 
 	"github.com/ejv2/podbit/colors"
 	"github.com/ejv2/podbit/data"
-	"github.com/ejv2/podbit/sound"
 	ev "github.com/ejv2/podbit/event"
+	"github.com/ejv2/podbit/sound"
 
 	"github.com/vit1251/go-ncursesw"
 )

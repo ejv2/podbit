@@ -23,7 +23,7 @@ const (
 	EpisodeCacheTime = 259200
 )
 
-// Queue reload operations
+// Queue reload operations.
 const (
 	QueueReload = iota
 	QueueSave

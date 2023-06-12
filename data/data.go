@@ -140,7 +140,6 @@ loop:
 			ReloadData()
 			if i == QueueSave {
 				Q.Save()
-				return
 			}
 		}
 	}

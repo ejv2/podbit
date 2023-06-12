@@ -23,6 +23,12 @@ const (
 	EpisodeCacheTime = 259200
 )
 
+// Queue reload operations
+const (
+	QueueReload = iota
+	QueueSave
+)
+
 // Dependent data structures.
 var (
 	Q         Queue
@@ -57,8 +63,8 @@ func InitData(hndl ev.Handler) error {
 	return nil
 }
 
-// SaveData cleans up and saves data to disk.
-// First ensures we have hot-reloaded any required data.
+// SaveData cleans up and saves data to disk. First ensures we have
+// hot-reloaded any required data. Only designed for use at startup.
 func SaveData() {
 	ReloadData()
 	CleanData()
@@ -109,10 +115,34 @@ func CleanData() {
 //
 // Should allow us to hot-reload the queue file - among other
 // things.
-func ReloadLoop() {
+func ReloadLoop(upchan chan int8) {
+	ticker := time.NewTicker(QueueReloadInterval)
+	count := 0
+	defer ticker.Stop()
+
+loop:
 	for {
-		ReloadData()
-		time.Sleep(QueueReloadInterval)
+
+		select {
+		case <-ticker.C:
+			ReloadData()
+			if count == 3 {
+				Q.Save()
+				count = 0
+				return
+			}
+			count++
+		case i, ok := <-upchan:
+			if !ok {
+				break loop
+			}
+
+			ReloadData()
+			if i == QueueSave {
+				Q.Save()
+				return
+			}
+		}
 	}
 }
 

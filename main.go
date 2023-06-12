@@ -31,6 +31,7 @@ var (
 	keystroke = make(chan rune)
 	newMen    = make(chan ui.Menu)
 	exit      = make(chan struct{})
+	reload    = make(chan int8)
 )
 
 func banner() {
@@ -112,7 +113,7 @@ func main() {
 		return
 	}
 	defer data.SaveData()
-	go data.ReloadLoop()
+	go data.ReloadLoop(reload)
 
 	fmt.Print("Initialising sound system...")
 	sound.Plr, err = sound.NewPlayer(events)
@@ -134,7 +135,7 @@ func main() {
 	initColors()
 	defer goncurses.End()
 
-	ui.InitUI(scr, ui.LibraryMenu, events, keystroke, newMen)
+	ui.InitUI(scr, ui.LibraryMenu, events, keystroke, newMen, reload)
 	go ui.RenderLoop()
 
 	// Welcome message

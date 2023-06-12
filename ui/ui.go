@@ -29,7 +29,7 @@ import (
 
 	ev "github.com/ejv2/podbit/event"
 
-	"github.com/vit1251/go-ncursesw"
+	goncurses "github.com/vit1251/go-ncursesw"
 	"golang.org/x/term"
 )
 
@@ -52,6 +52,7 @@ var (
 
 	menuChan  chan Menu
 	keystroke chan rune
+	reload    chan int8
 )
 
 // Menu singletons.
@@ -71,11 +72,12 @@ func watchResize(sig chan os.Signal, scr *goncurses.Window) {
 }
 
 // InitUI initialises the UI subsystem.
-func InitUI(scr *goncurses.Window, initialMenu Menu, hndl *ev.Handler, k chan rune, m chan Menu) {
+func InitUI(scr *goncurses.Window, initialMenu Menu, hndl *ev.Handler, k chan rune, m chan Menu, r chan int8) {
 	keystroke = k
 	menuChan = m
 	root = scr
 	currentMenu = initialMenu
+	reload = r
 
 	eventsHndl = *hndl
 	events = hndl.Register()

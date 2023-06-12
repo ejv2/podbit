@@ -70,8 +70,15 @@ func InputLoop(exit chan struct{}) {
 			case '4':
 				ActivateMenu(LibraryMenu)
 			case 'r':
-				data.Q.Reload()
-				go StatusMessage("Queue file reloaded")
+				go func() {
+					reload <- data.QueueReload
+					StatusMessage("Queue file reloaded")
+				}()
+			case 'R':
+				go func() {
+					reload <- data.QueueSave
+					StatusMessage("Queue file saved")
+				}()
 			case 'p':
 				sound.Plr.Toggle()
 			case 's':

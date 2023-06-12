@@ -129,7 +129,7 @@ loop:
 			if count == 3 {
 				Q.Save()
 				count = 0
-				return
+				continue
 			}
 			count++
 		case i, ok := <-upchan:

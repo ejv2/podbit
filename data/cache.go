@@ -163,11 +163,15 @@ func (c *Cache) Download(item *QueueItem) (id int, err error) {
 
 	if err != nil {
 		dl = Download{
+			mut:       new(sync.RWMutex),
+			Path:      item.Path,
+			File:      f,
+			Elem:      item,
 			Started:   time.Now(),
 			Completed: true,
 			Success:   false,
-			Elem:      item,
 			Error:     "IO Error",
+			Stop: nil,
 		}
 
 		c.downloadsMutex.Lock()

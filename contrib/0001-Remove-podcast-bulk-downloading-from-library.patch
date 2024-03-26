@@ -1,0 +1,81 @@
+From 720e7f6aba895992f751aee6164af5449276fadc Mon Sep 17 00:00:00 2001
+From: Ethan Marshall <ethan@ethanjmarshall.co.uk>
+Date: Fri, 21 Jul 2023 15:31:27 +0100
+Subject: [PATCH] Remove podcast bulk downloading from library
+
+I find this feature annoying and not particularly useful, so I provide
+this patch in case anybody else uses podbit in the same way I do and
+gets annoyed when they waste multiple GB of data on a podcast they will
+never re-listen to.
+---
+ ui/library.go | 47 ++++++++++++-----------------------------------
+ 1 file changed, 12 insertions(+), 35 deletions(-)
+
+diff --git a/ui/library.go b/ui/library.go
+index a59a95f..45b4f94 100644
+--- a/ui/library.go
++++ b/ui/library.go
+@@ -144,48 +144,25 @@ func (l *Library) StartDownload() {
+ 		return
+ 	}
+ 
+-	defer func() {
+-		// Move cursor down
+-		l.men[l.menSel].MoveSelection(1)
+-	}()
+-
+-	targets := l.men[1].Items
+-	if l.menSel == 1 {
+-		_, target := l.men[1].GetSelection()
+-		item := data.Q.GetEpisodeByURL(target)
+-
+-		if item == nil {
+-			return
+-		}
+-
+-		if y, _ := data.Downloads.IsDownloading(item.Path); y {
+-			go StatusMessage("Episode already downloading")
+-			return
+-		}
+-
+-		data.Downloads.Download(item)
+-		go StatusMessage(fmt.Sprintf("Download of %s started...", item.URL))
+-
++	if l.menSel != 1 {
+ 		return
+ 	}
+ 
+-	for _, elem := range targets {
+-		if data.IsURL(elem) {
+-			item := data.Q.GetEpisodeByURL(elem)
+-			if item == nil {
+-				continue
+-			}
++	_, target := l.men[1].GetSelection()
++	item := data.Q.GetEpisodeByURL(target)
+ 
+-			if y, _ := data.Downloads.IsDownloading(item.Path); y {
+-				go StatusMessage("Episode already downloading")
+-				return
+-			}
++	if item == nil {
++		return
++	}
+ 
+-			go data.Downloads.Download(item)
+-		}
++	if y, _ := data.Downloads.IsDownloading(item.Path); y {
++		go StatusMessage("Episode already downloading")
++		return
+ 	}
+ 
+-	go StatusMessage("Download of multiple episodes started...")
++	data.Downloads.Download(item)
++	go StatusMessage(fmt.Sprintf("Download of %s started...", item.URL))
++	l.men[l.menSel].MoveSelection(1)
+ }
+ 
+ // StartPlaying begins playing the currently focused element.
+-- 
+2.41.0
+

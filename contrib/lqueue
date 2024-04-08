@@ -1,0 +1,21 @@
+#!/bin/sh
+# lqueue - enqueue a YTDL link to the podbit queue file
+# Copyright (C) 2024 - Ethan Marshall
+#
+# Usage: lqueue <url>
+#
+# The base path defaults to ~/Downloads/Podcasts, but can be overriden
+# with the environment variable $PODBIT_DOWNLOAD_PATH.
+#
+# The URL is enqueued with a leading '+' (plus) sign, which instructs
+# podbit to download the URL using the best available YTDL tool (ytdl,
+# yt-dlp, etc.). If you do not need this, you can just append the file
+# using the standard newsboat enqueue command.
+#
+# You can create a bind to enqueue YouTube links from newsboat with this
+# script. For instance, the below enqueues using lquque when ",q" is pressed:
+# 	macro q set browser "lqueue %u" ; open-in-browser ; set browser "<BROWSER> %u"
+# Replace <BROWSER> with the name of your browser (firefox, chromium etc.)
+
+DLPATH=${PODBIT_DOWNLOAD_PATH:-$HOME/Downloads/Podcasts}
+echo "+$1 \"$DLPATH/$(basename $1)\"" >> $XDG_DATA_HOME/newsboat/queue

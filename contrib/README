@@ -1,0 +1,23 @@
+contrib - community and user contributed stuff
+----------------------------------------------
+
+The contents of this directory are optional extras which can be used alongside
+podbit. These are intended for use by the end user and are not used as part of
+the main program.
+
+Patches in this directory are intended to be applied by the end user to modify
+the behavior of the program or to add extra ones. They may be applied using the
+standard UNIX patch command:
+
+	patch -p1 <contrib/<PATCH NAME HERE>
+
+or using `git am`:
+
+	git am patches/<PATCH NAME HERE>
+
+In the latter case, a new commit is automatically added into your working tree
+which may make forks easier to maintain. Please remember to revert these when
+contributing!
+
+Scripts in this directory are useful macros and automation scripts which can
+make using podbit alongside newsboat a little easier.

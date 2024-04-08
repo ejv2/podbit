@@ -171,7 +171,7 @@ func (c *Cache) Download(item *QueueItem) (id int, err error) {
 			Completed: true,
 			Success:   false,
 			Error:     "IO Error",
-			Stop: nil,
+			Stop:      nil,
 		}
 
 		c.downloadsMutex.Lock()

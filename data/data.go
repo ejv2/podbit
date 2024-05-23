@@ -87,6 +87,8 @@ func ReloadData() {
 // (defaults to three days). Removed episodes are set to "pending" status (to
 // be downloaded) and have their cache file removed.
 func CleanData() {
+	fmt.Printf("Cache cleanup...")
+
 	now := time.Now().Unix()
 	count := 0
 
@@ -107,7 +109,7 @@ func CleanData() {
 		return true
 	})
 
-	fmt.Printf("Cache cleanup...done (removed %d items)\n", count)
+	fmt.Printf("done (removed %d items)\n", count)
 }
 
 // ReloadLoop is an infinite loop to continually reload the

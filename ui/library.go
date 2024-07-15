@@ -59,7 +59,12 @@ func (l *Library) renderEpisodes(x, y int) {
 
 	data.Q.RevRange(func(i int, elem *data.QueueItem) bool {
 		_, sel := l.men[0].GetSelection()
-		if data.DB.GetFriendlyName(elem.URL) == sel {
+		pc := data.DB.GetFriendlyName(elem.URL)
+
+		// Render this item if:
+		//   - It is a member of the current podcast
+		//   - It is uncategorised and we are showing those
+		if pc  == sel || (sel == data.UnknownPodcastName && pc == elem.URL) {
 			var text string
 			entry, ok := data.Downloads.Query(elem.Path)
 			title := entry.Title

@@ -32,8 +32,12 @@ var PossibleDirs = []string{
 	".newsboat",
 }
 
-// QueueFilename is the name of the file for the queue.
-const QueueFilename = "queue"
+const (
+	// QueueFilename is the name of the file for the queue.
+	QueueFilename = "queue"
+	// UnknownPodcastName is the name used for episodes from an unknown podcast.
+	UnknownPodcastName = "Unrecognised"
+)
 
 // Possible states of download queue.
 const (
@@ -293,8 +297,14 @@ func (q *Queue) GetPodcasts() (podcasts []string) {
 	defer q.mutex.RUnlock()
 
 	seen := make(map[string]bool)
+	uncat := false
+
 	for i := range q.Items {
 		name := DB.GetFriendlyName(q.Items[i].URL)
+		if name == q.Items[i].URL {
+			uncat = true
+			continue
+		}
 
 		if !seen[name] {
 			podcasts = append(podcasts, name)
@@ -302,6 +312,9 @@ func (q *Queue) GetPodcasts() (podcasts []string) {
 		}
 	}
 
+	if uncat {
+		podcasts = append(podcasts, UnknownPodcastName)
+	}
 	return
 }
 

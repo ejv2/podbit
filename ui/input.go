@@ -71,12 +71,12 @@ func InputLoop(exit chan struct{}) {
 				ActivateMenu(LibraryMenu)
 			case 'r':
 				go func() {
-					reload <- data.QueueReload
+					reload <- data.DataReload
 					StatusMessage("Queue file reloaded")
 				}()
 			case 'R':
 				go func() {
-					reload <- data.QueueSave
+					reload <- data.DataSave
 					StatusMessage("Queue file saved")
 				}()
 			case 'p':

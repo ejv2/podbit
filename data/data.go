@@ -25,8 +25,8 @@ const (
 
 // Queue reload operations.
 const (
-	QueueReload = iota
-	QueueSave
+	DataReload = iota
+	DataSave
 )
 
 // Dependent data structures.
@@ -159,8 +159,9 @@ loop:
 			}
 
 			ReloadData()
-			if i == QueueSave {
+			if i == DataSave {
 				Q.Save()
+				Stamps.Save()
 			}
 		}
 	}

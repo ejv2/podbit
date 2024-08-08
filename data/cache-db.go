@@ -163,6 +163,7 @@ func (c *CacheDB) Prune(path string) error {
 
 	// Mark as pruned with negative timestamp
 	c.db[path] = -1
+	return nil
 }
 
 // RawStat returns the currently recorded raw timestamp for an entry. This can

@@ -243,7 +243,12 @@ func (q *Queue) Save() {
 			prefix = "+"
 		}
 
-		fmt.Fprintf(file, "%s%s \"%s\" %s\n", prefix, elem.URL, elem.Path, StateStrings[elem.State])
+		ss := StateStrings[elem.State]
+		if ss != "" {
+			ss = " " + ss
+		}
+
+		fmt.Fprintf(file, "%s%s \"%s\"%s\n", prefix, elem.URL, elem.Path, ss)
 	}
 }
 

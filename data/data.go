@@ -102,14 +102,24 @@ func CleanData() {
 	count := 0
 
 	Q.Range(func(i int, item *QueueItem) bool {
-		if item.Date == -1 || (item.State != StatePlayed && item.State != StateFinished) {
+		if item.State != StatePlayed && item.State != StateFinished {
 			return true
 		}
 
-		diff := now - item.Date
-		if diff >= EpisodeCacheTime {
-			item.Date = -1
+		date, err := Stamps.RawStat(item.Path)
+		if err != nil {
+			tmp := time.Now().Unix()
+			date = &tmp
+		}
+		diff := now - *date
+
+		// If past expiry date OR never present in cache.db in the first place, prune it
+		if diff >= EpisodeCacheTime || err != nil {
 			item.State = StatePending
+			if err == nil {
+				// Ignoring error here as we check the necessary condition above
+				Stamps.Prune(item.Path)
+			}
 
 			os.Remove(item.Path)
 			count++

@@ -100,7 +100,7 @@ func endWait(u chan int) {
 	Plr.NowPodcast = ""
 
 	// Set state to finished
-	data.Q.Range(func(i int, item *data.QueueItem) bool {
+	data.Q.Range(func(_ int, item *data.QueueItem) bool {
 		if item.Path == Plr.Now.Path {
 			item.State = data.StateFinished
 			item.Date = time.Now().Unix()
@@ -169,9 +169,18 @@ func (p *Player) start() {
 	p.proc = exec.Command(PlayerName, PlayerArgs...)
 	p.proc.Start()
 
+	go p.procWatcher()
+
 	for err := p.connect(); err != nil; {
 		err = p.connect()
 	}
+}
+
+func (p *Player) procWatcher() {
+	p.proc.Wait()
+	// Should mpv exit unexpectedly, we need to close the program
+	// gracefully.
+	p.hndl.Post(ev.RequestShutdown)
 }
 
 func (p *Player) load(filename string) {
@@ -214,8 +223,6 @@ func (p *Player) play(q *data.QueueItem) {
 // Stop ends playback of the current audio track, but does not
 // destroy the sound mainloop. This will usually result in the
 // next podcast playing.
-//
-// TODO: Add some way of stopping the sound mainloop.
 func (p *Player) Stop() {
 	p.act <- actStop
 }
@@ -416,7 +423,7 @@ func Mainloop() {
 				wait = endWait
 
 				// Set status to played
-				data.Q.Range(func(i int, item *data.QueueItem) bool {
+				data.Q.Range(func(_ int, item *data.QueueItem) bool {
 					if item.Path == elem.Path {
 						item.State = data.StatePlayed
 						item.Date = time.Now().Unix()

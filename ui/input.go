@@ -114,7 +114,7 @@ func InputLoop(exit chan struct{}) {
 				PassKeystroke(c)
 			}
 
-			events <- ev.Keystroke
+			eventsHndl.Post(ev.Keystroke)
 		case <-exit:
 			return
 		}

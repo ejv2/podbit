@@ -161,6 +161,11 @@ func RenderLoop() {
 			if !ok {
 				return
 			}
+			if event == ev.RequestShutdown {
+				close(exitChan)
+				return
+			}
+
 			if event == ev.Resize {
 				UpdateDimensions(root)
 				renderMenu()

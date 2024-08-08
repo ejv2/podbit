@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strconv"
 	"strings"
 	"sync"
 )
@@ -62,7 +61,6 @@ type QueueItem struct {
 	URL     string
 	Path    string
 	State   int
-	Date    int64
 	Youtube bool
 }
 
@@ -83,16 +81,12 @@ func (q *Queue) parseField(fields []string, num int) (item QueueItem) {
 		item.URL = item.URL[1:]
 	}
 
-	f, err := os.Open(item.Path)
-
-	// NOTE: Commontly expected error here, so no handling required
-	if err != nil {
-		defer f.Close()
-	}
+	// NOTE: Not closing file or handling error here as both are handled
+	//       implicitly below
+	_, err := os.Open(item.Path)
 
 	if num == 2 || (err != nil && os.IsNotExist(err)) {
 		item.State = StatePending
-		item.Date = -1
 	} else {
 		switch fields[2] {
 		case "downloaded":
@@ -105,14 +99,16 @@ func (q *Queue) parseField(fields []string, num int) (item QueueItem) {
 			item.State = StateReady
 		}
 
-		if num > 3 {
-			item.Date, err = strconv.ParseInt(fields[3], 10, 64)
-			if err != nil {
-				item.Date = -1
-			}
-		} else {
-			item.Date = -1
-		}
+		// TODO: Add queue file migration here
+		// Need to migrate entries to cache.db
+		// if num > 3 {
+		// 	item.Date, err = strconv.ParseInt(fields[3], 10, 64)
+		// 	if err != nil {
+		// 		item.Date = -1
+		// 	}
+		// } else {
+		// 	item.Date = -1
+		// }
 	}
 
 	return
@@ -241,18 +237,14 @@ func (q *Queue) Save() {
 	defer file.Close()
 
 	for _, elem := range q.Items {
-		date := ""
 		prefix := ""
-		if elem.Date != -1 {
-			date = fmt.Sprint(elem.Date)
-		}
+
 		if elem.Youtube {
 			prefix = "+"
 		}
 
-		fmt.Fprintf(file, "%s%s \"%s\" %s %s\n", prefix, elem.URL, elem.Path, StateStrings[elem.State], date)
+		fmt.Fprintf(file, "%s%s \"%s\" %s\n", prefix, elem.URL, elem.Path, StateStrings[elem.State])
 	}
-
 }
 
 // Range loops through the queue array in a thread-safe fashion

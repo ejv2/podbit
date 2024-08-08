@@ -145,6 +145,26 @@ func (c *CacheDB) Touch(path string) error {
 	return nil
 }
 
+// Prune marks an entry as having been pruned, which excludes it from being
+// saved at the next cache.db save.
+func (c *CacheDB) Prune(path string) error {
+	c.mut.Lock()
+	defer c.mut.Unlock()
+
+	s, ok := c.db[path]
+	if !ok {
+		return ErrDBEnoent
+	}
+
+	// Refuse to prune more than once - obviously erroneous
+	if s < 0 {
+		return ErrDBPruned
+	}
+
+	// Mark as pruned with negative timestamp
+	c.db[path] = -1
+}
+
 // RawStat returns the currently recorded raw timestamp for an entry. This can
 // fail if an entry does not exist, or if the entry was marked for pruning.
 func (c *CacheDB) RawStat(path string) (*int64, error) {

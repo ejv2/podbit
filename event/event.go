@@ -11,4 +11,5 @@ const (
 	TrayMessage
 	PlayerChanged
 	DownloadChanged
+	RequestShutdown
 )

@@ -97,6 +97,11 @@ func (c *CacheDB) Open() error {
 		}
 
 		elem := scanner.Text()
+		// Ignore comments
+		if strings.HasPrefix(elem, "#") {
+			continue
+		}
+
 		fields := strings.Fields(elem)
 
 		if len(fields) < 2 {

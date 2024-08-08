@@ -80,7 +80,6 @@ func SaveData() {
 
 	Q.Save()
 	Stamps.Save()
-	DB.Save()
 }
 
 // ReloadData performs a hot-reload of any data which can/needs

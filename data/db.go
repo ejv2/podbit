@@ -62,10 +62,17 @@ func initDatabase(db *Database) error {
 			}
 
 			elem := scanner.Text()
+			if strings.HasPrefix(elem, "#") {
+				continue
+			}
+
 			fields := strings.Split(elem, " ")
 			num := len(fields)
 
 			if num < 2 {
+				if num == 0 {
+					continue
+				}
 				return fmt.Errorf(ErrorDatabaseSyntax, i)
 			}
 

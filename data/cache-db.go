@@ -20,7 +20,9 @@ const (
 
 var (
 	ErrDBIO     = errors.New("Error: IO error while reading from cache.db")
+	ErrDBIOW    = errors.New("Error: IO error while writing to cache.db")
 	ErrDBSyntax = errors.New("Error: Syntax error in cache.db")
+	ErrDBExists = errors.New("entry alredy exists")
 	ErrDBEnoent = errors.New("no such entry in cache.db")
 	ErrDBPruned = errors.New("entry has been marked for pruning")
 )
@@ -105,6 +107,9 @@ func (c *CacheDB) Open() error {
 		fields := strings.Fields(elem)
 
 		if len(fields) < 2 {
+			if len(fields) == 0 {
+				continue
+			}
 			return CacheSyntaxError{i, "insufficient fields (expect 2)"}
 		}
 
@@ -128,6 +133,36 @@ func (c *CacheDB) Open() error {
 	return nil
 }
 
+// Save truncates the cache.db to zero bytes before zerializing the in-memory
+// database to the file in the accepted format.
+func (c *CacheDB) Save() error {
+	data := os.Getenv("XDG_DATA_HOME")
+	path := filepath.Join(data, DatabaseDirname, CacheDBFilename)
+
+	f, err := os.Create(path)
+	if err != nil {
+		return ErrDBIOW
+	}
+	defer f.Close()
+
+	f.WriteString(CacheDBComment + "\n\n")
+
+	c.mut.RLock()
+	defer c.mut.RUnlock()
+
+	for url, ts := range c.db {
+		// Pruned entries
+		if ts < 0 {
+			continue
+		}
+
+		sts := strconv.FormatInt(ts, 10)
+		f.WriteString(url + " " + sts)
+	}
+
+	return nil
+}
+
 // Touch updates the listen time for an episode to the current timestamp. This
 // method refuses to update the timestamp for any file which does not exist, so
 // this should be checked first.
@@ -142,6 +177,25 @@ func (c *CacheDB) Touch(path string) error {
 	defer c.mut.Unlock()
 
 	c.db[path] = time.Now().Unix()
+	return nil
+}
+
+// Insert inserts a new path with the given timestamp into the map. Panics if
+// ts < 0.
+func (c *CacheDB) Insert(path string, ts int64) error {
+	if ts < 0 {
+		panic("invalid timestamp (<0): cannot insert pruned item")
+	}
+
+	c.mut.Lock()
+	defer c.mut.Unlock()
+
+	_, ok := c.db[path]
+	if ok {
+		return ErrDBExists
+	}
+
+	c.db[path] = ts
 	return nil
 }
 

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"sync"
 )
@@ -99,16 +100,15 @@ func (q *Queue) parseField(fields []string, num int) (item QueueItem) {
 			item.State = StateReady
 		}
 
-		// TODO: Add queue file migration here
-		// Need to migrate entries to cache.db
-		// if num > 3 {
-		// 	item.Date, err = strconv.ParseInt(fields[3], 10, 64)
-		// 	if err != nil {
-		// 		item.Date = -1
-		// 	}
-		// } else {
-		// 	item.Date = -1
-		// }
+		if num > 3 {
+			date, err := strconv.ParseInt(fields[3], 10, 64)
+			if err != nil {
+				return
+			}
+
+			// Ignore error here as errors will occur during reloads for duplicate entries.
+			Stamps.Insert(item.Path, date)
+		}
 	}
 
 	return

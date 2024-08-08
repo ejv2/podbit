@@ -40,16 +40,16 @@ var (
 // InitData initialises all dependent data structures.
 // The only returned errors *will* be fatal to the program.
 func InitData(hndl ev.Handler) error {
-	fmt.Print("Reading queue...")
-	err := Q.Open()
+	fmt.Print("Reading cache.db...")
+	Stamps = NewCacheDB()
+	err := Stamps.Open()
 	if err != nil {
 		return err
 	}
 	fmt.Println("done")
 
-	fmt.Print("Reading cache.db...")
-	Stamps = NewCacheDB()
-	err = Stamps.Open()
+	fmt.Print("Reading queue...")
+	err = Q.Open()
 	if err != nil {
 		return err
 	}
@@ -79,6 +79,7 @@ func SaveData() {
 	CleanData()
 
 	Q.Save()
+	Stamps.Save()
 	DB.Save()
 }
 
@@ -101,7 +102,7 @@ func CleanData() {
 	now := time.Now().Unix()
 	count := 0
 
-	Q.Range(func(i int, item *QueueItem) bool {
+	Q.Range(func(_ int, item *QueueItem) bool {
 		if item.State != StatePlayed && item.State != StateFinished {
 			return true
 		}

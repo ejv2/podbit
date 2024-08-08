@@ -103,7 +103,9 @@ func endWait(u chan int) {
 	data.Q.Range(func(_ int, item *data.QueueItem) bool {
 		if item.Path == Plr.Now.Path {
 			item.State = data.StateFinished
-			item.Date = time.Now().Unix()
+			// We just played this fime so I reckon we can ignore
+			// file not found errors.
+			data.Stamps.Touch(item.Path)
 			return false
 		}
 
@@ -426,7 +428,7 @@ func Mainloop() {
 				data.Q.Range(func(_ int, item *data.QueueItem) bool {
 					if item.Path == elem.Path {
 						item.State = data.StatePlayed
-						item.Date = time.Now().Unix()
+						data.Stamps.Touch(item.Path)
 						return false
 					}
 

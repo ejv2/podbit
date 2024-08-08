@@ -32,6 +32,7 @@ const (
 // Dependent data structures.
 var (
 	Q         Queue
+	Stamps    *CacheDB
 	DB        Database
 	Downloads Cache
 )
@@ -41,6 +42,14 @@ var (
 func InitData(hndl ev.Handler) error {
 	fmt.Print("Reading queue...")
 	err := Q.Open()
+	if err != nil {
+		return err
+	}
+	fmt.Println("done")
+
+	fmt.Print("Reading cache.db...")
+	Stamps = NewCacheDB()
+	err = Stamps.Open()
 	if err != nil {
 		return err
 	}

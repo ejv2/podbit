@@ -99,17 +99,14 @@ func (c *CacheDB) Open() error {
 		}
 
 		elem := scanner.Text()
-		// Ignore comments
-		if strings.HasPrefix(elem, "#") {
+		// Ignore comments and blank lines
+		if len(elem) == 0 || strings.HasPrefix(elem, "#") {
 			continue
 		}
 
 		fields := strings.Fields(elem)
 
 		if len(fields) < 2 {
-			if len(fields) == 0 {
-				continue
-			}
 			return CacheSyntaxError{i, "insufficient fields (expect 2)"}
 		}
 

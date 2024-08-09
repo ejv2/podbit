@@ -154,7 +154,7 @@ func (c *CacheDB) Save() error {
 		}
 
 		sts := strconv.FormatInt(ts, 10)
-		f.WriteString(url + " " + sts)
+		f.WriteString(url + " " + sts + "\n")
 	}
 
 	return nil

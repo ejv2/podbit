@@ -48,15 +48,15 @@ func InitData(hndl ev.Handler) error {
 	}
 	fmt.Println("done")
 
-	fmt.Print("Reading queue...")
-	err = Q.Open()
+	fmt.Print("Reading database...")
+	err = DB.Open()
 	if err != nil {
 		return err
 	}
 	fmt.Println("done")
 
-	fmt.Print("Reading database...")
-	err = DB.Open()
+	fmt.Print("Reading queue...")
+	err = Q.Open()
 	if err != nil {
 		return err
 	}

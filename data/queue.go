@@ -70,8 +70,12 @@ type Queue struct {
 	path string
 	file *os.File
 
+	// mutex protects all of the below
 	mutex sync.RWMutex
 	Items []QueueItem
+	// both of below are cached references into the items array
+	Podmap  map[string]*QueueItem
+	Linkmap map[string]*QueueItem
 }
 
 func (q *Queue) parseField(fields []string, num int) (item QueueItem) {
@@ -117,6 +121,10 @@ func (q *Queue) parseField(fields []string, num int) (item QueueItem) {
 // Open opens and parses the newsboat queue file.
 // Returned errors are usually fatal to the application.
 func (q *Queue) Open() error {
+	// Init stuff inside queue that we need here
+	q.Linkmap = make(map[string]*QueueItem)
+	q.Podmap = make(map[string]*QueueItem)
+
 	// First try the most likely places
 	var err error
 	found := false
@@ -168,7 +176,17 @@ func (q *Queue) Open() error {
 			return fmt.Errorf(ErrorQueueSyntax, i)
 		}
 
-		q.Items = append(q.Items, q.parseField(fields, num))
+		item := q.parseField(fields, num)
+		pod := DB.GetOwner(item.URL)
+
+		if _, ok := q.Linkmap[item.URL]; ok {
+			fmt.Printf("WARNING: Duplicate entry in queue (line %d, url: %s) - dropping subsequent entries\n", i, item.URL)
+			continue
+		}
+
+		q.Items = append(q.Items, item)
+		q.Linkmap[item.URL] = &q.Items[len(q.Items)-1]
+		q.Podmap[pod.FriendlyName] = &q.Items[len(q.Items)-1]
 		i++
 	}
 
@@ -194,7 +212,7 @@ func (q *Queue) Reload() {
 
 	scanner := bufio.NewScanner(q.file)
 
-scanloop:
+	i := 1
 	for scanner.Scan() {
 		if scanner.Err() != nil {
 			fmt.Println("WARNING: Failed to reload queue")
@@ -211,14 +229,17 @@ scanloop:
 			return
 		}
 
-		parsed := q.parseField(fields, num)
-		for _, elem := range q.Items {
-			if elem.URL == parsed.URL {
-				continue scanloop
-			}
+		item := q.parseField(fields, num)
+		pod := DB.GetOwner(item.URL)
+
+		if _, ok := q.Linkmap[item.URL]; ok {
+			continue
 		}
 
-		q.Items = append(q.Items, parsed)
+		q.Items = append(q.Items, item)
+		q.Linkmap[item.URL] = &q.Items[len(q.Items)-1]
+		q.Podmap[pod.FriendlyName] = &q.Items[len(q.Items)-1]
+		i++
 	}
 }
 
@@ -318,7 +339,7 @@ func (q *Queue) GetPodcasts() (podcasts []string) {
 // GetEpisodeByURL searches the queue file for an entry
 // with the requested URL.
 func (q *Queue) GetEpisodeByURL(url string) (found *QueueItem) {
-	q.Range(func(i int, elem *QueueItem) bool {
+	q.Range(func(_ int, elem *QueueItem) bool {
 		if elem.URL == url {
 			found = elem
 			return false

@@ -43,8 +43,9 @@ func (p *Podcast) Owns(url string) bool {
 
 // Database aggregates all podcast data from the database.
 type Database struct {
-	path     string
-	podcasts []Podcast
+	path           string
+	podcasts       []Podcast
+	defaultPodcast Podcast
 }
 
 func initDatabase(db *Database) error {
@@ -122,6 +123,14 @@ func (db *Database) Open() error {
 		return err
 	}
 
+	// Add a default podcast, when none else are present
+	db.defaultPodcast = Podcast{
+		FriendlyName: UnknownPodcastName,
+		RegexPattern: ".*",
+		pat:          regexp.MustCompile(".*"),
+	}
+	db.podcasts = append(db.podcasts, db.defaultPodcast)
+
 	return nil
 }
 
@@ -145,8 +154,7 @@ func (db *Database) Save() {
 // specified URL. If one cannot be found, the url is returned.
 func (db *Database) GetFriendlyName(url string) string {
 	for _, elem := range db.podcasts {
-		matched, _ := regexp.MatchString(elem.RegexPattern, url)
-		if matched {
+		if elem.Owns(url) {
 			return elem.FriendlyName
 		}
 	}
@@ -164,4 +172,16 @@ func (db *Database) GetRegex(friendly string) string {
 	}
 
 	return ""
+}
+
+// GetOwner returns the owning podcast, if known. If the owning podcast is
+// known, the default podcast is returned.
+func (db *Database) GetOwner(url string) Podcast {
+	for _, elem := range db.podcasts {
+		if elem.Owns(url) {
+			return elem
+		}
+	}
+
+	return db.defaultPodcast
 }

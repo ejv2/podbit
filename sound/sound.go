@@ -15,6 +15,7 @@ package sound
 
 import (
 	"fmt"
+	"math"
 	"os/exec"
 	"time"
 
@@ -189,7 +190,7 @@ func (p *Player) procWatcher() {
 	p.hndl.Post(ev.RequestShutdown)
 }
 
-func (p *Player) load(filename string) {
+func (p *Player) load(filename string, starttime int) {
 	if p.proc == nil || p.ctrl == nil {
 		p.start()
 	}
@@ -199,10 +200,28 @@ func (p *Player) load(filename string) {
 	// Wait for track to load
 	for loaded := ""; loaded != "\""+filename+"\""; loaded, _ = p.ctrl.Path() {
 	}
+	for {
+		pos, _ := p.ctrl.PercentPosition()
+		if pos != 0 {
+			break
+		}
+	}
+
+	p.ctrl.Seek(starttime, mpv.SeekModeAbsolute)
 }
 
 func (p *Player) play(q *data.QueueItem) {
-	p.load(q.Path)
+	_, s, err := data.Stamps.Stat(q.Path)
+	if err != nil {
+		tmp := uint64(0)
+		s = &tmp
+	}
+	if *s > uint64(math.MaxInt) {
+		tmp := uint64(math.MaxInt)
+		s = &tmp
+	}
+
+	p.load(q.Path, int(*s))
 
 	if q.State != data.StatePending {
 		Plr.Now = q

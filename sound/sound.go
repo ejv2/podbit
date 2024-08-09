@@ -494,10 +494,9 @@ func Mainloop() {
 				switch action {
 				case actTerm:
 					if Plr.proc != nil {
+						Plr.stop()
 						Plr.proc.Process.Kill()
 					}
-
-					Plr.playing = false
 
 					Plr.dat <- 1
 					return

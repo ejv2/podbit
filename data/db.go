@@ -157,8 +157,9 @@ func (db *Database) GetPodcasts() []Podcast {
 	list := make([]Podcast, 0, len(db.podcasts))
 	seen := make(map[string]bool, len(db.podcasts))
 	for _, pod := range db.podcasts {
-		if seen, ok := seen[pod.FriendlyName]; !(ok || seen) {
+		if _, ok := seen[pod.FriendlyName]; !ok {
 			list = append(list, pod)
+			seen[pod.FriendlyName] = true
 		}
 	}
 

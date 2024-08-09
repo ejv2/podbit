@@ -305,6 +305,26 @@ func (q *Queue) RevRange(callback RangeFunc) {
 	}
 }
 
+// RLock calls RLock on the internal RWMutex.
+func (q *Queue) RLock() {
+	q.mutex.RLock()
+}
+
+// RUnlock calls RLock on the internal RWMutex. This should ALWAYS be deferred.
+func (q *Queue) RUnlock() {
+	q.mutex.RUnlock()
+}
+
+// Lock calls Lock on the internal RWMutex.
+func (q *Queue) Lock() {
+	q.mutex.Lock()
+}
+
+// Unlock calls Lock on the internal RWMutex. This should ALWAYS be deferred.
+func (q *Queue) Unlock() {
+	q.mutex.Unlock()
+}
+
 // GetPodcasts returns each individual podcast detected through the queue file
 // and database.
 //

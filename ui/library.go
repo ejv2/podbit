@@ -8,7 +8,7 @@ import (
 	"github.com/ejv2/podbit/sound"
 	"github.com/ejv2/podbit/ui/components"
 
-	"github.com/vit1251/go-ncursesw"
+	goncurses "github.com/vit1251/go-ncursesw"
 )
 
 // Library represents the list menu type and state.
@@ -32,8 +32,14 @@ func (l *Library) renderPodcasts(x, y int) {
 	l.men[0].W, l.men[0].H = (w/2)-1, (h - 5)
 	l.men[0].Win = *root
 
-	l.men[0].Items = l.men[0].Items[:0]
-	l.men[0].Items = data.Q.GetPodcasts()
+	pods := data.DB.GetPodcastNames()
+	fpods := make([]string, 0, len(pods))
+	for _, pod := range pods {
+		if len(data.Q.GetPodcastEpisodes(pod)) != 0 {
+			fpods = append(fpods, pod)
+		}
+	}
+	l.men[0].Items = fpods
 
 	l.men[0].Selected = true
 
@@ -57,28 +63,25 @@ func (l *Library) renderEpisodes(x, y int) {
 
 	l.men[1].Items = l.men[1].Items[:0]
 
-	data.Q.RevRange(func(i int, elem *data.QueueItem) bool {
-		_, sel := l.men[0].GetSelection()
-		pc := data.DB.GetFriendlyName(elem.URL)
+	_, pod := l.men[0].GetSelection()
+	eps := data.Q.GetPodcastEpisodes(pod)
 
-		// Render this item if:
-		//   - It is a member of the current podcast
-		//   - It is uncategorised and we are showing those
-		if pc  == sel || (sel == data.UnknownPodcastName && pc == elem.URL) {
-			var text string
-			entry, ok := data.Downloads.Query(elem.Path)
-			title := entry.Title
-			if !ok || title == "" {
-				text = elem.URL
-			} else {
-				text = title
-			}
+	data.Q.RLock()
+	defer data.Q.RUnlock()
+	for i := len(eps) - 1; i >= 0; i-- {
+		ep := eps[i]
+		text := ""
 
-			l.men[1].Items = append(l.men[1].Items, text)
+		entry, ok := data.Downloads.Query(ep.Path)
+		title := entry.Title
+		if !ok || title == "" {
+			text = ep.URL
+		} else {
+			text = title
 		}
 
-		return true
-	})
+		l.men[1].Items = append(l.men[1].Items, text)
+	}
 
 	l.men[1].Selected = (l.menSel == 1)
 
@@ -163,6 +166,8 @@ func (l *Library) StartDownload() {
 			return
 		}
 
+		data.Q.RLock()
+		defer data.Q.RUnlock()
 		if y, _ := data.Downloads.IsDownloading(item.Path); y {
 			go StatusMessage("Episode already downloading")
 			return
@@ -181,10 +186,12 @@ func (l *Library) StartDownload() {
 				continue
 			}
 
+			data.Q.RLock()
 			if y, _ := data.Downloads.IsDownloading(item.Path); y {
 				go StatusMessage("Episode already downloading")
 				return
 			}
+			data.Q.RUnlock()
 
 			go data.Downloads.Download(item)
 		}

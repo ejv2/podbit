@@ -41,6 +41,18 @@ func (c CacheSyntaxError) Unwrap() error {
 	return ErrDBSyntax
 }
 
+// A CacheEntry is a single entry in the db map contained within a CacheDB. It
+// is made up of a resume timecode and a last played/finished timestamp.
+type CacheEntry struct {
+	// unix epoch time of an entry
+	// set to <0 to indicate pruned entry
+	finished int64
+	// number of seconds in to the media file which we should resume at
+	// if zero, start from the beginning (obviously!), but also is excluded
+	// from the cache.db file
+	resume uint64
+}
+
 // The CacheDB contains the timestamps which specify when media was last played
 // or finished. This is used to avoid the media downloads directory becoming
 // bigger and bigger as more and more podcasts are downloaded.
@@ -61,13 +73,13 @@ func (c CacheSyntaxError) Unwrap() error {
 type CacheDB struct {
 	mut *sync.RWMutex
 	// db maps episode paths to timestamps
-	db map[string]int64
+	db map[string]CacheEntry
 }
 
 func NewCacheDB() *CacheDB {
 	return &CacheDB{
 		new(sync.RWMutex),
-		make(map[string]int64),
+		make(map[string]CacheEntry),
 	}
 }
 
@@ -107,7 +119,7 @@ func (c *CacheDB) Open() error {
 		fields := strings.Fields(elem)
 
 		if len(fields) < 2 {
-			return CacheSyntaxError{i, "insufficient fields (expect 2)"}
+			return CacheSyntaxError{i, "insufficient fields (expect 2/3)"}
 		}
 
 		stamp, err := strconv.ParseInt(fields[1], 10, 64)
@@ -115,14 +127,24 @@ func (c *CacheDB) Open() error {
 			return CacheSyntaxError{i, "parsing timestamp: " + err.Error()}
 		}
 
+		resume := uint64(0)
+		if len(fields) == 3 {
+			r, err := strconv.ParseUint(fields[2], 10, 64)
+			if err != nil {
+				return CacheSyntaxError{i, "parsing resume timecode: " + err.Error()}
+			}
+
+			resume = r
+		}
+
 		// If we have duplicates somehow take the later stamp.
 		s, ok := c.db[fields[0]]
 		if ok {
-			if s >= stamp {
+			if s.finished >= stamp {
 				continue
 			}
 		}
-		c.db[fields[0]] = stamp
+		c.db[fields[0]] = CacheEntry{stamp, resume}
 
 		i++
 	}
@@ -149,11 +171,17 @@ func (c *CacheDB) Save() error {
 
 	for url, ts := range c.db {
 		// Pruned entries
-		if ts < 0 {
+		if ts.finished < 0 {
 			continue
 		}
 
-		sts := strconv.FormatInt(ts, 10)
+		sts := strconv.FormatInt(ts.finished, 10)
+		res := strconv.FormatUint(ts.resume, 10)
+
+		if ts.resume != 0 {
+			f.WriteString(url + " " + sts + " " + res + "\n")
+			continue
+		}
 		f.WriteString(url + " " + sts + "\n")
 	}
 
@@ -173,7 +201,25 @@ func (c *CacheDB) Touch(path string) error {
 	c.mut.Lock()
 	defer c.mut.Unlock()
 
-	c.db[path] = time.Now().Unix()
+	c.db[path] = CacheEntry{time.Now().Unix(), 0}
+	return nil
+}
+
+// Resume is like Touch, except it sets the resume timecode to the given value.
+// Normal touches implicitly reset the resume timecode back to zero, so ensure
+// that this is called after any touch calls, if they should be made.
+func (c *CacheDB) Resume(path string, rt uint64) error {
+	// Refuse to touch a non existent path
+	_, err := os.Stat(path)
+	if err != nil {
+		return err
+	}
+
+	c.mut.Lock()
+	defer c.mut.Unlock()
+
+	orig := c.db[path]
+	c.db[path] = CacheEntry{orig.finished, rt}
 	return nil
 }
 
@@ -192,7 +238,7 @@ func (c *CacheDB) Insert(path string, ts int64) error {
 		return ErrDBExists
 	}
 
-	c.db[path] = ts
+	c.db[path] = CacheEntry{ts, 0}
 	return nil
 }
 
@@ -208,39 +254,39 @@ func (c *CacheDB) Prune(path string) error {
 	}
 
 	// Refuse to prune more than once - obviously erroneous
-	if s < 0 {
+	if s.finished < 0 {
 		return ErrDBPruned
 	}
 
 	// Mark as pruned with negative timestamp
-	c.db[path] = -1
+	c.db[path] = CacheEntry{-1, 0}
 	return nil
 }
 
 // RawStat returns the currently recorded raw timestamp for an entry. This can
 // fail if an entry does not exist, or if the entry was marked for pruning.
-func (c *CacheDB) RawStat(path string) (*int64, error) {
+func (c *CacheDB) RawStat(path string) (*int64, *uint64, error) {
 	c.mut.RLock()
 	defer c.mut.RUnlock()
 
 	s, ok := c.db[path]
 	if !ok {
-		return nil, ErrDBEnoent
+		return nil, nil, ErrDBEnoent
 	}
 
-	if s < 0 {
-		return nil, ErrDBPruned
+	if s.finished < 0 {
+		return nil, nil, ErrDBPruned
 	}
 
-	return &s, nil
+	return &s.finished, &s.resume, nil
 }
 
 // Stat returns the currently recorded timestamp for an entry. This can fail if
 // an entry does not exist, or if the entry was marked for pruning.
-func (c *CacheDB) Stat(path string) (*time.Time, error) {
-	s, err := c.RawStat(path)
+func (c *CacheDB) Stat(path string) (*time.Time, *uint64, error) {
+	s, r, err := c.RawStat(path)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	if s == nil {
@@ -248,5 +294,5 @@ func (c *CacheDB) Stat(path string) (*time.Time, error) {
 	}
 
 	t := time.Unix(*s, 0)
-	return &t, nil
+	return &t, r, nil
 }

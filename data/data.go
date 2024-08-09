@@ -106,7 +106,7 @@ func CleanData() {
 			return true
 		}
 
-		date, err := Stamps.RawStat(item.Path)
+		date, _, err := Stamps.RawStat(item.Path)
 		if err != nil {
 			tmp := time.Now().Unix()
 			date = &tmp

@@ -75,8 +75,9 @@ type Player struct {
 	waiting  bool
 	download *data.QueueItem
 
-	exhausted bool
-	playing   bool
+	exhausted  bool
+	playing    bool
+	manualStop bool
 
 	Now        *data.QueueItem
 	NowPlaying string
@@ -102,16 +103,19 @@ func endWait(u chan int) {
 	// Set state to finished
 	data.Q.Range(func(_ int, item *data.QueueItem) bool {
 		if item.Path == Plr.Now.Path {
-			item.State = data.StateFinished
-			// We just played this fime so I reckon we can ignore
-			// file not found errors.
-			data.Stamps.Touch(item.Path)
+			if !Plr.manualStop {
+				item.State = data.StateFinished
+				// We just played this fime so I reckon we can ignore
+				// file not found errors.
+				data.Stamps.Touch(item.Path)
+			}
 			return false
 		}
 
 		return true
 	})
 
+	Plr.manualStop = false
 	Plr.hndl.Post(ev.PlayerChanged)
 	u <- 1
 }
@@ -236,6 +240,12 @@ func (p *Player) stop() {
 
 	Plr.NowPlaying = ""
 	Plr.NowPodcast = ""
+	p.manualStop = true
+
+	pos, err := p.ctrl.Position()
+	if err == nil {
+		data.Stamps.Resume(p.Now.Path, uint64(pos))
+	}
 
 	p.ctrl.Exec("stop")
 	p.playing = false

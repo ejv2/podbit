@@ -28,6 +28,17 @@ var (
 type Podcast struct {
 	RegexPattern string
 	FriendlyName string
+
+	pat *regexp.Regexp
+}
+
+// Owns returns true if the given url is a member of this podcast.
+func (p *Podcast) Owns(url string) bool {
+	if p.pat == nil {
+		panic("invalid podcast: regex pattern not compiled")
+	}
+
+	return p.pat.MatchString(url)
 }
 
 // Database aggregates all podcast data from the database.
@@ -78,6 +89,12 @@ func initDatabase(db *Database) error {
 
 			p.RegexPattern = fields[0]
 			p.FriendlyName = strings.Join(fields[1:], " ")
+
+			pat, err := regexp.Compile(p.RegexPattern)
+			if err != nil {
+				return fmt.Errorf("Error: Malformed database: Invalid regex on Line %d: %w", i, err)
+			}
+			p.pat = pat
 
 			db.podcasts = append(db.podcasts, p)
 

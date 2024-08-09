@@ -74,7 +74,7 @@ type Queue struct {
 	mutex sync.RWMutex
 	Items []QueueItem
 	// both of below are cached references into the items array
-	Podmap  map[string]*QueueItem
+	Podmap  map[string][]*QueueItem
 	Linkmap map[string]*QueueItem
 }
 
@@ -123,7 +123,7 @@ func (q *Queue) parseField(fields []string, num int) (item QueueItem) {
 func (q *Queue) Open() error {
 	// Init stuff inside queue that we need here
 	q.Linkmap = make(map[string]*QueueItem)
-	q.Podmap = make(map[string]*QueueItem)
+	q.Podmap = make(map[string][]*QueueItem)
 
 	// First try the most likely places
 	var err error
@@ -186,7 +186,7 @@ func (q *Queue) Open() error {
 
 		q.Items = append(q.Items, item)
 		q.Linkmap[item.URL] = &q.Items[len(q.Items)-1]
-		q.Podmap[pod.FriendlyName] = &q.Items[len(q.Items)-1]
+		q.Podmap[pod.FriendlyName] = append(q.Podmap[pod.FriendlyName], &q.Items[len(q.Items)-1])
 		i++
 	}
 
@@ -238,7 +238,7 @@ func (q *Queue) Reload() {
 
 		q.Items = append(q.Items, item)
 		q.Linkmap[item.URL] = &q.Items[len(q.Items)-1]
-		q.Podmap[pod.FriendlyName] = &q.Items[len(q.Items)-1]
+		q.Podmap[pod.FriendlyName] = append(q.Podmap[pod.FriendlyName], &q.Items[len(q.Items)-1])
 		i++
 	}
 }
@@ -305,56 +305,34 @@ func (q *Queue) RevRange(callback RangeFunc) {
 	}
 }
 
-// GetPodcasts returns each individual podcast detected
-// through the queue file and database.
-// The value returned may be out of date by the time of
-// returning. It is best to use Range if you rely on
-// the results.
+// GetPodcasts returns each individual podcast detected through the queue file
+// and database.
+//
+// Deprecated: Use DB.GetPodcastNames.
 func (q *Queue) GetPodcasts() (podcasts []string) {
 	q.mutex.RLock()
 	defer q.mutex.RUnlock()
 
-	seen := make(map[string]bool)
-	uncat := false
-
-	for i := range q.Items {
-		name := DB.GetFriendlyName(q.Items[i].URL)
-		if name == q.Items[i].URL {
-			uncat = true
-			continue
-		}
-
-		if !seen[name] {
-			podcasts = append(podcasts, name)
-			seen[name] = true
-		}
+	podcasts = make([]string, 0, len(q.Podmap))
+	for pod := range q.Podmap {
+		podcasts = append(podcasts, pod)
 	}
 
-	if uncat {
-		podcasts = append(podcasts, UnknownPodcastName)
-	}
 	return
 }
 
-// GetEpisodeByURL searches the queue file for an entry
-// with the requested URL.
-func (q *Queue) GetEpisodeByURL(url string) (found *QueueItem) {
-	q.Range(func(_ int, elem *QueueItem) bool {
-		if elem.URL == url {
-			found = elem
-			return false
-		}
+// GetEpisodeByURL searches the queue file for an entry with the requested URL.
+func (q *Queue) GetEpisodeByURL(url string) *QueueItem {
+	q.mutex.RLock()
+	defer q.mutex.RUnlock()
 
-		return true
-	})
-
-	return
+	return q.Linkmap[url]
 }
 
 // GetEpisodeByTitle searches the queue file for an entry
 // with the requested title from cache.
 func (q *Queue) GetEpisodeByTitle(title string) (found *QueueItem) {
-	q.Range(func(i int, elem *QueueItem) bool {
+	q.Range(func(_ int, elem *QueueItem) bool {
 		find, ok := Downloads.Query(elem.Path)
 		if ok && find.Title == title {
 			found = elem
@@ -370,7 +348,7 @@ func (q *Queue) GetEpisodeByTitle(title string) (found *QueueItem) {
 // GetByStatus returns all queue entries which are currently
 // in the status marked in state.
 func (q *Queue) GetByStatus(status int) (found []*QueueItem) {
-	q.Range(func(i int, elem *QueueItem) bool {
+	q.Range(func(_ int, elem *QueueItem) bool {
 		if elem.State == status {
 			found = append(found, elem)
 		}
@@ -379,4 +357,17 @@ func (q *Queue) GetByStatus(status int) (found []*QueueItem) {
 	})
 
 	return
+}
+
+// GetPodcastEpisodes returns all episodes found to match a given episode, or
+// an empty array for an unknown podcast or configured podcast with no episodes.
+func (q *Queue) GetPodcastEpisodes(friendlyName string) []*QueueItem {
+	q.mutex.RLock()
+	defer q.mutex.RUnlock()
+
+	arr, ok := q.Podmap[friendlyName]
+	if !ok {
+		return []*QueueItem{}
+	}
+	return arr
 }

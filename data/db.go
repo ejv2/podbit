@@ -150,6 +150,33 @@ func (db *Database) Save() {
 	file.Close()
 }
 
+// GetPodcasts returns all podcasts configured in the db. This guarantees that
+// the same name will never be given twice (i.e podcasts with multi regex will
+// be merged.)
+func (db *Database) GetPodcasts() []Podcast {
+	list := make([]Podcast, 0, len(db.podcasts))
+	seen := make(map[string]bool, len(db.podcasts))
+	for _, pod := range db.podcasts {
+		if seen, ok := seen[pod.FriendlyName]; !(ok || seen) {
+			list = append(list, pod)
+		}
+	}
+
+	return list
+}
+
+// GetPodcastNames returns the friendly names of all configured podcasts,
+// gnaranteeing the absence of duplicates.
+func (db *Database) GetPodcastNames() []string {
+	pod := db.GetPodcasts()
+	nam := make([]string, 0, len(pod))
+	for _, p := range pod {
+		nam = append(nam, p.FriendlyName)
+	}
+
+	return nam
+}
+
 // GetFriendlyName returns the user-configured friendly name for a
 // specified URL. If one cannot be found, the url is returned.
 func (db *Database) GetFriendlyName(url string) string {

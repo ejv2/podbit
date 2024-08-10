@@ -73,9 +73,11 @@ type Download struct {
 //
 // Used internally by cache; avoid calling directly.
 func (d *Download) DownloadYoutube(hndl ev.Handler) {
+	d.Elem.RLock()
 	if !d.Elem.Youtube {
 		panic("download: downloading non-youtube with youtube-dl")
 	}
+	d.Elem.RUnlock()
 
 	// Work around "already downloaded" errors from youtube-dl
 	d.File.Close()
@@ -104,9 +106,11 @@ func (d *Download) DownloadYoutube(hndl ev.Handler) {
 		return
 	}
 
+	d.Elem.RLock()
 	h, _ := os.UserHomeDir()
 	tmppath := filepath.Join(h, "podbit-ytdl"+strconv.FormatInt(time.Now().UnixMicro(), 10))
 	flags := append(strings.Split(YoutubeFlags, " "), "-o", tmppath+".%(ext)s", d.Elem.URL)
+	d.Elem.RUnlock()
 
 	proc := exec.Command(loader, flags...)
 	r, err := proc.StdoutPipe()
@@ -160,9 +164,10 @@ func (d *Download) DownloadYoutube(hndl ev.Handler) {
 		default:
 		}
 	}
+	hndl.Post(ev.DownloadChanged)
 	r.Close()
 
-	if err != nil && err.Error() != "EOF" {
+	if err.Error() != "EOF" {
 		d.mut.Lock()
 		d.Completed = true
 		d.Success = false
@@ -185,9 +190,8 @@ func (d *Download) DownloadYoutube(hndl ev.Handler) {
 	os.Rename(tmppath+".mp3", d.Path)
 
 	// Final clean up
-	Q.mutex.Lock()
+	d.Elem.Lock()
 	d.Elem.State = StateReady
-	Q.mutex.Unlock()
 
 	d.mut.Lock()
 	d.Completed = true
@@ -198,6 +202,7 @@ func (d *Download) DownloadYoutube(hndl ev.Handler) {
 	Downloads.downloadsMutex.Unlock()
 
 	d.mut.Unlock()
+	d.Elem.Unlock()
 
 	hndl.Post(ev.DownloadChanged)
 }
@@ -208,6 +213,7 @@ func (d *Download) DownloadYoutube(hndl ev.Handler) {
 //
 // Used internally by cache; avoid calling directly.
 func (d *Download) DownloadHTTP(hndl ev.Handler) {
+	d.Elem.RLock()
 	resp, err := http.Get(d.Elem.URL)
 	if err != nil || resp.StatusCode != http.StatusOK {
 		d.mut.Lock()
@@ -224,15 +230,16 @@ func (d *Download) DownloadHTTP(hndl ev.Handler) {
 		hndl.Post(ev.DownloadChanged)
 		return
 	}
+	d.Elem.RUnlock()
 
 	d.mut.Lock()
 	size, _ := strconv.ParseInt(resp.Header.Get("Content-Length"), 10, 64)
 	d.Size = size
 	d.mut.Unlock()
 
-	Q.mutex.Lock()
+	d.Elem.Lock()
 	d.Elem.State = StatePending
-	Q.mutex.Unlock()
+	d.Elem.Unlock()
 
 	var count int64
 	var read int
@@ -276,15 +283,17 @@ outer:
 	} else {
 		d.Success = true
 
-		Q.mutex.Lock()
+		d.Elem.Lock()
 		d.Elem.State = StateReady
-		Q.mutex.Unlock()
+		d.Elem.Unlock()
 	}
 	d.mut.Unlock()
 
 	Downloads.downloadsMutex.Lock()
+	d.Elem.RLock()
 	Downloads.loadFile(d.Elem.Path, false)
 	Downloads.ongoing--
+	d.Elem.RUnlock()
 	Downloads.downloadsMutex.Unlock()
 
 	resp.Body.Close()

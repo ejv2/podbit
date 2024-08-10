@@ -59,6 +59,8 @@ var StateStrings = [4]string{
 // QueueItem represents an item in the player queue
 // as provided by newsboat.
 type QueueItem struct {
+	*sync.RWMutex
+
 	URL     string
 	Path    string
 	State   int
@@ -81,6 +83,8 @@ type Queue struct {
 func (q *Queue) parseField(fields []string, num int) (item QueueItem) {
 	item.URL = fields[0]
 	item.Path = strings.ReplaceAll(fields[1], "\"", "")
+	item.RWMutex = new(sync.RWMutex)
+
 	if strings.HasPrefix(item.URL, "+") {
 		item.Youtube = true
 		item.URL = item.URL[1:]

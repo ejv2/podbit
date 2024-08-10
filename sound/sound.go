@@ -106,6 +106,7 @@ func endWait(u chan int) {
 		if item.Path == Plr.Now.Path {
 			if !Plr.manualStop {
 				item.State = data.StateFinished
+
 				// We just played this fime so I reckon we can ignore
 				// file not found errors.
 				data.Stamps.Touch(item.Path)
@@ -450,22 +451,20 @@ func Mainloop() {
 
 		if !Plr.playing && !Plr.waiting && !Plr.exhausted && len(queue) > 0 {
 			if elem.State != data.StatePending && data.Downloads.EntryExists(elem.Path) {
+				elem.Lock()
+
 				Plr.play(elem)
 				wait = endWait
 
 				// Set status to played
-				data.Q.Range(func(_ int, item *data.QueueItem) bool {
-					if item.Path == elem.Path {
-						item.State = data.StatePlayed
-						data.Stamps.Touch(item.Path)
-						return false
-					}
+				elem.State = data.StatePlayed
+				data.Stamps.Touch(elem.Path)
 
-					return true
-				})
+				elem.Unlock()
 			} else {
 				Plr.waiting = true
 
+				elem.RLock()
 				if y, _ := data.Downloads.IsDownloading(elem.Path); y {
 					Plr.download = elem
 				} else {
@@ -478,6 +477,7 @@ func Mainloop() {
 					Plr.download = elem
 				}
 
+				elem.RUnlock()
 				wait = downloadWait
 			}
 		}

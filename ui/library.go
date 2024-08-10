@@ -66,10 +66,10 @@ func (l *Library) renderEpisodes(x, y int) {
 	_, pod := l.men[0].GetSelection()
 	eps := data.Q.GetPodcastEpisodes(pod)
 
-	data.Q.RLock()
-	defer data.Q.RUnlock()
 	for i := len(eps) - 1; i >= 0; i-- {
 		ep := eps[i]
+		ep.RLock()
+
 		text := ""
 
 		entry, ok := data.Downloads.Query(ep.Path)
@@ -81,6 +81,7 @@ func (l *Library) renderEpisodes(x, y int) {
 		}
 
 		l.men[1].Items = append(l.men[1].Items, text)
+		ep.RUnlock()
 	}
 
 	l.men[1].Selected = (l.menSel == 1)
@@ -166,8 +167,8 @@ func (l *Library) StartDownload() {
 			return
 		}
 
-		data.Q.RLock()
-		defer data.Q.RUnlock()
+		item.RLock()
+		defer item.RUnlock()
 		if y, _ := data.Downloads.IsDownloading(item.Path); y {
 			go StatusMessage("Episode already downloading")
 			return
@@ -186,12 +187,12 @@ func (l *Library) StartDownload() {
 				continue
 			}
 
-			data.Q.RLock()
+			item.RLock()
 			if y, _ := data.Downloads.IsDownloading(item.Path); y {
 				go StatusMessage("Episode already downloading")
 				return
 			}
-			data.Q.RUnlock()
+			item.RUnlock()
 
 			go data.Downloads.Download(item)
 		}

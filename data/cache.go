@@ -147,9 +147,9 @@ func (c *Cache) loadFile(path string, startup bool) {
 	c.episodes.Store(path, ep)
 }
 
-// Download starts an asynchronous download in a new goroutine.
-// Returns the ID in the downloads table, which must be accessed
-// using a mutex.
+// Download starts an asynchronous download in a new goroutine. Returns the ID
+// in the downloads table, which must be accessed using a mutex. Does not
+// require a lock on item to be called.
 func (c *Cache) Download(item *QueueItem) (id int, err error) {
 	f, err := os.Create(item.Path)
 	dl := Download{

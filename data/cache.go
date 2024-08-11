@@ -83,7 +83,6 @@ func (c *Cache) Open(dir string, q *Queue, hndl ev.Handler) error {
 		c.dir = strings.ReplaceAll(c.guessDir(q.Items), "~", home)
 	}
 
-	fmt.Println("\nDEBUG: Loading cache from", c.dir)
 	files, err := os.ReadDir(c.dir)
 	c.hndl = hndl
 

@@ -1,7 +1,6 @@
 package data
 
 import (
-	"bufio"
 	"errors"
 	"fmt"
 	"io/ioutil"
@@ -12,6 +11,7 @@ import (
 	"time"
 
 	"github.com/dhowden/tag"
+	lcss "github.com/vmarkovtsev/go-lcss"
 
 	ev "github.com/ejv2/podbit/event"
 )
@@ -52,33 +52,16 @@ type Episode struct {
 
 // Dig through newsboat stuff to guess the download dir.
 // If we can't find it, just use the newsboat default and hope for the best.
-func (c *Cache) guessDir() string {
-	conf, _ := os.UserConfigDir()
-	p := filepath.Join(conf, "newsboat/config")
-
-	file, err := os.Open(p)
-	if err != nil {
-		ret, _ := os.UserHomeDir()
-		return ret
+func (c *Cache) guessDir(queueEntries []QueueItem) string {
+	paths := make([][]byte, 0, len(queueEntries))
+	for _, entry := range queueEntries {
+		paths = append(paths, []byte(entry.Path))
 	}
 
-	scanner := bufio.NewScanner(file)
-	for scanner.Scan() {
-		if scanner.Err() != nil {
-			ret, _ := os.UserHomeDir()
-			return ret
-		}
-
-		line := scanner.Text()
-		fields := strings.Split(line, " ")
-
-		if len(line) < 1 || len(fields) < 2 {
-			continue
-		}
-
-		if fields[0] == "download-path" {
-			return fields[1]
-		}
+	bcom := lcss.LongestCommonSubstring(paths...)
+	com := string(bcom)
+	if com != "" {
+		return com
 	}
 
 	ret, _ := os.UserHomeDir()
@@ -88,9 +71,20 @@ func (c *Cache) guessDir() string {
 // Open opens and initialises the cache.
 // Should be called once and once only - further modifications
 // and cache mutations happen exclusively through other methods.
-func (c *Cache) Open(hndl ev.Handler) error {
+func (c *Cache) Open(dir string, q *Queue, hndl ev.Handler) error {
+	if q == nil {
+		panic("open cache: nil queue passed")
+	}
+
 	home, _ := os.UserHomeDir()
-	c.dir = strings.ReplaceAll(c.guessDir(), "~", home)
+	// Not locking queue here as we are still in initialization and so no
+	// other goroutines created yet
+	c.dir = dir
+	if c.dir == "" {
+		c.dir = strings.ReplaceAll(c.guessDir(q.Items), "~", home)
+	}
+
+	fmt.Println("\nDEBUG: Loading cache from", c.dir)
 	files, err := ioutil.ReadDir(c.dir)
 	c.hndl = hndl
 

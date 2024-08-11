@@ -3,7 +3,6 @@ package data
 import (
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -85,7 +84,7 @@ func (c *Cache) Open(dir string, q *Queue, hndl ev.Handler) error {
 	}
 
 	fmt.Println("\nDEBUG: Loading cache from", c.dir)
-	files, err := ioutil.ReadDir(c.dir)
+	files, err := os.ReadDir(c.dir)
 	c.hndl = hndl
 
 	if err != nil {
@@ -96,6 +95,10 @@ func (c *Cache) Open(dir string, q *Queue, hndl ev.Handler) error {
 	}
 
 	for _, elem := range files {
+		// TODO: Recursively load directories here
+		if elem.IsDir() {
+			continue
+		}
 		path := filepath.Join(c.dir, elem.Name())
 		c.loadFile(path, true)
 	}

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"os"
 	"os/signal"
@@ -32,6 +33,12 @@ var (
 	newMen    = make(chan ui.Menu)
 	exit      = make(chan struct{})
 	reload    = make(chan int8)
+)
+
+// Flags.
+var (
+	KeepPlayed = flag.Bool("nocleanup", false, "Disable cache cleanups and keep all finished items")
+	PurgeQueue = flag.Bool("purge", false, "Purge finished items from the queue file as well as disk")
 )
 
 func banner() {
@@ -95,6 +102,7 @@ func initSignals(exit chan struct{}) {
 
 func main() {
 	banner()
+	flag.Parse()
 	initDirs()
 	initSignals(exit)
 

@@ -74,7 +74,7 @@ type Queue struct {
 
 	// mutex protects all of the below
 	mutex sync.RWMutex
-	Items []QueueItem
+	Items []*QueueItem
 	// both of below are cached references into the items array
 	Podmap  map[string][]*QueueItem
 	Linkmap map[string]*QueueItem
@@ -188,9 +188,9 @@ func (q *Queue) Open() error {
 			continue
 		}
 
-		q.Items = append(q.Items, item)
-		q.Linkmap[item.URL] = &q.Items[len(q.Items)-1]
-		q.Podmap[pod.FriendlyName] = append(q.Podmap[pod.FriendlyName], &q.Items[len(q.Items)-1])
+		q.Items = append(q.Items, &item)
+		q.Linkmap[item.URL] = q.Items[len(q.Items)-1]
+		q.Podmap[pod.FriendlyName] = append(q.Podmap[pod.FriendlyName], q.Items[len(q.Items)-1])
 		i++
 	}
 
@@ -240,9 +240,9 @@ func (q *Queue) Reload() {
 			continue
 		}
 
-		q.Items = append(q.Items, item)
-		q.Linkmap[item.URL] = &q.Items[len(q.Items)-1]
-		q.Podmap[pod.FriendlyName] = append(q.Podmap[pod.FriendlyName], &q.Items[len(q.Items)-1])
+		q.Items = append(q.Items, &item)
+		q.Linkmap[item.URL] = q.Items[len(q.Items)-1]
+		q.Podmap[pod.FriendlyName] = append(q.Podmap[pod.FriendlyName], q.Items[len(q.Items)-1])
 		i++
 	}
 }
@@ -287,7 +287,7 @@ func (q *Queue) Range(callback RangeFunc) {
 	defer q.mutex.Unlock()
 
 	for i := range q.Items {
-		if !callback(i, &q.Items[i]) {
+		if !callback(i, q.Items[i]) {
 			return
 		}
 	}
@@ -303,7 +303,7 @@ func (q *Queue) RevRange(callback RangeFunc) {
 	defer q.mutex.Unlock()
 
 	for i := len(q.Items) - 1; i >= 0; i-- {
-		if !callback(i, &q.Items[i]) {
+		if !callback(i, q.Items[i]) {
 			return
 		}
 	}

@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
 	"sync"
 	"time"
 
@@ -28,8 +27,6 @@ var (
 // This structure *is* thread safe, but ONLY is used with the
 // correct methods. Use with care!
 type Cache struct {
-	dir string
-
 	episodes sync.Map
 
 	downloadsMutex sync.RWMutex // Protects the below two variables
@@ -70,36 +67,14 @@ func (c *Cache) guessDir(queueEntries []QueueItem) string {
 // Open opens and initialises the cache.
 // Should be called once and once only - further modifications
 // and cache mutations happen exclusively through other methods.
-func (c *Cache) Open(dir string, q *Queue, hndl ev.Handler) error {
+func (c *Cache) Open(q *Queue, hndl ev.Handler) error {
 	if q == nil {
 		panic("open cache: nil queue passed")
 	}
-
-	home, _ := os.UserHomeDir()
-	// Not locking queue here as we are still in initialization and so no
-	// other goroutines created yet
-	c.dir = dir
-	if c.dir == "" {
-		c.dir = strings.ReplaceAll(c.guessDir(q.Items), "~", home)
-	}
-
-	files, err := os.ReadDir(c.dir)
 	c.hndl = hndl
 
-	if err != nil {
-		cerr := os.MkdirAll(c.dir, os.ModeDir|os.ModePerm)
-		if cerr != nil {
-			return ErrorCreation
-		}
-	}
-
-	for _, elem := range files {
-		// TODO: Recursively load directories here
-		if elem.IsDir() {
-			continue
-		}
-		path := filepath.Join(c.dir, elem.Name())
-		c.loadFile(path, true)
+	for _, elem := range q.Items {
+		c.loadFile(elem.Path, true)
 	}
 
 	return nil
@@ -144,9 +119,32 @@ func (c *Cache) loadFile(path string, startup bool) {
 }
 
 // Download starts an asynchronous download in a new goroutine. Returns the ID
-// in the downloads table, which must be accessed using a mutex. Does not
-// require a lock on item to be called.
+// in the downloads table, which must be accessed using a mutex. Item passed
+// should be locked by the caller prior to calling.
 func (c *Cache) Download(item *QueueItem) (id int, err error) {
+	dir := filepath.Dir(item.Path)
+	err = os.MkdirAll(dir, os.ModePerm)
+	if err != nil {
+		dl := Download{
+			mut:       new(sync.RWMutex),
+			Path:      item.Path,
+			File:      nil,
+			Elem:      item,
+			Started:   time.Now(),
+			Completed: true,
+			Success:   false,
+			Error:     "Directory IO Error",
+			Stop:      nil,
+		}
+
+		c.downloadsMutex.Lock()
+		c.downloads = append(c.downloads, &dl)
+		id = len(c.downloads) - 1
+		c.downloadsMutex.Unlock()
+
+		return id, ErrorIO
+	}
+
 	f, err := os.Create(item.Path)
 	dl := Download{
 		mut:     new(sync.RWMutex),

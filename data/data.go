@@ -63,7 +63,7 @@ func InitData(hndl ev.Handler) error {
 	fmt.Println("done")
 
 	fmt.Print("Initialising cache...")
-	err = Downloads.Open("", &Q, hndl)
+	err = Downloads.Open(&Q, hndl)
 	if err != nil {
 		return err
 	}

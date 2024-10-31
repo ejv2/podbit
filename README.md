@@ -4,7 +4,7 @@
 
 [![AUR Release](https://img.shields.io/aur/version/podbit?color=1793d1&label=podbit&logo=arch-linux)](https://aur.archlinux.org/packages/podbit/)
 [![Makefile CI](https://github.com/ejv2/podbit/actions/workflows/makefile.yml/badge.svg)](https://github.com/ejv2/podbit/actions/workflows/makefile.yml)
-[![Go Report Card](https://goreportcard.com/badge/github.com/ejv2/podbit)](https://goreportcard.com/report/github.com/ejv2/podbit)
+[![Go Report Card](https://goreportcard.com/badge/github.com/ethanv2/podbit)](https://goreportcard.com/report/github.com/ethanv2/podbit)
 
 Podbit is a replacement for ``newsboat``'s standard podboat tool for listening to podcasts. It is minimal, performant and tries to focus just on being a podcast client, rather than an RSS reader. Podbit has an ncurses terminal user interface and vi-like keybindings.
 

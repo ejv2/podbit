@@ -96,7 +96,7 @@ func ReloadData() {
 // (defaults to three days). Removed episodes are set to "pending" status (to
 // be downloaded) and have their cache file removed.
 func CleanData() {
-	fmt.Printf("Cache cleanup...")
+	fmt.Print("Cache cleanup...")
 
 	now := time.Now().Unix()
 	count := 0
